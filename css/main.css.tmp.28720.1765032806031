@@ -206,7 +206,8 @@ body::after {
   font-size: 0.9rem;
 }
 
-.sidebar select {
+.sidebar select,
+.sidebar input[type="range"] {
   width: 100%;
   padding: 8px 12px;
   background: rgba(17, 24, 39, 0.5);
@@ -217,6 +218,29 @@ body::after {
   margin-bottom: 15px;
 }
 
+.sidebar input[type="range"] {
+  padding: 0;
+  height: 6px;
+  -webkit-appearance: none;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+}
+
+.sidebar input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #ff4db8;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.range-value {
+  color: #9aa6b2;
+  font-size: 0.85rem;
+  margin-top: -10px;
+  margin-bottom: 15px;
+}
 
 /* Main content */
 .main {

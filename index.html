@@ -13,8 +13,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=1.4">
-  <link rel="stylesheet" href="css/experiment.css?v=1.1">
+  <link rel="stylesheet" href="css/main.css?v=1.5">
+  <link rel="stylesheet" href="css/experiment.css?v=1.2">
 </head>
 <body>
 
@@ -404,9 +404,175 @@
     </div>
   </div>
 
+  <!-- =====================================================
+       STROOP LANGUAGE DOMINANCE TEST OVERLAY
+       ===================================================== -->
+  <div class="stroop-overlay" id="stroop-overlay" tabindex="-1">
+    <div class="stroop-container">
+
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="stroop-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Stroop Language Dominance Test</h2>
+        <p class="subtitle">Experience being a participant - discover which language you process faster</p>
+
+        <div class="language-selectors">
+          <div class="language-select-group">
+            <label>Language 1 (Native/Primary)</label>
+            <select id="language1">
+              <option value="en">English</option>
+              <option value="he">Hebrew</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ru">Russian</option>
+              <option value="ar">Arabic</option>
+              <option value="zh">Chinese</option>
+            </select>
+          </div>
+          <div class="language-select-group">
+            <label>Language 2 (Secondary)</label>
+            <select id="language2">
+              <option value="he">Hebrew</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ru">Russian</option>
+              <option value="ar">Arabic</option>
+              <option value="zh">Chinese</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Instructions Box -->
+        <div style="background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.4); border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left;">
+          <h3 style="color: #ff4db8; margin-bottom: 15px; font-size: 1.1rem;">Instructions / How to Play:</h3>
+
+          <p style="color: #e5e7eb; margin-bottom: 20px; font-size: 1rem; line-height: 1.6;">
+            You will see <strong>color words</strong> written in <strong>colored ink</strong>.<br>
+            Your task: Identify the <strong style="color: #ff4db8;">INK COLOR</strong> (the color you SEE), <strong>NOT</strong> the word meaning.
+          </p>
+
+          <!-- Visual Example -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #9aa6b2; margin-bottom: 15px; font-size: 0.9rem;">Example:</p>
+            <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap; justify-content: center;">
+              <div style="text-align: center;">
+                <span style="font-size: 2rem; font-weight: bold; color: #4444ff;">RED</span>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">The word says "RED"<br>but the ink is <strong style="color: #4444ff;">BLUE</strong></p>
+                <p style="color: #44ff44; font-size: 0.9rem; margin-top: 5px;">Press <strong>B</strong> for Blue</p>
+              </div>
+              <div style="text-align: center;">
+                <span style="font-size: 2rem; font-weight: bold; color: #ff4444;">GREEN</span>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">The word says "GREEN"<br>but the ink is <strong style="color: #ff4444;">RED</strong></p>
+                <p style="color: #44ff44; font-size: 0.9rem; margin-top: 5px;">Press <strong>R</strong> for Red</p>
+              </div>
+            </div>
+          </div>
+
+          <p style="color: #ffff44; font-size: 0.95rem; margin-bottom: 0;">
+            Respond as FAST and ACCURATELY as possible!
+          </p>
+        </div>
+
+        <!-- Hebrew Instructions -->
+        <details style="background: rgba(255, 77, 184, 0.1); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 25px; cursor: pointer;">
+          <summary style="color: #ff4db8; font-size: 0.95rem;">Click for Hebrew Instructions / הוראות בעברית</summary>
+          <div style="margin-top: 15px; text-align: right; direction: rtl;">
+            <p style="color: #e5e7eb; line-height: 1.8; font-size: 0.95rem;">
+              <strong>הוראות:</strong><br>
+              יוצגו בפניך מילים שמתארות צבעים, כתובות בדיו צבעוני.<br>
+              המשימה שלך: לזהות את <strong style="color: #ff4db8;">צבע הדיו</strong> (הצבע שאת/ה רואה), <strong>ולא</strong> את משמעות המילה.<br><br>
+              <strong>דוגמה:</strong> אם המילה "אדום" כתובה בדיו <span style="color: #4444ff;">כחול</span> - לחצ/י על <strong>B</strong> (כחול).<br><br>
+              <span style="color: #ffff44;">הגיב/י מהר ומדויק ככל האפשר!</span>
+            </p>
+          </div>
+        </details>
+
+        <button class="btn" onclick="startStroop()">Start Experiment</button>
+        <button class="btn btn-secondary" style="margin-left: 15px;" onclick="closeStroop()">Cancel</button>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="stroop-trial">
+        <div class="stroop-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">Trial <span id="current-trial">1</span> of <span id="total-trials">48</span></div>
+        </div>
+
+        <div class="stroop-stimulus" id="stroop-stimulus">
+          <span class="stroop-fixation">+</span>
+        </div>
+
+        <p class="stroop-instruction">Press the key for the INK COLOR</p>
+
+        <div class="stroop-keys" id="stroop-keys-container">
+          <!-- Keys will be dynamically generated -->
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="stroop-results">
+        <h2>Your Results</h2>
+
+        <div class="dominance-result">
+          <h3>Language Dominance</h3>
+          <div class="dominance-language" id="dominant-language">-</div>
+          <p class="dominance-explanation" id="dominance-explanation"></p>
+        </div>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <h3 id="lang1-name">Language 1</h3>
+            <div class="result-value" id="lang1-rt">-</div>
+            <div class="result-unit">ms avg RT</div>
+          </div>
+          <div class="result-card">
+            <h3 id="lang2-name">Language 2</h3>
+            <div class="result-value" id="lang2-rt">-</div>
+            <div class="result-unit">ms avg RT</div>
+          </div>
+          <div class="result-card">
+            <h3>Stroop Effect (L1)</h3>
+            <div class="result-value" id="stroop-effect1">-</div>
+            <div class="result-unit">ms (incongruent - congruent)</div>
+          </div>
+          <div class="result-card">
+            <h3>Stroop Effect (L2)</h3>
+            <div class="result-value" id="stroop-effect2">-</div>
+            <div class="result-unit">ms (incongruent - congruent)</div>
+          </div>
+        </div>
+
+        <div class="stroop-buttons">
+          <button class="btn" onclick="startStroop()">Try Again</button>
+          <button class="btn btn-secondary" onclick="closeStroop()">Close</button>
+        </div>
+
+        <div class="export-section">
+          <h4>Export Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn-export" onclick="exportStroopCSV()">Download CSV</button>
+              <p class="export-desc">Universal format for data analysis software</p>
+            </div>
+            <div class="export-option">
+              <button class="btn-export" onclick="exportStroopXLSX()">Download Excel</button>
+              <p class="export-desc">Opens directly in Excel with formatted sheets</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script src="js/core.js"></script>
   <script src="js/engine.js"></script>
+  <script src="js/stroop.js"></script>
 
   <!-- Main Application Script -->
   <script>
@@ -533,6 +699,12 @@
       const type = document.getElementById('experimentSelect').value;
       if (!type) {
         alert('Please select an experiment type from the sidebar first.');
+        return;
+      }
+
+      // Special handling for Stroop - use full V30 implementation
+      if (type === 'stroop') {
+        openStroop();
         return;
       }
 

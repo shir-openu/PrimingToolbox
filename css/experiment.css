@@ -1,0 +1,586 @@
+/* =====================================================
+   PrimingToolbox - Experiment Runner Styles
+   Version: 1.0
+   Styles for running experiments (overlay, trial display, results)
+   ===================================================== */
+
+/* Experiment Overlay (fullscreen container) */
+.experiment-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+.experiment-overlay.active {
+  display: flex;
+}
+
+.experiment-container {
+  width: 100%;
+  max-width: 800px;
+  padding: 40px;
+  text-align: center;
+}
+
+/* Setup Screen */
+.experiment-setup {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 77, 184, 0.3);
+  border-radius: 20px;
+  padding: 50px;
+}
+
+.experiment-setup h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+}
+
+.experiment-setup .subtitle {
+  color: #9aa6b2;
+  margin-bottom: 40px;
+}
+
+/* Language/Option Selectors */
+.option-selectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.option-select-group {
+  text-align: left;
+}
+
+.option-select-group label {
+  color: #ff4db8;
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.option-select-group select {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+}
+
+/* Trial Screen */
+.experiment-trial {
+  display: none;
+}
+
+.experiment-trial.active {
+  display: block;
+}
+
+/* Fixation cross */
+.fixation {
+  font-size: 5rem;
+  color: #ffffff;
+}
+
+/* Stimulus display area */
+.stimulus-display {
+  font-size: 4rem;
+  font-weight: bold;
+  padding: 60px;
+  border-radius: 20px;
+  background: rgba(17, 24, 39, 0.5);
+  min-height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* For simultaneous presentation (e.g., Stroop) */
+.stimulus-simultaneous {
+  /* Prime (word meaning) affects how target (color) is perceived */
+}
+
+/* For sequential presentation */
+.stimulus-prime {
+  font-size: 3rem;
+}
+
+.stimulus-target {
+  font-size: 4rem;
+}
+
+/* Instructions */
+.trial-instruction {
+  color: #9aa6b2;
+  font-size: 1.2rem;
+  margin-top: 30px;
+}
+
+/* Response keys display */
+.response-keys {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+}
+
+.key-hint {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  padding: 15px 30px;
+}
+
+.key-hint .key {
+  display: block;
+  font-size: 2rem;
+  color: #ff4db8;
+  margin-bottom: 5px;
+}
+
+.key-hint .label {
+  color: #9aa6b2;
+  font-size: 0.9rem;
+}
+
+/* Progress display */
+.experiment-progress {
+  margin-bottom: 30px;
+}
+
+/* Feedback display */
+.feedback {
+  font-size: 3rem;
+  padding: 40px;
+}
+
+.feedback.correct {
+  color: #169999;
+}
+
+.feedback.incorrect {
+  color: #990f23;
+}
+
+/* Results Screen */
+.experiment-results {
+  display: none;
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 77, 184, 0.3);
+  border-radius: 20px;
+  padding: 50px;
+}
+
+.experiment-results.active {
+  display: block;
+}
+
+.experiment-results h2 {
+  color: #ffffff;
+  font-size: 1.8rem;
+  margin-bottom: 30px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.result-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  padding: 25px;
+  text-align: center;
+}
+
+.result-card h3 {
+  color: #a78bfa;
+  font-size: 1rem;
+  margin-bottom: 15px;
+}
+
+.result-value {
+  font-size: 2.5rem;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.result-unit {
+  color: #9aa6b2;
+  font-size: 0.9rem;
+}
+
+/* Special result highlight */
+.result-highlight {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+  border: 2px solid #667eea;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.result-highlight h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.result-highlight-value {
+  font-size: 2rem;
+  color: #ff4db8;
+  font-weight: bold;
+}
+
+.result-explanation {
+  color: #9aa6b2;
+  font-size: 0.95rem;
+  margin-top: 15px;
+  line-height: 1.6;
+}
+
+/* Action buttons */
+.experiment-buttons {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+/* Export section */
+.export-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.export-section h4 {
+  color: #ff4db8;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.export-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.export-option {
+  flex: 1;
+  max-width: 250px;
+  text-align: center;
+}
+
+.export-desc {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #9aa6b2;
+  line-height: 1.4;
+}
+
+/* =====================================================
+   Template Builder Styles
+   ===================================================== */
+
+.template-builder-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.template-builder-overlay.active {
+  display: block;
+}
+
+.template-builder {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px;
+}
+
+.builder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.builder-header h1 {
+  font-size: 1.8rem;
+  color: #ffffff;
+}
+
+.builder-close {
+  background: none;
+  border: none;
+  color: #9aa6b2;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 5px 15px;
+  transition: color 0.2s;
+}
+
+.builder-close:hover {
+  color: #ffffff;
+}
+
+/* ABCD Framework Section */
+.abcd-section {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 77, 184, 0.3);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+.abcd-section h2 {
+  color: #ff4db8;
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.abcd-section h2::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(135deg, #667eea, #ff4db8);
+  border-radius: 2px;
+}
+
+/* Stimulus preview */
+.stimulus-combined {
+  background: rgba(102, 126, 234, 0.15);
+  border: 2px solid rgba(102, 126, 234, 0.4);
+  border-radius: 16px;
+  padding: 30px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.stimulus-combined h3 {
+  color: #a78bfa;
+  font-size: 1rem;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stimulus-preview {
+  font-size: 3rem;
+  font-weight: bold;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.stimulus-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  text-align: left;
+  margin-top: 20px;
+}
+
+.stimulus-part {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 15px 20px;
+  border-left: 3px solid;
+}
+
+.stimulus-part.prime {
+  border-color: #ff4db8;
+}
+
+.stimulus-part.target {
+  border-color: #667eea;
+}
+
+.stimulus-part-label {
+  font-size: 0.8rem;
+  color: #9aa6b2;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.stimulus-part-value {
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+/* Experimenter identity section */
+.identity-section {
+  background: rgba(22, 153, 153, 0.1);
+  border: 1px solid rgba(22, 153, 153, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.identity-section h3 {
+  color: #169999;
+  margin-bottom: 15px;
+}
+
+/* External ID section */
+.external-id-section {
+  background: rgba(153, 15, 35, 0.1);
+  border: 1px solid rgba(153, 15, 35, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.external-id-section h3 {
+  color: #990f23;
+  margin-bottom: 15px;
+}
+
+/* Timeline */
+.timeline-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 20px 40px 30px 40px;
+  z-index: 100;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.timeline-title {
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.timeline-total {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.timeline-track {
+  position: relative;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.timeline-axis {
+  position: absolute;
+  bottom: 30px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.timeline-axis::after {
+  content: 'ms';
+  position: absolute;
+  right: -25px;
+  top: -8px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+}
+
+.timeline-event {
+  position: absolute;
+  bottom: 45px;
+  transform: translateX(-50%);
+  cursor: grab;
+  user-select: none;
+  transition: transform 0.1s ease;
+}
+
+.timeline-event:active {
+  cursor: grabbing;
+}
+
+.timeline-event:hover .event-box {
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-2px);
+}
+
+.event-box {
+  background: rgba(17, 24, 39, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+  min-width: 70px;
+  transition: all 0.2s ease;
+}
+
+.event-label {
+  color: #a78bfa;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.event-content {
+  color: #ffffff;
+  font-size: 0.9rem;
+}
+
+.event-connector {
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 15px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.event-dot {
+  position: absolute;
+  bottom: -23px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.event-time {
+  position: absolute;
+  bottom: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}

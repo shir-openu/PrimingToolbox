@@ -1,0 +1,81 @@
+{
+  "id": "semantic-priming",
+  "name": "Semantic Priming - Lexical Decision",
+  "description": "Classic Meyer & Schvaneveldt paradigm: decide if target is a word or nonword",
+  "version": "1.0",
+
+  "primes": {
+    "type": "text",
+    "description": "Prime word (A) - semantically related or unrelated to target",
+    "items": [
+      "DOCTOR", "BREAD", "TABLE", "BIRD", "NIGHT", "MUSIC",
+      "CHAIR", "WATER", "GARDEN", "BOOK"
+    ]
+  },
+
+  "targets": {
+    "type": "text",
+    "description": "Target (B) - word or nonword for lexical decision",
+    "items": [
+      "NURSE", "BUTTER", "CHAIR", "WING", "DARK", "SONG",
+      "DESK", "OCEAN", "FLOWER", "READ"
+    ],
+    "nonwords": [
+      "NURPE", "BATTER", "CHIAR", "WIGN", "DRAK", "SNOG",
+      "DEKS", "OCAEN", "FLOWAR", "RAED"
+    ]
+  },
+
+  "presentation": {
+    "mode": "sequential",
+    "description": "A is presented before B (prime -> ISI -> target)",
+    "fixation_ms": 500,
+    "prime_duration_ms": 200,
+    "ISI_ms": 50,
+    "target_until_response": true,
+    "ITI_ms": 1500,
+    "response_timeout_ms": 2000
+  },
+
+  "response": {
+    "type": "key_press",
+    "instruction": "Press J for WORD, F for NONWORD",
+    "keys": {
+      "word": "J",
+      "nonword": "F"
+    },
+    "measure": ["RT", "ER"]
+  },
+
+  "trials": {
+    "conditions": ["related", "unrelated", "nonword"],
+    "randomize": true,
+    "repetitions_per_condition": 20,
+    "practice_trials": 6
+  },
+
+  "feedback": {
+    "show": false
+  },
+
+  "data": {
+    "save_to_supabase": true,
+    "table_name": "experiment_results",
+    "fields": [
+      "trial_number",
+      "prime",
+      "target",
+      "condition",
+      "response",
+      "correct",
+      "rt"
+    ]
+  },
+
+  "metadata": {
+    "paradigm": "Semantic Priming",
+    "framework": "ABCD",
+    "reference": "Meyer & Schvaneveldt, 1971; Sivroni & Stark, 2025",
+    "created": "2025-12-06"
+  }
+}

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="author" content="Dr. Shir Sivroni">
+  <meta name="description" content="PrimingToolbox - A universal platform for priming experiments based on the ABCD framework (Sivroni & Stark, 2025)">
+
+  <title>PrimingToolbox - Open University</title>
+
+  <!-- External Libraries -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/experiment.css">
+</head>
+<body>
+
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <div class="wave-container">
+      <svg class="wave wave-teal" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,160 C320,220 420,100 720,160 C1020,220 1120,100 1440,160 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-pink" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,200 C280,260 380,140 680,200 C980,260 1080,140 1440,200 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-wine" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,240 C240,300 340,180 640,240 C940,300 1040,180 1440,240 L1440,320 L0,320 Z"></path>
+      </svg>
+    </div>
+    <div class="particles">
+      <div class="particle particle-teal" style="left: 10%; top: 20%;"></div>
+      <div class="particle particle-pink" style="left: 30%; top: 60%;"></div>
+      <div class="particle particle-wine" style="left: 50%; top: 30%;"></div>
+      <div class="particle particle-teal" style="left: 70%; top: 70%;"></div>
+      <div class="particle particle-pink" style="left: 90%; top: 40%;"></div>
+      <div class="particle particle-wine" style="left: 20%; top: 80%;"></div>
+      <div class="particle particle-teal" style="left: 60%; top: 10%;"></div>
+      <div class="particle particle-pink" style="left: 80%; top: 50%;"></div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <span>PrimingToolbox</span>
+        <span class="copyright">v1.0</span>
+      </div>
+
+      <h3>Quick Settings</h3>
+      <label for="experimentSelect">Experiment Type</label>
+      <select id="experimentSelect" onchange="loadExperimentConfig(this.value)">
+        <option value="">-- Select --</option>
+        <option value="stroop">Stroop Task</option>
+        <option value="semantic">Semantic Priming</option>
+        <option value="affective">Affective Priming</option>
+      </select>
+
+      <div class="sidebar-footer">
+        <span class="copyright">
+          Based on the ABCD Framework<br>
+          Sivroni & Stark, 2025<br><br>
+          The Open University of Israel
+        </span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <h1>PrimingToolbox</h1>
+      <p class="subtitle">A universal platform for priming experiments</p>
+
+      <!-- Module Cards -->
+      <div class="modules-grid">
+
+        <!-- Try Experiment Card -->
+        <div class="module-card" onclick="showTryExperiment()">
+          <div class="module-content">
+            <div class="module-icon">&#9658;</div>
+            <div class="module-title">Try an Experiment</div>
+            <div class="module-description">
+              Experience a priming experiment yourself. Great for learning and testing.
+            </div>
+            <ul class="module-options">
+              <li>Stroop Task</li>
+              <li>Semantic Priming</li>
+              <li>Affective Priming</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Template Builder Card -->
+        <div class="module-card" onclick="showTemplateBuilder()">
+          <div class="module-content">
+            <div class="module-icon">&#9881;</div>
+            <div class="module-title">Template Builder</div>
+            <div class="module-description">
+              Configure and customize experiments for your research.
+            </div>
+            <ul class="module-options">
+              <li>Custom stimuli</li>
+              <li>Timing control</li>
+              <li>Generate participant links</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Get My Data Card -->
+        <div class="module-card" onclick="showGetData()">
+          <div class="module-content">
+            <div class="module-icon">&#128202;</div>
+            <div class="module-title">Get My Data</div>
+            <div class="module-description">
+              Retrieve and export your experiment data.
+            </div>
+            <ul class="module-options">
+              <li>Download CSV</li>
+              <li>Download Excel</li>
+              <li>Filter by experiment ID</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Learn More Card -->
+        <div class="module-card" onclick="showLearnMore()">
+          <div class="module-content">
+            <div class="module-icon">&#128218;</div>
+            <div class="module-title">Learn More</div>
+            <div class="module-description">
+              Understand the ABCD framework and priming paradigms.
+            </div>
+            <ul class="module-options">
+              <li>ABCD Framework</li>
+              <li>Priming types</li>
+              <li>Research resources</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ABCD Framework Info -->
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-content">
+          <h3 class="card-title" style="color: #ff4db8;">The ABCD Framework</h3>
+          <p style="color: #9aa6b2; line-height: 1.8;">
+            <strong style="color: #ffffff;">A</strong> = Prime (the influencing information)<br>
+            <strong style="color: #ffffff;">B</strong> = Target (the input that requires processing)<br>
+            <strong style="color: #ffffff;">C</strong> = Baseline outcome (without A)<br>
+            <strong style="color: #ffffff;">D</strong> = Measured outcome (with A)
+          </p>
+          <p style="color: #9aa6b2; margin-top: 15px; font-size: 0.9rem;">
+            Three characteristics define priming: <strong>Association</strong> (A-B relationship),
+            <strong>Secondariness</strong> (A is task-irrelevant), and
+            <strong>Modulation</strong> (A changes outcome from C to D).
+          </p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Experiment Overlay -->
+  <div id="experimentOverlay" class="experiment-overlay">
+    <div class="experiment-container">
+
+      <!-- Setup Screen -->
+      <div id="experimentSetup" class="experiment-setup">
+        <h2 id="experimentTitle">Experiment</h2>
+        <p class="subtitle" id="experimentDescription">Configure and start the experiment</p>
+
+        <div class="option-selectors" id="optionSelectors">
+          <!-- Dynamic options will be inserted here -->
+        </div>
+
+        <button class="btn" onclick="startExperiment()">Start Experiment</button>
+        <button class="btn btn-secondary" onclick="closeExperiment()" style="margin-left: 15px;">Cancel</button>
+      </div>
+
+      <!-- Trial Screen -->
+      <div id="experimentTrial" class="experiment-trial">
+        <div class="experiment-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-text" id="progressText">Trial 1 of 20</div>
+        </div>
+
+        <div class="stimulus-display" id="stimulusDisplay">
+          +
+        </div>
+
+        <p class="trial-instruction" id="trialInstruction">
+          Press the key corresponding to the ink color
+        </p>
+
+        <div class="response-keys" id="responseKeys">
+          <!-- Dynamic keys will be inserted here -->
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div id="experimentResults" class="experiment-results">
+        <h2>Experiment Complete</h2>
+
+        <div class="results-grid" id="resultsGrid">
+          <!-- Dynamic results will be inserted here -->
+        </div>
+
+        <div class="experiment-buttons">
+          <button class="btn" onclick="restartExperiment()">Try Again</button>
+          <button class="btn btn-secondary" onclick="closeExperiment()">Close</button>
+        </div>
+
+        <div class="export-section">
+          <h4>Export Your Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn-export" onclick="exportResults('csv')">Download CSV</button>
+              <p class="export-desc">Comma-separated values file</p>
+            </div>
+            <div class="export-option">
+              <button class="btn-export" onclick="exportResults('xlsx')">Download Excel</button>
+              <p class="export-desc">Microsoft Excel format</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Template Builder Overlay -->
+  <div id="templateBuilderOverlay" class="template-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Template Builder</h1>
+        <button class="builder-close" onclick="closeTemplateBuilder()">&times;</button>
+      </div>
+
+      <!-- Experiment Type Selection -->
+      <div class="abcd-section">
+        <h2>Experiment Configuration</h2>
+
+        <label for="builderExperimentType">Experiment Type</label>
+        <select id="builderExperimentType" onchange="updateBuilderPreview()">
+          <option value="stroop">Stroop Task (Simultaneous)</option>
+          <option value="semantic">Semantic Priming (Sequential)</option>
+          <option value="affective">Affective Priming (Sequential)</option>
+        </select>
+
+        <!-- Stimulus Preview -->
+        <div class="stimulus-combined">
+          <h3>Stimulus Preview</h3>
+          <div class="stimulus-preview" id="builderPreview" style="color: #ff0000;">
+            BLUE
+          </div>
+          <div class="stimulus-breakdown">
+            <div class="stimulus-part prime">
+              <div class="stimulus-part-label">A - Prime</div>
+              <div class="stimulus-part-value" id="builderPrimeValue">Word: "BLUE"</div>
+            </div>
+            <div class="stimulus-part target">
+              <div class="stimulus-part-label">B - Target</div>
+              <div class="stimulus-part-value" id="builderTargetValue">Color: Red</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Experimenter Identity -->
+      <div class="abcd-section">
+        <h2>Experimenter Identity</h2>
+
+        <div class="identity-section">
+          <label for="experimenterEmail">Your Email</label>
+          <input type="email" id="experimenterEmail" placeholder="researcher@university.edu">
+
+          <label for="userExperimentId">Experiment ID</label>
+          <input type="text" id="userExperimentId" placeholder="e.g., study1_group_a">
+          <p style="color: #9aa6b2; font-size: 0.85rem;">
+            Use a unique ID to identify this experiment. You'll need this to retrieve your data later.
+          </p>
+        </div>
+      </div>
+
+      <!-- Generate Link Section -->
+      <div class="abcd-section">
+        <h2>Generate Participant Link</h2>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="requireExternalId">
+          <label for="requireExternalId">Require External ID (Prolific, MTurk, SONA)</label>
+        </div>
+
+        <button class="btn" onclick="generateParticipantLink()" style="margin-top: 20px;">
+          Generate Shareable Link
+        </button>
+
+        <div id="generatedLinkContainer" style="display: none; margin-top: 20px;">
+          <label>Participant Link:</label>
+          <input type="text" id="generatedLink" readonly style="font-size: 0.85rem;">
+          <button class="btn btn-secondary" onclick="copyLink()" style="margin-top: 10px;">
+            Copy Link
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Get Data Overlay -->
+  <div id="getDataOverlay" class="template-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Get My Data</h1>
+        <button class="builder-close" onclick="closeGetData()">&times;</button>
+      </div>
+
+      <div class="abcd-section">
+        <h2>Retrieve Your Data</h2>
+
+        <label for="dataEmail">Your Email</label>
+        <input type="email" id="dataEmail" placeholder="researcher@university.edu">
+
+        <label for="dataExperimentId">Experiment ID</label>
+        <input type="text" id="dataExperimentId" placeholder="e.g., study1_group_a">
+
+        <button class="btn" onclick="fetchMyData()" style="margin-top: 20px;">
+          Retrieve Data
+        </button>
+
+        <div id="dataResultsContainer" style="display: none; margin-top: 30px;">
+          <div class="success-message" id="dataResultsMessage"></div>
+
+          <div class="export-options" style="margin-top: 20px;">
+            <div class="export-option">
+              <button class="btn-export" onclick="downloadData('csv')">Download CSV</button>
+            </div>
+            <div class="export-option">
+              <button class="btn-export" onclick="downloadData('xlsx')">Download Excel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/core.js"></script>
+  <script src="js/engine.js"></script>
+
+  <!-- Main Application Script -->
+  <script>
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+      PTA.initSupabase();
+    });
+
+    // Current experiment config
+    let currentConfig = null;
+    let retrievedData = null;
+
+    // Load experiment configuration
+    function loadExperimentConfig(type) {
+      // Predefined experiment configurations
+      const configs = {
+        stroop: {
+          id: 'stroop-language',
+          name: 'Stroop Task',
+          description: 'Identify the ink color, ignore the word meaning',
+          primes: {
+            type: 'text',
+            items: ['RED', 'BLUE', 'GREEN', 'YELLOW']
+          },
+          targets: {
+            type: 'color',
+            items: ['#ff0000', '#0000ff', '#00ff00', '#ffff00']
+          },
+          presentation: {
+            mode: 'simultaneous',
+            fixation_ms: 500,
+            ITI_ms: 1000
+          },
+          response: {
+            type: 'key_press',
+            keys: { 'red': 'R', 'blue': 'B', 'green': 'G', 'yellow': 'Y' }
+          },
+          trials: {
+            randomize: true,
+            repetitions: 2
+          },
+          feedback: {
+            show: true,
+            duration_ms: 500,
+            correct_text: 'Correct!',
+            incorrect_text: 'Incorrect'
+          },
+          data: {
+            save_to_supabase: true,
+            table_name: 'experiment_results'
+          }
+        },
+        semantic: {
+          id: 'semantic-priming',
+          name: 'Semantic Priming',
+          description: 'Lexical decision task with related/unrelated primes',
+          primes: {
+            type: 'text',
+            items: ['DOCTOR', 'BREAD', 'TABLE', 'BIRD']
+          },
+          targets: {
+            type: 'text',
+            items: ['NURSE', 'BUTTER', 'CHAIR', 'WING']
+          },
+          presentation: {
+            mode: 'sequential',
+            fixation_ms: 500,
+            prime_duration_ms: 200,
+            ISI_ms: 50,
+            ITI_ms: 1500
+          },
+          response: {
+            type: 'key_press',
+            keys: { 'word': 'J', 'nonword': 'F' }
+          },
+          trials: {
+            randomize: true,
+            repetitions: 2
+          },
+          data: {
+            save_to_supabase: true,
+            table_name: 'experiment_results'
+          }
+        },
+        affective: {
+          id: 'affective-priming',
+          name: 'Affective Priming',
+          description: 'Evaluate target valence after emotional primes',
+          primes: {
+            type: 'text',
+            items: ['HAPPY', 'LOVE', 'SAD', 'HATE']
+          },
+          targets: {
+            type: 'text',
+            items: ['JOY', 'PEACE', 'FEAR', 'ANGER']
+          },
+          presentation: {
+            mode: 'sequential',
+            fixation_ms: 500,
+            prime_duration_ms: 150,
+            ISI_ms: 100,
+            ITI_ms: 1500
+          },
+          response: {
+            type: 'key_press',
+            keys: { 'positive': 'P', 'negative': 'N' }
+          },
+          trials: {
+            randomize: true,
+            repetitions: 2
+          },
+          data: {
+            save_to_supabase: true,
+            table_name: 'experiment_results'
+          }
+        }
+      };
+
+      currentConfig = configs[type] || null;
+    }
+
+    // Show Try Experiment
+    function showTryExperiment() {
+      const type = document.getElementById('experimentSelect').value;
+      if (!type) {
+        alert('Please select an experiment type from the sidebar first.');
+        return;
+      }
+
+      loadExperimentConfig(type);
+      if (!currentConfig) {
+        alert('Configuration not found.');
+        return;
+      }
+
+      // Set up the experiment UI
+      document.getElementById('experimentTitle').textContent = currentConfig.name;
+      document.getElementById('experimentDescription').textContent = currentConfig.description;
+
+      // Set up response keys display
+      const keysContainer = document.getElementById('responseKeys');
+      keysContainer.innerHTML = '';
+      for (const [label, key] of Object.entries(currentConfig.response.keys)) {
+        keysContainer.innerHTML += `
+          <div class="key-hint">
+            <span class="key">${key}</span>
+            <span class="label">${label}</span>
+          </div>
+        `;
+      }
+
+      // Show overlay
+      document.getElementById('experimentOverlay').classList.add('active');
+      document.getElementById('experimentSetup').style.display = 'block';
+      document.getElementById('experimentTrial').classList.remove('active');
+      document.getElementById('experimentResults').classList.remove('active');
+    }
+
+    // Start experiment
+    function startExperiment() {
+      if (!currentConfig) {
+        alert('No experiment configured.');
+        return;
+      }
+
+      // Initialize engine
+      PTA.Engine.init(currentConfig)
+        .bindElements({
+          stimulusDisplay: 'stimulusDisplay',
+          progressBar: 'progressFill',
+          progressText: 'progressText',
+          setupScreen: 'experimentSetup',
+          trialScreen: 'experimentTrial',
+          resultsScreen: 'experimentResults'
+        })
+        .generateTrials()
+        .start();
+    }
+
+    // Close experiment
+    function closeExperiment() {
+      PTA.Engine.reset();
+      document.getElementById('experimentOverlay').classList.remove('active');
+    }
+
+    // Restart experiment
+    function restartExperiment() {
+      document.getElementById('experimentResults').classList.remove('active');
+      document.getElementById('experimentSetup').style.display = 'block';
+    }
+
+    // Export results
+    function exportResults(format) {
+      const results = PTA.Engine.getResults();
+      const filename = `${currentConfig.id}_results_${Date.now()}`;
+
+      if (format === 'csv') {
+        PTA.exportToCSV(results, filename + '.csv');
+      } else if (format === 'xlsx') {
+        PTA.exportToExcel(results, filename + '.xlsx');
+      }
+    }
+
+    // Listen for experiment complete
+    document.addEventListener('experimentComplete', function(e) {
+      const { results, stats } = e.detail;
+
+      // Display results
+      const grid = document.getElementById('resultsGrid');
+      grid.innerHTML = `
+        <div class="result-card">
+          <h3>Mean RT</h3>
+          <div class="result-value">${Math.round(stats.meanRT)}</div>
+          <div class="result-unit">milliseconds</div>
+        </div>
+        <div class="result-card">
+          <h3>Accuracy</h3>
+          <div class="result-value">${stats.accuracy.toFixed(1)}%</div>
+          <div class="result-unit">${results.filter(r => r.correct).length}/${stats.totalTrials} correct</div>
+        </div>
+      `;
+    });
+
+    // Template Builder functions
+    function showTemplateBuilder() {
+      document.getElementById('templateBuilderOverlay').classList.add('active');
+    }
+
+    function closeTemplateBuilder() {
+      document.getElementById('templateBuilderOverlay').classList.remove('active');
+    }
+
+    function updateBuilderPreview() {
+      // Update preview based on selected experiment type
+      const type = document.getElementById('builderExperimentType').value;
+      const preview = document.getElementById('builderPreview');
+      const primeValue = document.getElementById('builderPrimeValue');
+      const targetValue = document.getElementById('builderTargetValue');
+
+      if (type === 'stroop') {
+        preview.textContent = 'BLUE';
+        preview.style.color = '#ff0000';
+        primeValue.textContent = 'Word: "BLUE"';
+        targetValue.textContent = 'Color: Red';
+      } else if (type === 'semantic') {
+        preview.textContent = 'NURSE';
+        preview.style.color = '#ffffff';
+        primeValue.textContent = 'Prime: "DOCTOR"';
+        targetValue.textContent = 'Target: "NURSE"';
+      } else if (type === 'affective') {
+        preview.textContent = 'JOY';
+        preview.style.color = '#ffffff';
+        primeValue.textContent = 'Prime: "HAPPY"';
+        targetValue.textContent = 'Target: "JOY"';
+      }
+    }
+
+    function generateParticipantLink() {
+      const email = document.getElementById('experimenterEmail').value;
+      const expId = document.getElementById('userExperimentId').value;
+      const expType = document.getElementById('builderExperimentType').value;
+      const requireExtId = document.getElementById('requireExternalId').checked;
+
+      if (!email || !expId) {
+        alert('Please enter your email and experiment ID.');
+        return;
+      }
+
+      loadExperimentConfig(expType);
+      if (!currentConfig) {
+        alert('Please select an experiment type.');
+        return;
+      }
+
+      // Add experimenter info to config
+      currentConfig.experimenter = {
+        email: email,
+        experiment_id: expId
+      };
+      currentConfig.requireExternalId = requireExtId;
+
+      // Encode config
+      const encoded = PTA.encodeConfig(currentConfig);
+      const baseUrl = window.location.origin + window.location.pathname;
+      const link = baseUrl + '?config=' + encoded;
+
+      document.getElementById('generatedLink').value = link;
+      document.getElementById('generatedLinkContainer').style.display = 'block';
+    }
+
+    function copyLink() {
+      const linkInput = document.getElementById('generatedLink');
+      linkInput.select();
+      document.execCommand('copy');
+      alert('Link copied to clipboard!');
+    }
+
+    // Get Data functions
+    function showGetData() {
+      document.getElementById('getDataOverlay').classList.add('active');
+    }
+
+    function closeGetData() {
+      document.getElementById('getDataOverlay').classList.remove('active');
+    }
+
+    async function fetchMyData() {
+      const email = document.getElementById('dataEmail').value;
+      const expId = document.getElementById('dataExperimentId').value;
+
+      if (!email || !expId) {
+        alert('Please enter your email and experiment ID.');
+        return;
+      }
+
+      const { data, error } = await PTA.fetchExperimenterData('experiment_results', email, expId);
+
+      if (error) {
+        alert('Error fetching data: ' + error.message);
+        return;
+      }
+
+      retrievedData = data;
+
+      document.getElementById('dataResultsMessage').textContent =
+        `Found ${data.length} trials from your experiment.`;
+      document.getElementById('dataResultsContainer').style.display = 'block';
+    }
+
+    function downloadData(format) {
+      if (!retrievedData || retrievedData.length === 0) {
+        alert('No data to download.');
+        return;
+      }
+
+      const email = document.getElementById('dataEmail').value;
+      const expId = document.getElementById('dataExperimentId').value;
+      const filename = `${expId}_${email.split('@')[0]}_${Date.now()}`;
+
+      if (format === 'csv') {
+        PTA.exportToCSV(retrievedData, filename + '.csv');
+      } else if (format === 'xlsx') {
+        PTA.exportToExcel(retrievedData, filename + '.xlsx');
+      }
+    }
+
+    // Learn More function
+    function showLearnMore() {
+      alert('Documentation coming soon!\n\nThe ABCD Framework provides a unified definition of priming across disciplines.\n\nFor more information, see Sivroni & Stark (2025).');
+    }
+
+    // Check for config in URL (participant mode)
+    function checkUrlConfig() {
+      const params = PTA.getUrlParams();
+      if (params.config) {
+        const config = PTA.decodeConfig(params.config);
+        if (config) {
+          currentConfig = config;
+          // Auto-start experiment for participants
+          showTryExperiment();
+        }
+      }
+    }
+
+    // Run on load
+    document.addEventListener('DOMContentLoaded', function() {
+      PTA.initSupabase();
+      checkUrlConfig();
+    });
+  </script>
+
+</body>
+</html>

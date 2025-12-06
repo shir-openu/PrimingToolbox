@@ -6,7 +6,11 @@ PYTHON/
 JAVA_SCRIPT/
 docs/
 src/
+versions/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Temp files
+*.tmp.*

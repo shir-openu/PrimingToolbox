@@ -82,42 +82,43 @@ PTA.Engine = {
     const trials = [];
     const config = this.config;
 
-    // Get primes and targets
-    const primes = config.primes.items;
-    const targets = config.targets.items;
+    // Check experiment type for specialized trial generation
+    if (config.type === 'stroop') {
+      // Stroop-specific trial generation
+      this.generateStroopTrials(trials);
+    } else if (config.primes && config.primes.items) {
+      // Generic trial generation
+      const primes = config.primes.items;
+      const targets = config.targets.items;
 
-    // Generate trials based on trial configuration
-    if (config.trials.pairings) {
-      // Explicit pairings provided
-      for (const pairing of config.trials.pairings) {
-        for (let rep = 0; rep < (config.trials.repetitions || 1); rep++) {
-          trials.push({
-            primeIndex: pairing.primeIndex,
-            targetIndex: pairing.targetIndex,
-            prime: primes[pairing.primeIndex],
-            target: targets[pairing.targetIndex],
-            condition: pairing.condition,
-            correctResponse: pairing.correctResponse
-          });
-        }
-      }
-    } else if (config.trials.conditions) {
-      // Generate based on conditions
-      // This is experiment-specific logic that can be customized
-      console.log('PTA Engine: Condition-based trial generation');
-    } else {
-      // Default: pair each prime with each target
-      for (let p = 0; p < primes.length; p++) {
-        for (let t = 0; t < targets.length; t++) {
+      if (config.trials.pairings) {
+        // Explicit pairings provided
+        for (const pairing of config.trials.pairings) {
           for (let rep = 0; rep < (config.trials.repetitions || 1); rep++) {
             trials.push({
-              primeIndex: p,
-              targetIndex: t,
-              prime: primes[p],
-              target: targets[t],
-              condition: 'default',
-              correctResponse: null
+              primeIndex: pairing.primeIndex,
+              targetIndex: pairing.targetIndex,
+              prime: primes[pairing.primeIndex],
+              target: targets[pairing.targetIndex],
+              condition: pairing.condition,
+              correctResponse: pairing.correctResponse
             });
+          }
+        }
+      } else {
+        // Default: pair each prime with each target
+        for (let p = 0; p < primes.length; p++) {
+          for (let t = 0; t < targets.length; t++) {
+            for (let rep = 0; rep < (config.trials.repetitions || 1); rep++) {
+              trials.push({
+                primeIndex: p,
+                targetIndex: t,
+                prime: primes[p],
+                target: targets[t],
+                condition: 'default',
+                correctResponse: null
+              });
+            }
           }
         }
       }
@@ -134,6 +135,46 @@ PTA.Engine = {
     console.log('PTA Engine: Generated', this.state.totalTrials, 'trials');
 
     return this;
+  },
+
+  // Generate Stroop-specific trials (congruent/incongruent)
+  generateStroopTrials: function(trials) {
+    const config = this.config;
+    const colors = Object.keys(config.colors);
+    const congruentReps = config.trials.congruent_reps || 2;
+    const incongruentReps = config.trials.incongruent_reps || 2;
+
+    colors.forEach(inkColor => {
+      // Congruent trials: word matches ink color
+      for (let i = 0; i < congruentReps; i++) {
+        trials.push({
+          inkColor: inkColor,
+          inkHex: config.colors[inkColor].hex,
+          word: config.colors[inkColor].word,
+          wordMeaning: inkColor,
+          congruent: true,
+          correctResponse: inkColor
+        });
+      }
+
+      // Incongruent trials: word differs from ink color
+      const otherColors = colors.filter(c => c !== inkColor);
+      for (let i = 0; i < incongruentReps; i++) {
+        const wordMeaning = otherColors[i % otherColors.length];
+        trials.push({
+          inkColor: inkColor,
+          inkHex: config.colors[inkColor].hex,
+          word: config.colors[wordMeaning].word,
+          wordMeaning: wordMeaning,
+          congruent: false,
+          correctResponse: inkColor
+        });
+      }
+    });
+
+    console.log('PTA Engine: Generated Stroop trials -',
+      trials.filter(t => t.congruent).length, 'congruent,',
+      trials.filter(t => !t.congruent).length, 'incongruent');
   },
 
   /* =====================================================
@@ -299,17 +340,19 @@ PTA.Engine = {
 
   // Render simultaneous stimulus (e.g., Stroop)
   renderSimultaneousStimulus: function(trial) {
-    // Default: show target text in prime color (Stroop-style)
-    // This can be customized based on experiment type
-    if (this.config.primes.type === 'text' && this.config.targets.type === 'color') {
+    // Check if this is a Stroop trial
+    if (this.config.type === 'stroop' && trial.inkHex && trial.word) {
+      // Stroop: word displayed in ink color
+      return `<span style="color: ${trial.inkHex}; font-size: 4rem; font-weight: bold;">${trial.word}</span>`;
+    } else if (this.config.primes && this.config.primes.type === 'text' && this.config.targets.type === 'color') {
       // Text displayed in a color (classic Stroop)
       return `<span style="color: ${trial.target};">${trial.prime}</span>`;
-    } else if (this.config.primes.type === 'color' && this.config.targets.type === 'text') {
+    } else if (this.config.primes && this.config.primes.type === 'color' && this.config.targets.type === 'text') {
       // Color with text overlay
       return `<span style="color: ${trial.prime};">${trial.target}</span>`;
     } else {
       // Default: show both
-      return `<span>${trial.prime}</span><br><span>${trial.target}</span>`;
+      return `<span>${trial.prime || ''}</span><br><span>${trial.target || ''}</span>`;
     }
   },
 
@@ -367,16 +410,33 @@ PTA.Engine = {
     const rt = Date.now() - trial.targetOnset;
     const correct = trial.correctResponse ? (response === trial.correctResponse) : null;
 
-    const result = {
-      trial_number: this.state.currentTrial + 1,
-      prime: trial.prime,
-      target: trial.target,
-      condition: trial.condition,
-      response: response,
-      correct: correct,
-      rt: rt,
-      timestamp: new Date().toISOString()
-    };
+    // Build result object based on experiment type
+    let result;
+    if (this.config.type === 'stroop') {
+      result = {
+        trial_number: this.state.currentTrial + 1,
+        word: trial.word,
+        word_meaning: trial.wordMeaning,
+        ink_color: trial.inkColor,
+        congruent: trial.congruent,
+        response: response,
+        correct_response: trial.correctResponse,
+        correct: correct,
+        rt: rt,
+        timestamp: new Date().toISOString()
+      };
+    } else {
+      result = {
+        trial_number: this.state.currentTrial + 1,
+        prime: trial.prime,
+        target: trial.target,
+        condition: trial.condition,
+        response: response,
+        correct: correct,
+        rt: rt,
+        timestamp: new Date().toISOString()
+      };
+    }
 
     this.state.results.push(result);
 
@@ -464,18 +524,45 @@ PTA.Engine = {
   // Calculate and display results
   displayResults: function() {
     const results = this.state.results;
+    let stats;
 
-    // Calculate overall stats
-    const rts = results.filter(r => r.rt && r.correct !== false).map(r => r.rt);
-    const correctTrials = results.filter(r => r.correct === true).length;
-    const totalTrials = results.length;
+    if (this.config.type === 'stroop') {
+      // Stroop-specific stats
+      const correctResults = results.filter(r => r.correct === true);
+      const congruentResults = correctResults.filter(r => r.congruent === true);
+      const incongruentResults = correctResults.filter(r => r.congruent === false);
 
-    const stats = {
-      meanRT: PTA.mean(rts),
-      medianRT: PTA.median(rts),
-      accuracy: (correctTrials / totalTrials) * 100,
-      totalTrials: totalTrials
-    };
+      const congruentRT = PTA.mean(congruentResults.map(r => r.rt));
+      const incongruentRT = PTA.mean(incongruentResults.map(r => r.rt));
+      const stroopEffect = incongruentRT - congruentRT;
+
+      const correctTrials = results.filter(r => r.correct === true).length;
+      const totalTrials = results.length;
+      const errorRate = ((totalTrials - correctTrials) / totalTrials) * 100;
+
+      stats = {
+        meanRT: PTA.mean(correctResults.map(r => r.rt)),
+        congruentRT: congruentRT,
+        incongruentRT: incongruentRT,
+        stroopEffect: stroopEffect,
+        accuracy: (correctTrials / totalTrials) * 100,
+        errorRate: errorRate,
+        totalTrials: totalTrials
+      };
+    } else {
+      // Generic stats
+      const rts = results.filter(r => r.rt && r.correct !== false).map(r => r.rt);
+      const correctTrials = results.filter(r => r.correct === true).length;
+      const totalTrials = results.length;
+
+      stats = {
+        meanRT: PTA.mean(rts),
+        medianRT: PTA.median(rts),
+        accuracy: (correctTrials / totalTrials) * 100,
+        errorRate: ((totalTrials - correctTrials) / totalTrials) * 100,
+        totalTrials: totalTrials
+      };
+    }
 
     // Emit results event for custom handling
     const event = new CustomEvent('experimentComplete', {

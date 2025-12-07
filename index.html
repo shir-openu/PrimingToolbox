@@ -410,11 +410,11 @@
       <!-- Setup Screen -->
       <div class="stroop-setup" id="stroop-setup" style="max-height: 90vh; overflow-y: auto;">
         <h2>Stroop Language Dominance Test</h2>
-        <p class="subtitle">Discover which language you process faster</p>
+        <p class="subtitle">Experience being a participant - discover which language you process faster</p>
 
         <div class="language-selectors">
           <div class="language-select-group">
-            <label>Language 1 (Primary)</label>
+            <label>Language 1 (Native/Primary)</label>
             <select id="language1">
               <option value="en">English</option>
               <option value="he">Hebrew</option>
@@ -441,27 +441,50 @@
           </div>
         </div>
 
+        <!-- Clear Instructions Box -->
         <div style="background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.4); border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left;">
-          <h3 style="color: #ff4db8; margin-bottom: 15px;">Instructions:</h3>
-          <p style="color: #e5e7eb; margin-bottom: 20px; line-height: 1.6;">
-            You will see <strong>color words</strong> in <strong>colored ink</strong>.<br>
-            Your task: Identify the <strong style="color: #ff4db8;">INK COLOR</strong>, NOT the word meaning.
+          <h3 style="color: #ff4db8; margin-bottom: 15px; font-size: 1.1rem;">Instructions / How to Play:</h3>
+
+          <p style="color: #e5e7eb; margin-bottom: 20px; font-size: 1rem; line-height: 1.6;">
+            You will see <strong>color words</strong> written in <strong>colored ink</strong>.<br>
+            Your task: Identify the <strong style="color: #ff4db8;">INK COLOR</strong> (the color you SEE), <strong>NOT</strong> the word meaning.
           </p>
-          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 15px;">
-            <p style="color: #9aa6b2; margin-bottom: 10px;">Example:</p>
-            <div style="display: flex; gap: 30px; justify-content: center; flex-wrap: wrap;">
+
+          <!-- Visual Example -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #9aa6b2; margin-bottom: 15px; font-size: 0.9rem;">Example:</p>
+            <div style="display: flex; align-items: center; gap: 30px; flex-wrap: wrap; justify-content: center;">
               <div style="text-align: center;">
                 <span style="font-size: 2rem; font-weight: bold; color: #4444ff;">RED</span>
-                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 5px;">Press <strong>B</strong> (Blue ink)</p>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">The word says "RED"<br>but the ink is <strong style="color: #4444ff;">BLUE</strong></p>
+                <p style="color: #44ff44; font-size: 0.9rem; margin-top: 5px;">Press <strong>B</strong> for Blue</p>
               </div>
               <div style="text-align: center;">
                 <span style="font-size: 2rem; font-weight: bold; color: #ff4444;">GREEN</span>
-                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 5px;">Press <strong>R</strong> (Red ink)</p>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">The word says "GREEN"<br>but the ink is <strong style="color: #ff4444;">RED</strong></p>
+                <p style="color: #44ff44; font-size: 0.9rem; margin-top: 5px;">Press <strong>R</strong> for Red</p>
               </div>
             </div>
           </div>
-          <p style="color: #ffff44;">Respond as FAST and ACCURATELY as possible!</p>
+
+          <p style="color: #ffff44; font-size: 0.95rem; margin-bottom: 0;">
+            Respond as FAST and ACCURATELY as possible!
+          </p>
         </div>
+
+        <!-- Hebrew Instructions -->
+        <details style="background: rgba(255, 77, 184, 0.1); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 25px; cursor: pointer;">
+          <summary style="color: #ff4db8; font-size: 0.95rem;">Click for Hebrew Instructions / הוראות בעברית</summary>
+          <div style="margin-top: 15px; text-align: right; direction: rtl;">
+            <p style="color: #e5e7eb; line-height: 1.8; font-size: 0.95rem;">
+              <strong>הוראות:</strong><br>
+              יוצגו בפניך מילים שמתארות צבעים, כתובות בדיו צבעוני.<br>
+              המשימה שלך: לזהות את <strong style="color: #ff4db8;">צבע הדיו</strong> (הצבע שאת/ה רואה), <strong>ולא</strong> את משמעות המילה.<br><br>
+              <strong>דוגמה:</strong> אם המילה "אדום" כתובה בדיו <span style="color: #4444ff;">כחול</span> - לחצ/י על <strong>B</strong> (כחול).<br><br>
+              <span style="color: #ffff44;">הגיב/י מהר ומדויק ככל האפשר!</span>
+            </p>
+          </div>
+        </details>
 
         <button class="btn" onclick="Stroop.start()">Start Experiment</button>
         <button class="btn btn-secondary" style="margin-left: 15px;" onclick="Stroop.close()">Cancel</button>
@@ -485,11 +508,13 @@
       <!-- Results Screen -->
       <div class="stroop-results" id="stroop-results">
         <h2>Your Results</h2>
+
         <div class="dominance-result">
           <h3>Language Dominance</h3>
           <div class="dominance-language" id="dominant-language">-</div>
           <p class="dominance-explanation" id="dominance-explanation"></p>
         </div>
+
         <div class="results-grid">
           <div class="result-card">
             <h3 id="lang1-name">Language 1</h3>
@@ -504,23 +529,31 @@
           <div class="result-card">
             <h3>Stroop Effect (L1)</h3>
             <div class="result-value" id="stroop-effect1">-</div>
-            <div class="result-unit">ms</div>
+            <div class="result-unit">ms (incongruent - congruent)</div>
           </div>
           <div class="result-card">
             <h3>Stroop Effect (L2)</h3>
             <div class="result-value" id="stroop-effect2">-</div>
-            <div class="result-unit">ms</div>
+            <div class="result-unit">ms (incongruent - congruent)</div>
           </div>
         </div>
+
         <div class="stroop-buttons">
           <button class="btn" onclick="Stroop.start()">Try Again</button>
           <button class="btn btn-secondary" onclick="Stroop.close()">Close</button>
         </div>
-        <div class="export-section" style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
-          <h4 style="color: #ff4db8; margin-bottom: 15px;">Export Results</h4>
-          <div style="display: flex; gap: 20px; justify-content: center;">
-            <button class="btn-export" onclick="Stroop.exportCSV()">Download CSV</button>
-            <button class="btn-export" onclick="Stroop.exportXLSX()">Download Excel</button>
+
+        <div class="export-section">
+          <h4>Export Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn btn-export" onclick="Stroop.exportCSV()">Download CSV</button>
+              <p class="export-desc">Universal format for data analysis software (Python, R, MATLAB, SPSS)</p>
+            </div>
+            <div class="export-option">
+              <button class="btn btn-export" onclick="Stroop.exportXLSX()">Download Excel</button>
+              <p class="export-desc">Opens directly in Excel with formatted sheets - no dialogs or questions</p>
+            </div>
           </div>
         </div>
       </div>
@@ -529,29 +562,60 @@
 
   <!-- Stroop Template Builder Overlay -->
   <div class="template-builder-overlay" id="stroop-builder-overlay">
-    <div class="template-builder">
+    <div class="template-builder" style="max-width: 900px;">
       <div class="builder-header">
         <h1>Stroop Experiment - Template Builder</h1>
         <button class="builder-close" onclick="Stroop.closeBuilder()">&times;</button>
       </div>
 
-      <div class="abcd-section">
-        <h2>Experimenter Identity</h2>
-        <p style="color: #9aa6b2; margin-bottom: 20px;">These fields identify your experiment for data retrieval.</p>
+      <!-- Step 1: Experimenter Identification -->
+      <div class="experimenter-id-section" style="margin-bottom: 30px; padding: 25px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.15), rgba(102, 126, 234, 0.15)); border-radius: 16px; border: 2px solid rgba(255, 77, 184, 0.4);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+          <span style="background: #ff4db8; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">1</span>
+          <h3 style="color: #ffffff; margin: 0; font-size: 1.2rem;">Your Experiment Identity</h3>
+        </div>
+        <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
+          These two fields identify YOUR specific experiment. You'll need both to download your data later.
+        </p>
 
-        <label>Your Email</label>
-        <input type="email" id="stroopExperimenterEmail" placeholder="your.email@university.edu">
+        <!-- Email -->
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Your Email</label>
+          <input type="email" id="stroopExperimenterEmail" placeholder="your.email@university.edu"
+                 style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                        background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                 oninput="this.style.borderColor = this.validity.valid && this.value ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'">
+        </div>
 
-        <label>Experiment ID</label>
-        <input type="text" id="stroopExperimentId" placeholder="e.g., stroop_study_2025">
+        <!-- Experiment ID -->
+        <div>
+          <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Experiment ID <span style="color: #9aa6b2; font-weight: normal;">(a unique name for this experiment)</span></label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="stroopExperimentId" placeholder="e.g., stroop_study_dec2025"
+                   style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                          background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                   oninput="this.style.borderColor = this.value.length >= 3 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'">
+            <button onclick="document.getElementById('stroopExperimentId').value = 'stroop_' + Date.now().toString(36); document.getElementById('stroopExperimentId').style.borderColor = 'rgba(74, 222, 128, 0.7)';" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
+          </div>
+          <p style="margin-top: 8px; font-size: 12px; color: #9aa6b2;">
+            Use a descriptive name you'll remember. If you run multiple experiments, each should have a unique ID.
+          </p>
+        </div>
       </div>
 
-      <div class="abcd-section">
-        <h2>Language Settings</h2>
+      <!-- Step 2: Language Settings -->
+      <div class="abcd-section" style="margin-bottom: 30px; padding: 25px; background: rgba(17, 24, 39, 0.5); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+          <span style="background: #667eea; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">2</span>
+          <h3 style="color: #ffffff; margin: 0; font-size: 1.2rem;">Language Settings</h3>
+        </div>
+        <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
+          Select the two languages for the bilingual Stroop test. Trials will be randomized between both languages.
+        </p>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
           <div>
-            <label>Language 1 (Primary)</label>
-            <select id="builder-lang1">
+            <label style="color: #ff4db8; margin-bottom: 8px; display: block;">Language 1 (Primary)</label>
+            <select id="builder-lang1" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 15px;">
               <option value="en">English</option>
               <option value="he">Hebrew</option>
               <option value="es">Spanish</option>
@@ -563,8 +627,8 @@
             </select>
           </div>
           <div>
-            <label>Language 2 (Secondary)</label>
-            <select id="builder-lang2">
+            <label style="color: #ff4db8; margin-bottom: 8px; display: block;">Language 2 (Secondary)</label>
+            <select id="builder-lang2" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 15px;">
               <option value="he">Hebrew</option>
               <option value="en">English</option>
               <option value="es">Spanish</option>
@@ -578,9 +642,35 @@
         </div>
       </div>
 
-      <div class="builder-actions" style="margin-top: 30px; display: flex; gap: 20px; justify-content: center;">
-        <button class="btn btn-secondary" onclick="Stroop.previewFromBuilder()">Preview Experiment</button>
-        <button class="btn" onclick="Stroop.generateLink()">Generate Shareable Link</button>
+      <!-- Step 3: Preview & Generate -->
+      <div class="abcd-section" style="padding: 25px; background: rgba(17, 24, 39, 0.5); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+          <span style="background: #22c55e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">3</span>
+          <h3 style="color: #ffffff; margin: 0; font-size: 1.2rem;">Preview & Generate Link</h3>
+        </div>
+
+        <!-- Try It CTA -->
+        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border: 2px solid rgba(102, 126, 234, 0.5); border-radius: 12px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+          <div>
+            <div style="color: #ffffff; font-size: 1.1rem; font-weight: 600; margin-bottom: 5px;">
+              TRY IT YOURSELF <span style="color: #ff4db8;">→</span>
+            </div>
+            <div style="color: #9aa6b2; font-size: 0.9rem;">
+              Experience the experiment from a participant's perspective
+            </div>
+          </div>
+          <button class="btn btn-secondary" onclick="Stroop.previewFromBuilder()" style="white-space: nowrap;">Start Preview</button>
+        </div>
+
+        <!-- Generate Link Button -->
+        <div style="text-align: center;">
+          <button class="btn" onclick="Stroop.generateLink()" style="padding: 18px 40px; font-size: 1.1rem;">
+            Generate Shareable Link
+          </button>
+          <p style="color: #9aa6b2; margin-top: 15px; font-size: 0.85rem;">
+            Creates a unique link you can share with participants. Their results will be saved with your Experiment ID.
+          </p>
+        </div>
       </div>
     </div>
   </div>

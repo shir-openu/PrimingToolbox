@@ -3452,11 +3452,9 @@
     }
 
     function handleModuleClick(moduleId) {
-      if (moduleId === 'experience') {
-        // Open Stroop experiment - experience from participant's perspective
-        openStroop();
-      } else if (moduleId === 'create') {
-        // Open template builder - for now, Stroop is the main template
+      if (moduleId === 'experience' || moduleId === 'create') {
+        // Both EXPERIENCE and CREATE open the Template Builder
+        // From there, users can either preview (try it) or generate shareable links
         openStroopBuilder();
       } else {
         console.log('Module clicked:', moduleId);

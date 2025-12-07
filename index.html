@@ -492,6 +492,8 @@
 
       <!-- Trial Screen -->
       <div class="stroop-trial" id="stroop-trial">
+        <!-- Exit button for mid-experiment exit -->
+        <button onclick="Stroop.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
         <div class="stroop-progress">
           <div class="progress-bar">
             <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
@@ -803,13 +805,9 @@
     // Show Try Experiment
     function showTryExperiment() {
       const type = document.getElementById('experimentSelect').value;
-      if (!type) {
-        alert('Please select an experiment type from the sidebar first.');
-        return;
-      }
 
-      // Use Stroop module for Stroop experiment
-      if (type === 'stroop') {
+      // Default to Stroop if nothing selected, or use Stroop module for Stroop experiment
+      if (type === 'stroop' || !type) {
         Stroop.open();
         return;
       }
@@ -945,8 +943,8 @@
     function showTemplateBuilder() {
       const type = document.getElementById('experimentSelect').value;
 
-      // Use Stroop Builder for Stroop experiment
-      if (type === 'stroop') {
+      // Use Stroop Builder for Stroop experiment (or default to Stroop if nothing selected)
+      if (type === 'stroop' || !type) {
         Stroop.openBuilder();
         return;
       }

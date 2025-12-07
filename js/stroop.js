@@ -487,8 +487,11 @@ window.Stroop = {
   generateLink: function() {
     const lang1 = document.getElementById('builder-lang1').value;
     const lang2 = document.getElementById('builder-lang2').value;
-    const email = document.getElementById('stroopExperimenterEmail').value.trim();
-    const expId = document.getElementById('stroopExperimentId').value.trim();
+    // Support both ID formats for compatibility
+    const emailEl = document.getElementById('stroopExperimenterEmail') || document.getElementById('experimenterEmail');
+    const expIdEl = document.getElementById('stroopExperimentId') || document.getElementById('userExperimentId');
+    const email = emailEl ? emailEl.value.trim() : '';
+    const expId = expIdEl ? expIdEl.value.trim() : '';
 
     if (lang1 === lang2) {
       alert('Please select two different languages.');

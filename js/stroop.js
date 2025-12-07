@@ -514,28 +514,81 @@ window.Stroop = {
       stimuli: this.builderStimuli
     };
 
-    const configStr = btoa(JSON.stringify(config));
-    const link = window.location.href.split('?')[0] + '?exp=' + configStr;
+    try {
+      // Use encodeURIComponent to handle UTF-8 characters properly
+      const configStr = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
+      const link = window.location.href.split('?')[0] + '?exp=' + configStr;
 
-    // Show modal with link
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.9); z-index: 2000;
-      display: flex; justify-content: center; align-items: center;
-    `;
-    modal.innerHTML = `
-      <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 20px; padding: 40px; max-width: 650px; text-align: center;">
-        <h2 style="color: #ffffff; margin-bottom: 20px;">Your Experiment Link is Ready!</h2>
-        <p style="color: #9aa6b2; margin-bottom: 10px;">Send this link to your participants:</p>
-        <input type="text" value="${link}" readonly style="width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;">
-        <div style="display: flex; gap: 15px; justify-content: center;">
-          <button onclick="navigator.clipboard.writeText('${link}').then(() => alert('Link copied!'))" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Copy Link</button>
-          <button onclick="this.closest('div').parentElement.remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Close</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
+      // Show modal with link
+      const modal = document.createElement('div');
+      modal.id = 'stroop-link-modal';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); z-index: 2000;
+        display: flex; justify-content: center; align-items: center;
+      `;
+
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3);
+        border-radius: 20px; padding: 40px; max-width: 650px; text-align: center;
+      `;
+
+      const title = document.createElement('h2');
+      title.style.cssText = 'color: #ffffff; margin-bottom: 20px;';
+      title.textContent = 'Your Experiment Link is Ready!';
+
+      const subtitle = document.createElement('p');
+      subtitle.style.cssText = 'color: #9aa6b2; margin-bottom: 10px;';
+      subtitle.textContent = 'Send this link to your participants:';
+
+      const linkInput = document.createElement('input');
+      linkInput.type = 'text';
+      linkInput.value = link;
+      linkInput.readOnly = true;
+      linkInput.style.cssText = `
+        width: 100%; padding: 15px; background: rgba(0,0,0,0.3);
+        border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+        color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;
+      `;
+
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.cssText = 'display: flex; gap: 15px; justify-content: center;';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy Link';
+      copyBtn.style.cssText = `
+        background: linear-gradient(135deg, #667eea, #764ba2); border: none;
+        color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;
+      `;
+      copyBtn.onclick = function() {
+        navigator.clipboard.writeText(link).then(() => alert('Link copied!'));
+      };
+
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.style.cssText = `
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;
+      `;
+      closeBtn.onclick = function() {
+        modal.remove();
+      };
+
+      buttonContainer.appendChild(copyBtn);
+      buttonContainer.appendChild(closeBtn);
+      modalContent.appendChild(title);
+      modalContent.appendChild(subtitle);
+      modalContent.appendChild(linkInput);
+      modalContent.appendChild(buttonContainer);
+      modal.appendChild(modalContent);
+      document.body.appendChild(modal);
+
+      console.log('Stroop link generated:', link);
+    } catch (error) {
+      console.error('Error generating link:', error);
+      alert('Error generating link. Please try again.');
+    }
   },
 
   // =====================================================
@@ -547,7 +600,8 @@ window.Stroop = {
 
     if (expConfig) {
       try {
-        const config = JSON.parse(atob(expConfig));
+        // Decode UTF-8 properly
+        const config = JSON.parse(decodeURIComponent(escape(atob(expConfig))));
         if (config.template === 'stroop-language') {
           this.isParticipantMode = true;
           this.experimenterEmail = config.experimenterEmail || '';

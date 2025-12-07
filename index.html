@@ -562,9 +562,9 @@
     </div>
   </div>
 
-  <!-- Stroop Template Builder Overlay -->
+  <!-- Stroop Template Builder Overlay (V30 Structure) -->
   <div class="template-builder-overlay" id="stroop-builder-overlay">
-    <div class="template-builder" style="max-width: 900px;">
+    <div class="template-builder">
       <div class="builder-header">
         <h1>Stroop Experiment - Template Builder</h1>
         <button class="builder-close" onclick="Stroop.closeBuilder()">&times;</button>
@@ -597,7 +597,7 @@
                    style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
                           background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
                    oninput="this.style.borderColor = this.value.length >= 3 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'">
-            <button onclick="document.getElementById('stroopExperimentId').value = 'stroop_' + Date.now().toString(36); document.getElementById('stroopExperimentId').style.borderColor = 'rgba(74, 222, 128, 0.7)';" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
+            <button onclick="Stroop.generateExperimentId()" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
           </div>
           <p style="margin-top: 8px; font-size: 12px; color: #9aa6b2;">
             Use a descriptive name you'll remember. If you run multiple experiments, each should have a unique ID.
@@ -605,75 +605,226 @@
         </div>
       </div>
 
-      <!-- Step 2: Language Settings -->
-      <div class="abcd-section" style="margin-bottom: 30px; padding: 25px; background: rgba(17, 24, 39, 0.5); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-          <span style="background: #667eea; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">2</span>
-          <h3 style="color: #ffffff; margin: 0; font-size: 1.2rem;">Language Settings</h3>
-        </div>
-        <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
-          Select the two languages for the bilingual Stroop test. Trials will be randomized between both languages.
-        </p>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-          <div>
-            <label style="color: #ff4db8; margin-bottom: 8px; display: block;">Language 1 (Primary)</label>
-            <select id="builder-lang1" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 15px;">
-              <option value="en">English</option>
-              <option value="he">Hebrew</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="ru">Russian</option>
-              <option value="ar">Arabic</option>
-              <option value="zh">Chinese</option>
-            </select>
-          </div>
-          <div>
-            <label style="color: #ff4db8; margin-bottom: 8px; display: block;">Language 2 (Secondary)</label>
-            <select id="builder-lang2" style="width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 15px;">
-              <option value="he">Hebrew</option>
-              <option value="en">English</option>
-              <option value="es">Spanish</option>
-              <option value="fr">French</option>
-              <option value="de">German</option>
-              <option value="ru">Russian</option>
-              <option value="ar">Arabic</option>
-              <option value="zh">Chinese</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <!-- ABCD Framework Section -->
+      <div class="abcd-section">
+        <h2>ABCD Framework Structure</h2>
 
-      <!-- Step 3: Preview & Generate -->
-      <div class="abcd-section" style="padding: 25px; background: rgba(17, 24, 39, 0.5); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
-          <span style="background: #22c55e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px;">3</span>
-          <h3 style="color: #ffffff; margin: 0; font-size: 1.2rem;">Preview & Generate Link</h3>
-        </div>
+        <!-- Simultaneous Stimulus Display -->
+        <div class="stimulus-combined">
+          <h3>Stimulus (A + B Combined)</h3>
+          <div class="stimulus-preview stimulus-preview-live" id="stimulus-preview">
+            <span id="preview-word" style="color: #4444ff;">RED</span>
+          </div>
+          <p style="color: #9aa6b2; font-size: 0.9rem;">
+            In Stroop, the prime and target appear <strong style="color: #ff4db8;">simultaneously</strong> in the same stimulus
+          </p>
 
-        <!-- Try It CTA -->
-        <div style="background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2)); border: 2px solid rgba(102, 126, 234, 0.5); border-radius: 12px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-          <div>
-            <div style="color: #ffffff; font-size: 1.1rem; font-weight: 600; margin-bottom: 5px;">
-              TRY IT YOURSELF <span style="color: #ff4db8;">→</span>
+          <div class="stimulus-breakdown">
+            <div class="stimulus-part prime">
+              <div class="stimulus-part-label">A (Prime)</div>
+              <div class="stimulus-part-name">Word Meaning</div>
+              <div class="stimulus-part-desc">The semantic content of the word - what it "says"</div>
             </div>
-            <div style="color: #9aa6b2; font-size: 0.9rem;">
-              Experience the experiment from a participant's perspective
+            <div class="stimulus-part target">
+              <div class="stimulus-part-label">B (Target)</div>
+              <div class="stimulus-part-name">Ink Color</div>
+              <div class="stimulus-part-desc">The visual color - what the participant must report</div>
             </div>
           </div>
-          <button class="btn btn-secondary" onclick="Stroop.previewFromBuilder()" style="white-space: nowrap;">Start Preview</button>
         </div>
 
-        <!-- Generate Link Button -->
-        <div style="text-align: center;">
-          <button class="btn" onclick="Stroop.generateLink()" style="padding: 18px 40px; font-size: 1.1rem;">
-            Generate Shareable Link
-          </button>
-          <p style="color: #9aa6b2; margin-top: 15px; font-size: 0.85rem;">
-            Creates a unique link you can share with participants. Their results will be saved with your Experiment ID.
+        <!-- Editable Stimulus Table -->
+        <div class="stimulus-editor">
+          <div class="stimulus-editor-header">
+            <span class="stimulus-editor-title">Define Your Stimuli (Colors & Words)</span>
+            <button class="btn-add-stimulus" onclick="Stroop.addStimulusRow()">+ Add Color</button>
+          </div>
+
+          <table class="stimulus-table" id="stimulus-table">
+            <thead>
+              <tr>
+                <th>Color</th>
+                <th>Ink (Hex)</th>
+                <th>Word (Lang 1)</th>
+                <th>Word (Lang 2)</th>
+                <th>Response Key</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="stimulus-table-body">
+              <!-- Rows generated by JavaScript -->
+            </tbody>
+          </table>
+
+          <p class="stimulus-note">
+            Each row defines a color concept. The system will create congruent trials (word matches ink) and incongruent trials (word differs from ink) automatically.
           </p>
         </div>
+
+        <!-- Outcomes -->
+        <div class="outcomes-row">
+          <div class="outcome-box baseline">
+            <div class="outcome-letter">C</div>
+            <div class="outcome-name">Baseline Outcome</div>
+            <div class="outcome-condition">When A = B (congruent)</div>
+            <div class="outcome-example" id="example-congruent">"RED" in red ink</div>
+          </div>
+
+          <div class="effect-formula">
+            <strong>Priming Effect</strong><br>
+            D - C
+          </div>
+
+          <div class="outcome-box measured">
+            <div class="outcome-letter">D</div>
+            <div class="outcome-name">Measured Outcome</div>
+            <div class="outcome-condition">When A != B (incongruent)</div>
+            <div class="outcome-example" id="example-incongruent">"RED" in blue ink</div>
+          </div>
+        </div>
+
+        <!-- Three Criteria -->
+        <div class="criteria-section">
+          <div class="criteria-title">Three Priming Criteria (All Met)</div>
+          <div class="criteria-list">
+            <div class="criterion">
+              <div class="criterion-check">&#10003;</div>
+              <div class="criterion-name">Association</div>
+              <div class="criterion-desc">Word meaning and ink color are associated through the color concept</div>
+            </div>
+            <div class="criterion">
+              <div class="criterion-check">&#10003;</div>
+              <div class="criterion-name">Secondariness</div>
+              <div class="criterion-desc">Word meaning is irrelevant to the task (report ink color only)</div>
+            </div>
+            <div class="criterion">
+              <div class="criterion-check">&#10003;</div>
+              <div class="criterion-name">Modulation</div>
+              <div class="criterion-desc">Word meaning affects RT despite being task-irrelevant (D != C)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Try It Yourself CTA -->
+        <div class="try-it-cta">
+          <div class="try-it-content">
+            <div class="try-it-title">
+              TRY IT YOURSELF
+              <span class="try-it-arrow">--></span>
+            </div>
+            <div class="try-it-desc">
+              Experience the experiment from a participant's perspective. See how your stimuli will look and feel in action.
+            </div>
+          </div>
+          <button class="btn-try-it" onclick="Stroop.previewFromBuilder()">START PREVIEW</button>
+        </div>
       </div>
+
+      <!-- Parameters Section -->
+      <div class="params-section">
+        <h2>Experiment Parameters</h2>
+
+        <div class="params-grid">
+          <div class="param-group">
+            <label for="builder-lang1">Language 1 (Primary)</label>
+            <select id="builder-lang1">
+              <option value="en">English</option>
+              <option value="he">Hebrew</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ru">Russian</option>
+              <option value="ar">Arabic</option>
+              <option value="zh">Chinese</option>
+            </select>
+            <div class="param-hint">The first language to test</div>
+          </div>
+
+          <div class="param-group">
+            <label for="builder-lang2">Language 2 (Secondary)</label>
+            <select id="builder-lang2">
+              <option value="he">Hebrew</option>
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+              <option value="de">German</option>
+              <option value="ru">Russian</option>
+              <option value="ar">Arabic</option>
+              <option value="zh">Chinese</option>
+            </select>
+            <div class="param-hint">The second language to compare</div>
+          </div>
+
+          <div class="param-group">
+            <label for="builder-trials">Trials per Condition</label>
+            <select id="builder-trials">
+              <option value="3">3 (Quick test - 48 total)</option>
+              <option value="5">5 (Standard - 80 total)</option>
+              <option value="10">10 (Extended - 160 total)</option>
+            </select>
+            <div class="param-hint">More trials = more reliable results, but longer duration</div>
+          </div>
+
+          <div class="param-group">
+            <label for="builder-fixation">Fixation Duration (ms)</label>
+            <input type="number" id="builder-fixation" value="500" min="200" max="2000" step="100">
+            <div class="param-hint">How long the + symbol appears before each trial</div>
+          </div>
+
+          <div class="param-group">
+            <label for="builder-feedback">Show Feedback</label>
+            <select id="builder-feedback">
+              <option value="yes">Yes - show correct/incorrect</option>
+              <option value="no">No - proceed immediately</option>
+            </select>
+            <div class="param-hint">Whether to show participants if their response was correct</div>
+          </div>
+
+          <div class="param-group">
+            <label for="builder-title">Experiment Title</label>
+            <input type="text" id="builder-title" value="Stroop Language Dominance Test" placeholder="Enter a title...">
+            <div class="param-hint">This title will be shown to participants</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data Collection Section -->
+      <div class="data-collection-section">
+        <h2>Data Collection</h2>
+        <p class="data-description">
+          Participant results are automatically saved to a secure cloud database.
+          No setup required - data collection works out of the box.
+        </p>
+
+        <div class="connection-status" id="connection-status">
+          <div class="status-dot"></div>
+          <div class="status-text">
+            <strong>Connected</strong> - Data will be saved automatically
+          </div>
+        </div>
+
+        <button class="btn-test-connection" onclick="Stroop.testConnection()">Test Connection</button>
+
+        <details class="data-info">
+          <summary>How data collection works</summary>
+          <div class="data-info-content">
+            <p>When participants complete the experiment, their results are automatically saved to a secure database:</p>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+              <li>Each trial is saved with: <code>experiment_id</code>, <code>participant_id</code>, <code>trial_number</code>, <code>language</code>, <code>ink_color</code>, <code>word_meaning</code>, <code>congruent</code>, <code>response</code>, <code>correct</code>, <code>rt</code></li>
+              <li>Participant IDs are randomly generated</li>
+              <li>No personal information is collected</li>
+              <li>Data can be exported to CSV or Excel from the Supabase dashboard</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="builder-actions">
+        <button class="btn-preview" onclick="Stroop.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="Stroop.generateLink()">Generate Shareable Link</button>
+      </div>
+
     </div>
   </div>
 

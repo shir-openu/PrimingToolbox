@@ -470,18 +470,192 @@ window.Stroop = {
   // =====================================================
   // TEMPLATE BUILDER
   // =====================================================
+
+  // Preview cycle state
+  previewIndex: 0,
+  previewInterval: null,
+
   openBuilder: function() {
     document.getElementById('stroop-builder-overlay').classList.add('active');
+    this.renderStimulusTable();
+    this.startPreviewCycle();
   },
 
   closeBuilder: function() {
     document.getElementById('stroop-builder-overlay').classList.remove('active');
+    this.stopPreviewCycle();
   },
 
   previewFromBuilder: function() {
+    // Get settings from builder
+    const lang1 = document.getElementById('builder-lang1').value;
+    const lang2 = document.getElementById('builder-lang2').value;
+
+    if (lang1 === lang2) {
+      alert('Please select two different languages.');
+      return;
+    }
+
+    // Set up state from builder settings
+    document.getElementById('language1').value = lang1;
+    document.getElementById('language2').value = lang2;
+
     this.state.openedFromBuilder = true;
     this.closeBuilder();
     this.open();
+  },
+
+  generateExperimentId: function() {
+    const el = document.getElementById('stroopExperimentId');
+    el.value = 'stroop_' + Date.now().toString(36);
+    el.style.borderColor = 'rgba(74, 222, 128, 0.7)';
+  },
+
+  renderStimulusTable: function() {
+    const tbody = document.getElementById('stimulus-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    this.builderStimuli.forEach((stim, index) => {
+      const row = document.createElement('tr');
+      row.dataset.index = index;
+      row.innerHTML = `
+        <td>
+          <input type="text" value="${stim.id}"
+                 onchange="Stroop.updateStimulus(${index}, 'id', this.value)"
+                 placeholder="Color name">
+        </td>
+        <td>
+          <div class="color-preview">
+            <input type="color" value="${stim.color}"
+                   onchange="Stroop.updateStimulus(${index}, 'color', this.value)">
+          </div>
+        </td>
+        <td>
+          <input type="text" value="${stim.wordLang1}"
+                 onchange="Stroop.updateStimulus(${index}, 'wordLang1', this.value)"
+                 placeholder="Word in Language 1">
+        </td>
+        <td>
+          <input type="text" value="${stim.wordLang2}"
+                 onchange="Stroop.updateStimulus(${index}, 'wordLang2', this.value)"
+                 placeholder="Word in Language 2"
+                 style="direction: auto;">
+        </td>
+        <td>
+          <input type="text" class="response-key-input" value="${stim.key}"
+                 onchange="Stroop.updateStimulus(${index}, 'key', this.value.toUpperCase())"
+                 maxlength="1">
+        </td>
+        <td>
+          <button class="btn-remove-row" onclick="Stroop.removeStimulusRow(${index})"
+                  ${this.builderStimuli.length <= 2 ? 'disabled' : ''}>x</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    this.updateExamples();
+  },
+
+  updateStimulus: function(index, field, value) {
+    this.builderStimuli[index][field] = value;
+    this.updateExamples();
+    this.updatePreview();
+  },
+
+  addStimulusRow: function() {
+    const newId = 'color' + (this.builderStimuli.length + 1);
+    this.builderStimuli.push({
+      id: newId,
+      color: '#ffffff',
+      wordLang1: '',
+      wordLang2: '',
+      key: ''
+    });
+    this.renderStimulusTable();
+  },
+
+  removeStimulusRow: function(index) {
+    if (this.builderStimuli.length <= 2) {
+      alert('You need at least 2 colors for the Stroop task.');
+      return;
+    }
+    this.builderStimuli.splice(index, 1);
+    this.renderStimulusTable();
+  },
+
+  updateExamples: function() {
+    if (this.builderStimuli.length < 2) return;
+
+    const first = this.builderStimuli[0];
+    const second = this.builderStimuli[1];
+
+    // Congruent example: first word in first color
+    const congruentEl = document.getElementById('example-congruent');
+    if (congruentEl) {
+      congruentEl.innerHTML = '"<span style="color: ' + first.color + '">' + first.wordLang1 + '</span>" in ' + first.id + ' ink';
+    }
+
+    // Incongruent example: first word in second color
+    const incongruentEl = document.getElementById('example-incongruent');
+    if (incongruentEl) {
+      incongruentEl.innerHTML = '"<span style="color: ' + second.color + '">' + first.wordLang1 + '</span>" in ' + second.id + ' ink';
+    }
+  },
+
+  updatePreview: function() {
+    if (this.builderStimuli.length === 0) return;
+
+    const stim = this.builderStimuli[this.previewIndex % this.builderStimuli.length];
+    // Show incongruent: use word from one stimulus, color from another
+    const colorStim = this.builderStimuli[(this.previewIndex + 1) % this.builderStimuli.length];
+
+    const previewWord = document.getElementById('preview-word');
+    if (previewWord) {
+      previewWord.textContent = stim.wordLang1;
+      previewWord.style.color = colorStim.color;
+    }
+  },
+
+  startPreviewCycle: function() {
+    this.updatePreview();
+    this.previewInterval = setInterval(() => {
+      this.previewIndex++;
+      this.updatePreview();
+    }, 2000);
+  },
+
+  stopPreviewCycle: function() {
+    if (this.previewInterval) {
+      clearInterval(this.previewInterval);
+      this.previewInterval = null;
+    }
+  },
+
+  testConnection: async function() {
+    const statusEl = document.getElementById('connection-status');
+    const statusText = statusEl.querySelector('.status-text');
+
+    try {
+      if (window.PTA && PTA.testSupabase) {
+        const success = await PTA.testSupabase();
+        if (success) {
+          statusEl.classList.remove('error');
+          statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
+        } else {
+          statusEl.classList.add('error');
+          statusText.innerHTML = '<strong>Connection Failed</strong> - Check your internet connection';
+        }
+      } else {
+        statusEl.classList.remove('error');
+        statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
+      }
+    } catch (error) {
+      statusEl.classList.add('error');
+      statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
+    }
   },
 
   generateLink: function() {

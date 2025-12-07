@@ -2680,10 +2680,20 @@
 
         const keyHint = document.createElement('div');
         keyHint.className = 'key-hint';
+        keyHint.style.cursor = 'pointer';
         keyHint.innerHTML = `
           <span class="key">${key}</span>
           <span class="label" style="color: ${hex};">${label}</span>
         `;
+
+        // Add click handler for this key hint
+        keyHint.addEventListener('click', () => {
+          const stroopTrial = document.getElementById('stroop-trial');
+          if (stroopTrial.classList.contains('active')) {
+            handleStroopResponse(key.toLowerCase());
+          }
+        });
+
         container.appendChild(keyHint);
       });
     }
@@ -3119,20 +3129,7 @@
       }
     });
 
-    // Also add click handlers for the key hints (for touch/mouse users)
-    document.querySelectorAll('.key-hint').forEach(hint => {
-      hint.style.cursor = 'pointer';
-      hint.addEventListener('click', () => {
-        const stroopTrial = document.getElementById('stroop-trial');
-        if (stroopTrial.classList.contains('active')) {
-          const label = hint.querySelector('.label').textContent.toLowerCase();
-          const keyMap = { 'red': 'r', 'green': 'g', 'blue': 'b', 'yellow': 'y' };
-          if (keyMap[label]) {
-            handleStroopResponse(keyMap[label]);
-          }
-        }
-      });
-    });
+    // Note: Click handlers for key hints are now added dynamically in renderResponseKeys()
 
     // =====================================================
     // STROOP TEMPLATE BUILDER FUNCTIONS

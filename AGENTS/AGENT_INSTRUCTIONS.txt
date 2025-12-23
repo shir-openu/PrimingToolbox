@@ -79,10 +79,24 @@ AGENT A (Creator):
 
 AGENT B (Verifier):
 - Waits for STATUS.txt = "ready_for_verification"
-- Reviews Agent A's code
-- Tests functionality
-- Documents findings in VERIFIER_LOG.txt
+- Reviews Agent A's code thoroughly
+- Tests ALL functionality (run the experiment, check Supabase saves data)
+- Documents ALL findings in VERIFIER_LOG.txt:
+  * What was tested
+  * What works correctly
+  * What doesn't work (with specific error messages)
+  * Suggestions for fixes
+  * Code quality observations
+- Updates SUMMARY.txt with verification results
 - Updates STATUS.txt to "completed" or "needs_revision"
+
+**VERIFIER_LOG.txt must include:**
+1. Date and time of verification
+2. List of tests performed
+3. Results for each test (PASS/FAIL with details)
+4. Screenshots or console logs if errors found
+5. Specific line numbers if bugs found
+6. Recommendations for Agent A if revision needed
 
 ================================================================================
 

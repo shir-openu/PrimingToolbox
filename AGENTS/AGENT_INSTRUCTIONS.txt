@@ -147,6 +147,19 @@ Layer C: Participants (משתתפים)
 - Complete experiment in browser
 - Data saved automatically to Supabase
 
+Layer D: Curious Visitors - People who just want to try
+- Students learning about priming
+- Researchers exploring what's possible
+- Anyone curious about cognitive experiments
+- "Be a Participant" mode - experience experiments firsthand
+
+**CRITICAL - USER SKILL ASSUMPTIONS:**
+- NEVER assume users have programming skills!
+- Users may be: psychology students, researchers, curious visitors
+- All interfaces must be point-and-click, no code required
+- Instructions must be clear and jargon-free
+- Error messages must be helpful, not technical
+
 **Experimenter Registration System:**
 - Each experimenter identified by: email + experiment_id
 - Data separation: each experimenter sees ONLY their own data

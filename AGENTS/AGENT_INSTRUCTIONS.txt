@@ -1,0 +1,265 @@
+================================================================================
+PrimingHub - Agent Instructions for Multi-Agent Development
+================================================================================
+Date: 23 December 2025
+Author: Dr. Shir Sivroni
+================================================================================
+
+1. OVERVIEW
+===========
+
+This document provides instructions for AI agents (Auto-Claude or similar)
+working on the PrimingHub project. Agents work in PAIRS:
+- Agent A: Creates/implements code
+- Agent B: Verifies/validates Agent A's work
+
+================================================================================
+
+2. CRITICAL RULE - NEVER OVERWRITE FILES
+=========================================
+
+**IRON LAW: NEVER overwrite an existing file!**
+
+**Protocol:**
+1. Before ANY file modification - check if file exists
+2. If exists -> Copy to new version FIRST (e.g., file.html -> file_v2.html)
+3. Only then modify the NEW copy
+4. NEVER modify the original directly
+
+**Why this matters:**
+- Each file represents hours of work
+- Agents cannot "remember" everything from previous sessions
+- Overwriting destroys context that took time to build
+- Versioned copies allow rollback and comparison
+
+**Naming conventions for new versions:**
+- index.html -> index_v32.html
+- index.html -> index_23_DEC_2025.html
+- core.js -> core_backup_23_DEC_2025.js
+
+================================================================================
+
+3. AGENT PAIR STRUCTURE
+=======================
+
+Each paradigm/experiment gets its own numbered folder:
+- AGENTS/PAIR_01_STROOP/
+- AGENTS/PAIR_02_SEMANTIC/
+- AGENTS/PAIR_03_AMP/
+- etc.
+
+Inside each folder:
+/PAIR_XX_NAME/
+  ├── TASK.txt           # Task description and requirements
+  ├── CREATOR_LOG.txt    # Agent A's work log
+  ├── VERIFIER_LOG.txt   # Agent B's verification log
+  ├── STATUS.txt         # Current status (pending/in_progress/completed/failed)
+  └── OUTPUT/            # Deliverables from this pair
+
+================================================================================
+
+4. AGENT ROLES
+==============
+
+AGENT A (Creator):
+- Reads task from TASK.txt
+- Implements the paradigm/experiment
+- Documents all decisions in CREATOR_LOG.txt
+- Places output in OUTPUT/ folder
+- Updates STATUS.txt to "ready_for_verification"
+
+AGENT B (Verifier):
+- Waits for STATUS.txt = "ready_for_verification"
+- Reviews Agent A's code
+- Tests functionality
+- Documents findings in VERIFIER_LOG.txt
+- Updates STATUS.txt to "completed" or "needs_revision"
+
+================================================================================
+
+5. PROJECT CONTEXT
+==================
+
+**Project Name:** PrimingHub (not PrimingToolbox)
+**Vision:** "The GitHub of Priming Experiments"
+
+**Three-Layer Architecture:**
+
+Layer 1: Core (shared modules)
+- timing.js - precise timing
+- stimuli.js - stimulus loading/display
+- responses.js - response collection
+- data.js - Supabase integration
+- ui.js - basic UI components
+
+Layer 2: Paradigms (~15-20 base paradigms)
+- Each paradigm = unique code using core
+- Examples: Stroop, Semantic, AMP, Social, Evaluative, Subliminal
+
+Layer 3: Built-in Experiments (~50-100)
+- Each experiment = unique code (not just config!)
+- Examples: stroop-bilingual-he-en, semantic-lexical-decision, amp-faces
+
+Layer 4: Custom Experiments (thousands, created by experimenters)
+- Config only, built on paradigms
+
+**User Model:**
+- Developer (Shir) - builds platform
+- Experimenters - researchers who create experiments
+- Participants - people who do the experiments
+
+================================================================================
+
+6. DATABASE - SUPABASE
+======================
+
+Host: db.luhgdmzksitdkbysdfbr.supabase.co
+Table: experiment_results
+
+Columns:
+- experiment_id
+- participant_id
+- trial_number
+- language
+- ink_color
+- word_meaning
+- congruent
+- response
+- correct
+- rt
+- experimenter_email
+- user_experiment_id
+- external_id
+
+IMPORTANT: Use the correct project ID: luhgdmzksitdkbysdfbr
+(NOT the old bgbhvvaykmkeoniagfap)
+
+================================================================================
+
+7. PARADIGM DIFFERENCES
+=======================
+
+Different priming paradigms are FUNDAMENTALLY DIFFERENT:
+
+| Paradigm    | What's Special                                      |
+|-------------|-----------------------------------------------------|
+| Stroop      | A and B presented simultaneously (word+color)       |
+| Semantic    | A then B sequentially, with variable SOA            |
+| AMP         | image -> mask -> target, critical timings           |
+| Social      | Sometimes A is a full task (scrambled sentences)    |
+| Evaluative  | Repeated pairings, not single trial                 |
+| Subliminal  | Below-threshold presentation + masks                |
+
+These differences require unique code for:
+- Stimulus types (text, image, audio, video)
+- Trial structures (single trial, blocks, sequences)
+- Response types (keyboard, mouse, time, multiple choice)
+- Timing (simultaneous, sequential, subliminal)
+- Trial logic (feedback, what happens after response)
+
+================================================================================
+
+8. CODE STANDARDS
+=================
+
+1. Use ES6+ JavaScript
+2. Comment in English
+3. Use meaningful variable names
+4. Follow existing code style in the project
+5. Always test before declaring complete
+6. Ensure Supabase integration works
+7. Maintain visual consistency (glassmorphism, dark theme)
+
+Colors:
+- Teal: #169999
+- Pink: #ff4db8
+- Wine: #990f23
+
+================================================================================
+
+9. COMMUNICATION
+================
+
+Agents do NOT communicate directly with each other.
+
+Communication happens through:
+1. TASK.txt - task definition
+2. STATUS.txt - current state
+3. CREATOR_LOG.txt - Agent A's notes
+4. VERIFIER_LOG.txt - Agent B's notes
+5. OUTPUT/ folder - deliverables
+
+STATUS values:
+- pending - not started
+- in_progress - Agent A working
+- ready_for_verification - Agent A done, waiting for Agent B
+- needs_revision - Agent B found issues
+- completed - both agents approved
+- failed - cannot complete
+
+================================================================================
+
+10. GETTING STARTED
+===================
+
+Before starting work:
+
+1. Read this document completely
+2. Read ARCHITECTURE_DECISIONS_23_DEC_2025.txt
+3. Read SUMMARY_FOR_CLAUDE_DECEMBER_2025.md
+4. Check your assigned PAIR_XX folder for TASK.txt
+5. Review existing code in the main project folder
+
+Remember:
+- NEVER overwrite existing files
+- Always copy to new version first
+- Document everything in your log file
+- Ask for clarification if task is unclear
+
+================================================================================
+
+11. QUALITY CHECKLIST
+=====================
+
+Before marking as complete, verify:
+
+[ ] Code runs without errors
+[ ] Supabase data saving works
+[ ] Visual design matches existing (glassmorphism, colors)
+[ ] Response keys work correctly
+[ ] Timing is accurate
+[ ] No hardcoded values that should be configurable
+[ ] Works on Chrome, Firefox, Safari
+[ ] Mobile-responsive (if applicable)
+[ ] All log files are updated
+[ ] Output folder contains all deliverables
+
+================================================================================
+
+12. FOLDER STRUCTURE
+====================
+
+PRIMING_TOOLBOX/
+├── AGENTS/                      # Agent work folders
+│   ├── AGENT_INSTRUCTIONS.txt   # This file
+│   ├── PAIR_01_STROOP/
+│   ├── PAIR_02_SEMANTIC/
+│   └── ...
+├── HTMLs/                       # Dated HTML backups
+│   ├── 23_DECEMBER_2025/
+│   └── ...
+├── core/                        # Shared modules (to be built)
+├── paradigms/                   # Base paradigms (to be built)
+├── experiments/                 # Built-in experiments
+├── js/                          # Current JavaScript files
+├── css/                         # Current CSS files
+├── index.html                   # Main entry point
+└── *.md, *.txt                  # Documentation
+
+================================================================================
+
+Written by: Claude (Opus 4.5)
+For: Dr. Shir Sivroni
+Date: 23 December 2025
+
+================================================================================

@@ -54,7 +54,16 @@ Inside each folder:
   ├── CREATOR_LOG.txt    # Agent A's work log
   ├── VERIFIER_LOG.txt   # Agent B's verification log
   ├── STATUS.txt         # Current status (pending/in_progress/completed/failed)
+  ├── SUMMARY.txt        # REQUIRED: Summary of what was done (both agents update)
   └── OUTPUT/            # Deliverables from this pair
+
+**SUMMARY.txt is MANDATORY!**
+Each agent MUST update SUMMARY.txt with:
+- What was created/changed
+- Key decisions made and why
+- Files added/modified (with paths)
+- Any issues encountered and how they were resolved
+- What the next agent needs to know
 
 ================================================================================
 
@@ -135,9 +144,18 @@ Layer C: Participants (משתתפים)
 6. DATABASE - SUPABASE
 ======================
 
-Host: db.luhgdmzksitdkbysdfbr.supabase.co
-Table: experiment_results
+**Connection Details:**
+- Host: db.luhgdmzksitdkbysdfbr.supabase.co
+- Project URL: https://luhgdmzksitdkbysdfbr.supabase.co
+- Project ID: luhgdmzksitdkbysdfbr (NOT the old bgbhvvaykmkeoniagfap!)
 
+**API Keys (for JavaScript client):**
+- Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aGdkbXprc2l0ZGtieXNkZmJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjU0MDMsImV4cCI6MjA4MDEwMTQwM30.kxiMmJE4N5U5pM-3d81URKCwZ5PSsE-19AIr5KWOMlQ
+
+**PostgreSQL Direct Access (for queries/reports):**
+- postgresql://postgres:Cc918273645*@db.luhgdmzksitdkbysdfbr.supabase.co:5432/postgres
+
+**Table: experiment_results**
 Columns:
 - experiment_id
 - participant_id
@@ -153,8 +171,12 @@ Columns:
 - user_experiment_id
 - external_id
 
-IMPORTANT: Use the correct project ID: luhgdmzksitdkbysdfbr
-(NOT the old bgbhvvaykmkeoniagfap)
+**Usage in JavaScript:**
+```javascript
+const supabaseUrl = 'https://luhgdmzksitdkbysdfbr.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // anon key
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+```
 
 ================================================================================
 

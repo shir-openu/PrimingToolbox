@@ -8,8 +8,8 @@ const PTA = window.PTA || {};
 
 // Supabase configuration
 PTA.config = {
-  supabaseUrl: 'https://bgbhvvaykmkeoniagfap.supabase.co',
-  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnYmh2dmF5a21rZW9uaWFnZmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4MTQ5MjAsImV4cCI6MjA0ODM5MDkyMH0.WPMsaUIcBvMqSvMqMWasYcb0iC5cODJhMgR_wjY8Jvw',
+  supabaseUrl: 'https://luhgdmzksitdkbysdfbr.supabase.co',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aGdkbXprc2l0ZGtieXNkZmJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjU0MDMsImV4cCI6MjA4MDEwMTQwM30.kxiMmJE4N5U5pM-3d81URKCwZ5PSsE-19AIr5KWOMlQ',
   version: '1.0'
 };
 

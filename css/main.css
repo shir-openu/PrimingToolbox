@@ -238,26 +238,21 @@ h1 {
   font-size: 1rem;
 }
 
-/* Module Cards Layout - Left + Right columns */
+/* Module Cards Layout - 3 column grid */
 .modules-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-bottom: 30px;
 }
 
 .modules-left {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  flex: 0 0 280px;
+  display: contents;
 }
 
 /* Module Cards Grid */
 .modules-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  flex: 1;
+  display: contents;
 }
 
 /* Module Card */

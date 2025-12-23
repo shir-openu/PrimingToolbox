@@ -241,8 +241,8 @@ h1 {
 /* Module Cards Layout - 3 column grid + ABCD sidebar */
 .modules-layout {
   display: grid;
-  grid-template-columns: repeat(3, 1fr) 280px;
-  gap: 24px;
+  grid-template-columns: repeat(3, 1fr) 320px;
+  gap: 28px;
   margin-bottom: 30px;
 }
 
@@ -260,12 +260,13 @@ h1 {
   grid-row: 1 / 3;
   grid-column: 4;
   align-self: start;
+  padding: 30px;
 }
 
 /* Module Card */
 .module-card {
-  padding: 30px;
-  border-radius: 16px;
+  padding: 35px;
+  border-radius: 18px;
   border: 1px solid rgba(255, 77, 184, 0.3);
   color: #ffffff;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -274,7 +275,7 @@ h1 {
   backdrop-filter: blur(8px);
   background: rgba(17, 24, 39, 0.5);
   cursor: pointer;
-  min-height: 180px;
+  min-height: 220px;
   display: flex;
   flex-direction: column;
 }
@@ -320,35 +321,35 @@ h1 {
 }
 
 .module-icon {
-  font-size: 2rem;
-  margin-bottom: 15px;
+  font-size: 2.5rem;
+  margin-bottom: 18px;
 }
 
 .module-title {
-  font-size: 1.4rem;
-  margin-bottom: 10px;
+  font-size: 1.6rem;
+  margin-bottom: 12px;
   color: #ffffff;
   font-weight: 600;
 }
 
 .module-description {
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   color: #9aa6b2;
-  line-height: 1.5;
+  line-height: 1.6;
   flex: 1;
 }
 
 .module-options {
   list-style: none;
-  margin-top: 15px;
+  margin-top: 18px;
   padding: 0;
 }
 
 .module-options li {
-  font-size: 0.85rem;
+  font-size: 1rem;
   color: #a78bfa;
-  padding: 4px 0;
-  padding-left: 15px;
+  padding: 5px 0;
+  padding-left: 18px;
   position: relative;
 }
 

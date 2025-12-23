@@ -72,102 +72,108 @@
       <h1>PrimingToolbox</h1>
       <p class="subtitle">A universal platform for priming experiments</p>
 
-      <!-- Module Cards -->
-      <div class="modules-grid">
+      <!-- Module Cards - Two Column Layout -->
+      <div class="modules-layout">
 
-        <!-- Be a Participant Card -->
-        <div class="module-card" onclick="showBeParticipant()">
-          <div class="module-content">
-            <div class="module-icon">&#128100;</div>
-            <div class="module-title">Be a Participant</div>
-            <div class="module-description">
-              Experience priming experiments firsthand as a participant.
+        <!-- Left Column: Visitor Cards -->
+        <div class="modules-left">
+          <!-- Be a Participant Card -->
+          <div class="module-card" onclick="showBeParticipant()">
+            <div class="module-content">
+              <div class="module-icon">&#128100;</div>
+              <div class="module-title">Be a Participant</div>
+              <div class="module-description">
+                Experience priming experiments firsthand as a participant.
+              </div>
+              <ul class="module-options">
+                <li>No setup required</li>
+                <li>Learn by doing</li>
+                <li>See how it feels</li>
+              </ul>
             </div>
-            <ul class="module-options">
-              <li>No setup required</li>
-              <li>Learn by doing</li>
-              <li>See how it feels</li>
-            </ul>
+          </div>
+
+          <!-- Community Card -->
+          <div class="module-card" onclick="showCommunity()">
+            <div class="module-content">
+              <div class="module-icon">&#128101;</div>
+              <div class="module-title">Community</div>
+              <div class="module-description">
+                Connect with other researchers and share experiments.
+              </div>
+              <ul class="module-options">
+                <li>Discuss methods</li>
+                <li>Share paradigms</li>
+                <li>Get help</li>
+              </ul>
+            </div>
           </div>
         </div>
 
-        <!-- Community Card -->
-        <div class="module-card" onclick="showCommunity()">
-          <div class="module-content">
-            <div class="module-icon">&#128101;</div>
-            <div class="module-title">Community</div>
-            <div class="module-description">
-              Connect with other researchers and share experiments.
+        <!-- Right Column: Main Cards Grid -->
+        <div class="modules-grid">
+          <!-- Try Experiment Card -->
+          <div class="module-card" onclick="showTryExperiment()">
+            <div class="module-content">
+              <div class="module-icon">&#9658;</div>
+              <div class="module-title">Try an Experiment</div>
+              <div class="module-description">
+                Experience a priming experiment yourself. Great for learning and testing.
+              </div>
+              <ul class="module-options">
+                <li>Stroop Task</li>
+                <li>Semantic Priming</li>
+                <li>Affective Priming</li>
+              </ul>
             </div>
-            <ul class="module-options">
-              <li>Discuss methods</li>
-              <li>Share paradigms</li>
-              <li>Get help</li>
-            </ul>
           </div>
-        </div>
 
-        <!-- Try Experiment Card -->
-        <div class="module-card" onclick="showTryExperiment()">
-          <div class="module-content">
-            <div class="module-icon">&#9658;</div>
-            <div class="module-title">Try an Experiment</div>
-            <div class="module-description">
-              Experience a priming experiment yourself. Great for learning and testing.
+          <!-- Template Builder Card -->
+          <div class="module-card" onclick="showTemplateBuilder()">
+            <div class="module-content">
+              <div class="module-icon">&#9881;</div>
+              <div class="module-title">Template Builder</div>
+              <div class="module-description">
+                Configure and customize experiments for your research.
+              </div>
+              <ul class="module-options">
+                <li>Custom stimuli</li>
+                <li>Timing control</li>
+                <li>Generate participant links</li>
+              </ul>
             </div>
-            <ul class="module-options">
-              <li>Stroop Task</li>
-              <li>Semantic Priming</li>
-              <li>Affective Priming</li>
-            </ul>
           </div>
-        </div>
 
-        <!-- Template Builder Card -->
-        <div class="module-card" onclick="showTemplateBuilder()">
-          <div class="module-content">
-            <div class="module-icon">&#9881;</div>
-            <div class="module-title">Template Builder</div>
-            <div class="module-description">
-              Configure and customize experiments for your research.
+          <!-- Get My Data Card -->
+          <div class="module-card" onclick="showGetData()">
+            <div class="module-content">
+              <div class="module-icon">&#128202;</div>
+              <div class="module-title">Get My Data</div>
+              <div class="module-description">
+                Retrieve and export your experiment data.
+              </div>
+              <ul class="module-options">
+                <li>Download CSV</li>
+                <li>Download Excel</li>
+                <li>Filter by experiment ID</li>
+              </ul>
             </div>
-            <ul class="module-options">
-              <li>Custom stimuli</li>
-              <li>Timing control</li>
-              <li>Generate participant links</li>
-            </ul>
           </div>
-        </div>
 
-        <!-- Get My Data Card -->
-        <div class="module-card" onclick="showGetData()">
-          <div class="module-content">
-            <div class="module-icon">&#128202;</div>
-            <div class="module-title">Get My Data</div>
-            <div class="module-description">
-              Retrieve and export your experiment data.
+          <!-- Learn More Card -->
+          <div class="module-card" onclick="showLearnMore()">
+            <div class="module-content">
+              <div class="module-icon">&#128218;</div>
+              <div class="module-title">Learn More</div>
+              <div class="module-description">
+                Understand the ABCD framework and priming paradigms.
+              </div>
+              <ul class="module-options">
+                <li>ABCD Framework</li>
+                <li>Priming types</li>
+                <li>Research resources</li>
+              </ul>
             </div>
-            <ul class="module-options">
-              <li>Download CSV</li>
-              <li>Download Excel</li>
-              <li>Filter by experiment ID</li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Learn More Card -->
-        <div class="module-card" onclick="showLearnMore()">
-          <div class="module-content">
-            <div class="module-icon">&#128218;</div>
-            <div class="module-title">Learn More</div>
-            <div class="module-description">
-              Understand the ABCD framework and priming paradigms.
-            </div>
-            <ul class="module-options">
-              <li>ABCD Framework</li>
-              <li>Priming types</li>
-              <li>Research resources</li>
-            </ul>
           </div>
         </div>
 

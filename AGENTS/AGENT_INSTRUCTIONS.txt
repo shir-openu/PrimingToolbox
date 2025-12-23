@@ -103,10 +103,32 @@ Layer 3: Built-in Experiments (~50-100)
 Layer 4: Custom Experiments (thousands, created by experimenters)
 - Config only, built on paradigms
 
-**User Model:**
-- Developer (Shir) - builds platform
-- Experimenters - researchers who create experiments
-- Participants - people who do the experiments
+**User Model (Three Layers):**
+
+Layer A: Developer (Shir)
+- Builds the platform
+- Creates paradigms (base experiment types)
+- Creates built-in experiments
+
+Layer B: Experimenters (נסיינים) - Researchers who USE the platform
+- Register with email + experiment ID
+- Choose a paradigm or built-in experiment
+- Customize parameters (stimuli, timing, responses)
+- Generate shareable link for their experiment
+- Send link to participants
+- Download their data ("Get My Data" button)
+- Can create THOUSANDS of customized experiments
+
+Layer C: Participants (משתתפים)
+- Receive link from experimenter
+- Complete experiment in browser
+- Data saved automatically to Supabase
+
+**Experimenter Registration System:**
+- Each experimenter identified by: email + experiment_id
+- Data separation: each experimenter sees ONLY their own data
+- Row Level Security in Supabase
+- External ID system for Prolific/MTurk/SONA (prevents duplicates)
 
 ================================================================================
 
@@ -199,16 +221,31 @@ STATUS values:
 
 ================================================================================
 
-10. GETTING STARTED
-===================
+10. MANDATORY READING BEFORE STARTING
+=====================================
 
-Before starting work:
+**CRITICAL: You MUST read these files BEFORE starting ANY work:**
 
-1. Read this document completely
-2. Read ARCHITECTURE_DECISIONS_23_DEC_2025.txt
-3. Read SUMMARY_FOR_CLAUDE_DECEMBER_2025.md
+1. **THE PAPER (MOST IMPORTANT!):**
+   D:\Dropbox\Research\PRIMING_TOOLBOX\sivroni2025_24nov25_v1.pdf
+   - This is the theoretical foundation of the entire project
+   - Explains the ABCD framework
+   - Defines the three characteristics of priming
+   - You cannot build experiments without understanding this!
+
+2. **Project documentation (in order):**
+   - AGENT_INSTRUCTIONS.txt (this file)
+   - ARCHITECTURE_DECISIONS_23_DEC_2025.txt
+   - SUMMARY_FOR_CLAUDE_DECEMBER_2025.md
+   - PrimingToolbox_Project_Plan-v1.md
+
+3. **All files in the project folder:**
+   D:\Dropbox\Research\PRIMING_TOOLBOX\
+   - Read ALL .txt and .md files
+   - Understand the existing code structure
+   - Check experiments/ folder for JSON configs
+
 4. Check your assigned PAIR_XX folder for TASK.txt
-5. Review existing code in the main project folder
 
 Remember:
 - NEVER overwrite existing files

@@ -139,6 +139,38 @@
           </div>
         </div>
 
+        <!-- Be a Participant Card -->
+        <div class="module-card" onclick="showBeParticipant()">
+          <div class="module-content">
+            <div class="module-icon">&#128100;</div>
+            <div class="module-title">Be a Participant</div>
+            <div class="module-description">
+              Experience priming experiments firsthand as a participant.
+            </div>
+            <ul class="module-options">
+              <li>No setup required</li>
+              <li>Learn by doing</li>
+              <li>See how it feels</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Community Card -->
+        <div class="module-card" onclick="showCommunity()">
+          <div class="module-content">
+            <div class="module-icon">&#128101;</div>
+            <div class="module-title">Community</div>
+            <div class="module-description">
+              Connect with other researchers and share experiments.
+            </div>
+            <ul class="module-options">
+              <li>Discuss methods</li>
+              <li>Share paradigms</li>
+              <li>Get help</li>
+            </ul>
+          </div>
+        </div>
+
       </div>
 
       <!-- ABCD Framework Info -->
@@ -1308,6 +1340,20 @@
     // Learn More function
     function showLearnMore() {
       alert('Documentation coming soon!\n\nThe ABCD Framework provides a unified definition of priming across disciplines.\n\nFor more information, see Sivroni & Stark (2025).');
+    }
+
+    // Be a Participant function
+    function showBeParticipant() {
+      // Show a selection of experiments to try as a participant
+      const choice = confirm('Experience a priming experiment firsthand!\n\nClick OK to try the Stroop Task.\nClick Cancel to go back.');
+      if (choice) {
+        showTryExperiment();
+      }
+    }
+
+    // Community function
+    function showCommunity() {
+      window.open('https://github.com/shir-openu/PrimingToolbox/discussions', '_blank');
     }
 
     // Check for config in URL (participant mode)

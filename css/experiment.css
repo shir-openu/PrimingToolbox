@@ -24,8 +24,8 @@
 
 .experiment-container {
   width: 100%;
-  max-width: 800px;
-  padding: 40px;
+  max-width: 1000px;
+  padding: 50px;
   text-align: center;
 }
 
@@ -34,19 +34,20 @@
   background: rgba(17, 24, 39, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 77, 184, 0.3);
-  border-radius: 20px;
-  padding: 50px;
+  border-radius: 24px;
+  padding: 60px 70px;
 }
 
 .experiment-setup h2 {
   color: #ffffff;
-  font-size: 1.8rem;
-  margin-bottom: 10px;
+  font-size: 2.4rem;
+  margin-bottom: 15px;
 }
 
 .experiment-setup .subtitle {
   color: #9aa6b2;
-  margin-bottom: 40px;
+  font-size: 1.2rem;
+  margin-bottom: 50px;
 }
 
 /* Language/Option Selectors */
@@ -63,15 +64,15 @@
 
 .option-select-group label {
   color: #ff4db8;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
   display: block;
 }
 
 .option-select-group select {
   width: 100%;
-  padding: 15px;
-  font-size: 1.1rem;
+  padding: 18px;
+  font-size: 1.3rem;
 }
 
 /* Trial Screen */
@@ -91,12 +92,12 @@
 
 /* Stimulus display area */
 .stimulus-display {
-  font-size: 4rem;
+  font-size: 5rem;
   font-weight: bold;
-  padding: 60px;
-  border-radius: 20px;
+  padding: 80px;
+  border-radius: 24px;
   background: rgba(17, 24, 39, 0.5);
-  min-height: 200px;
+  min-height: 250px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -119,35 +120,35 @@
 /* Instructions */
 .trial-instruction {
   color: #9aa6b2;
-  font-size: 1.2rem;
-  margin-top: 30px;
+  font-size: 1.4rem;
+  margin-top: 35px;
 }
 
 /* Response keys display */
 .response-keys {
   display: flex;
   justify-content: center;
-  gap: 40px;
-  margin-top: 30px;
+  gap: 50px;
+  margin-top: 35px;
 }
 
 .key-hint {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 10px;
-  padding: 15px 30px;
+  border-radius: 12px;
+  padding: 20px 40px;
 }
 
 .key-hint .key {
   display: block;
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: #ff4db8;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 
 .key-hint .label {
   color: #9aa6b2;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 /* Progress display */
@@ -175,8 +176,8 @@
   background: rgba(17, 24, 39, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 77, 184, 0.3);
-  border-radius: 20px;
-  padding: 50px;
+  border-radius: 24px;
+  padding: 60px 70px;
 }
 
 .experiment-results.active {
@@ -185,8 +186,8 @@
 
 .experiment-results h2 {
   color: #ffffff;
-  font-size: 1.8rem;
-  margin-bottom: 30px;
+  font-size: 2.4rem;
+  margin-bottom: 35px;
 }
 
 .results-grid {
@@ -198,26 +199,26 @@
 
 .result-card {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 15px;
-  padding: 25px;
+  border-radius: 16px;
+  padding: 30px;
   text-align: center;
 }
 
 .result-card h3 {
   color: #a78bfa;
-  font-size: 1rem;
-  margin-bottom: 15px;
+  font-size: 1.2rem;
+  margin-bottom: 18px;
 }
 
 .result-value {
-  font-size: 2.5rem;
+  font-size: 3rem;
   color: #ffffff;
   font-weight: bold;
 }
 
 .result-unit {
   color: #9aa6b2;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 /* Special result highlight */
@@ -478,12 +479,12 @@
 
 .timeline-title {
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 1.3rem;
 }
 
 .timeline-total {
   color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .timeline-track {
@@ -542,7 +543,7 @@
 
 .event-label {
   color: #a78bfa;
-  font-size: 0.85rem;
+  font-size: 1rem;
   text-transform: uppercase;
   margin-bottom: 4px;
   font-weight: 500;
@@ -551,7 +552,7 @@
 
 .event-content {
   color: #ffffff;
-  font-size: 0.9rem;
+  font-size: 1.1rem;
 }
 
 .event-connector {
@@ -581,7 +582,7 @@
   left: 50%;
   transform: translateX(-50%);
   color: rgba(255, 255, 255, 0.7);
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   white-space: nowrap;
 }
 

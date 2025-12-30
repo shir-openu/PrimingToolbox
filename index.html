@@ -12,6 +12,11 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Google Font for Chinese characters (AMP paradigm) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css?v=1.5">
   <link rel="stylesheet" href="css/experiment.css?v=1.1">
@@ -57,8 +62,7 @@
       <select id="experimentSelect" onchange="loadExperimentConfig(this.value)">
         <option value="">-- Select --</option>
         <option value="stroop">Stroop Task</option>
-        <option value="semantic">Semantic Priming</option>
-        <option value="affective">Affective Priming</option>
+        <option value="number-priming">Number Priming</option>
       </select>
 
       <div class="sidebar-footer">
@@ -77,18 +81,18 @@
 
         <!-- Left Column: Visitor Cards -->
         <div class="modules-left">
-          <!-- Be a Participant Card -->
-          <div class="module-card" onclick="showBeParticipant()">
+          <!-- Try It Yourself Card -->
+          <div class="module-card emphasized" onclick="showTryExperiment()">
+            <span class="card-badge">Try me</span>
             <div class="module-content">
-              <div class="module-icon">&#128100;</div>
-              <div class="module-title">Be a Participant</div>
+              <div class="module-icon">&#9658;</div>
+              <div class="module-title">Try It Yourself</div>
               <div class="module-description">
-                Experience priming experiments firsthand as a participant.
+                Experience a priming experiment yourself. Great for learning and testing.
               </div>
               <ul class="module-options">
-                <li>No setup required</li>
-                <li>Learn by doing</li>
-                <li>See how it feels</li>
+                <li>Stroop Task (Stroop, 1935)</li>
+                <li>Number Priming (Koechlin et al., 1999)</li>
               </ul>
             </div>
           </div>
@@ -112,24 +116,9 @@
 
         <!-- Right Column: Main Cards Grid -->
         <div class="modules-grid">
-          <!-- Try Experiment Card -->
-          <div class="module-card" onclick="showTryExperiment()">
-            <div class="module-content">
-              <div class="module-icon">&#9658;</div>
-              <div class="module-title">Try an Experiment</div>
-              <div class="module-description">
-                Experience a priming experiment yourself. Great for learning and testing.
-              </div>
-              <ul class="module-options">
-                <li>Stroop Task</li>
-                <li>Semantic Priming</li>
-                <li>Affective Priming</li>
-              </ul>
-            </div>
-          </div>
-
           <!-- Template Builder Card -->
-          <div class="module-card" onclick="showTemplateBuilder()">
+          <div class="module-card emphasized" onclick="showTemplateBuilder()">
+            <span class="card-badge">Try me</span>
             <div class="module-content">
               <div class="module-icon">&#9881;</div>
               <div class="module-title">Template Builder</div>
@@ -163,7 +152,7 @@
           <!-- Learn More Card -->
           <div class="module-card" onclick="showLearnMore()">
             <div class="module-content">
-              <div class="module-icon">&#128218;</div>
+              <div class="module-icon">&#128736;</div>
               <div class="module-title">Build From Scratch</div>
               <div class="module-description">
                 Understand the ABCD framework and priming paradigms.
@@ -205,54 +194,65 @@
   <div class="timeline-container">
     <div class="timeline-header">
       <span class="timeline-title">Trial Timeline</span>
-      <span class="timeline-total">Total duration: <span id="total-duration">1600</span> ms</span>
+      <span class="timeline-total">Total duration:
+        <input type="number" id="duration-value" value="1600" min="1" style="width: 80px; padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.3); color: white; font-size: 1rem; text-align: center;">
+        <select id="duration-unit" style="padding: 5px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.3); color: white; font-size: 1rem; cursor: pointer;">
+          <option value="ms">milliseconds</option>
+          <option value="s">seconds</option>
+          <option value="min">minutes</option>
+          <option value="h">hours</option>
+          <option value="d">days</option>
+          <option value="w">weeks</option>
+          <option value="y">years</option>
+        </select>
+      </span>
     </div>
     <div class="timeline-track" id="timeline-track">
       <div class="timeline-axis"></div>
       <div class="timeline-ticks" id="timeline-ticks"></div>
 
       <!-- Fixation Event -->
-      <div class="timeline-event" id="event-fixation" style="left: 0%;">
+      <div class="timeline-event" id="event-fixation" data-position="0" style="left: 0%;">
         <div class="event-box">
           <div class="event-label">Fixation</div>
           <div class="event-content">+</div>
         </div>
         <div class="event-connector"></div>
         <div class="event-dot"></div>
-        <div class="event-time">0 ms</div>
+        <div class="event-time">0.00</div>
       </div>
 
       <!-- Prime Event -->
-      <div class="timeline-event" id="event-prime" style="left: 31%;">
+      <div class="timeline-event" id="event-prime" data-position="0.31" style="left: 31%;">
         <div class="event-box">
           <div class="event-label">Prime</div>
           <div class="event-content">A</div>
         </div>
         <div class="event-connector"></div>
         <div class="event-dot"></div>
-        <div class="event-time">500 ms</div>
+        <div class="event-time">0.31</div>
       </div>
 
       <!-- Target Event -->
-      <div class="timeline-event" id="event-target" style="left: 47%;">
+      <div class="timeline-event" id="event-target" data-position="0.47" style="left: 47%;">
         <div class="event-box">
           <div class="event-label">Target</div>
           <div class="event-content">B</div>
         </div>
         <div class="event-connector"></div>
         <div class="event-dot"></div>
-        <div class="event-time">750 ms</div>
+        <div class="event-time">0.47</div>
       </div>
 
       <!-- Response Event -->
-      <div class="timeline-event" id="event-response" style="left: 75%;">
+      <div class="timeline-event" id="event-response" data-position="0.75" style="left: 75%;">
         <div class="event-box">
           <div class="event-label">Response</div>
           <div class="event-content">?</div>
         </div>
         <div class="event-connector"></div>
         <div class="event-dot"></div>
-        <div class="event-time">1200 ms</div>
+        <div class="event-time">0.75</div>
       </div>
     </div>
   </div>
@@ -342,8 +342,7 @@
         <label for="builderExperimentType">Experiment Type</label>
         <select id="builderExperimentType" onchange="updateBuilderPreview()">
           <option value="stroop">Stroop Task (Simultaneous)</option>
-          <option value="semantic">Semantic Priming (Sequential)</option>
-          <option value="affective">Affective Priming (Sequential)</option>
+          <option value="number-priming">Number Priming (Sequential)</option>
         </select>
 
         <!-- Stimulus Preview -->
@@ -938,10 +937,205 @@
     </div>
   </div>
 
+  <!-- Number Priming Overlay -->
+  <div class="stroop-overlay" id="number-priming-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="number-priming-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Number Comparison Task</h2>
+        <p class="subtitle">Masked numerical priming (Dehaene et al., 1998)</p>
+
+        <div class="setup-card">
+          <h3>Instructions</h3>
+          <ol style="color: #9aa6b2; line-height: 1.8; padding-left: 20px;">
+            <li>A fixation cross (+) will appear - focus on it</li>
+            <li>Symbols will flash briefly (ignore them)</li>
+            <li>A number will appear - compare it to 5</li>
+            <li>Press <strong>LEFT ARROW</strong> if the number is SMALLER than 5</li>
+            <li>Press <strong>RIGHT ARROW</strong> if the number is LARGER than 5</li>
+            <li>Respond as quickly and accurately as possible</li>
+          </ol>
+        </div>
+
+        <div id="number-priming-keys-container" class="response-keys" style="display: flex; justify-content: center; gap: 40px; margin: 30px 0;"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="btn" onclick="NumberPriming.start()">Start Experiment</button>
+          <button class="btn btn-secondary" onclick="NumberPriming.close()" style="margin-left: 15px;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="number-priming-trial">
+        <button onclick="NumberPriming.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="trial-header">
+          <span>Trial <span id="np-current-trial">1</span> of <span id="np-total-trials">48</span></span>
+          <div class="progress-bar" style="width: 200px;">
+            <div id="np-progress-fill" class="progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div id="np-stimulus" class="stimulus-display">
+          <span class="np-fixation">+</span>
+        </div>
+
+        <div class="response-hint">
+          Press <strong>E</strong> = Smaller than 5, <strong>I</strong> = Larger than 5
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="number-priming-results">
+        <h2>Experiment Complete</h2>
+
+        <div class="results-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 25px 0;">
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Congruent RT</div>
+            <div id="np-congruent-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Incongruent RT</div>
+            <div id="np-incongruent-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Priming Effect</div>
+            <div id="np-priming-effect" class="value" style="font-size: 2rem; font-weight: bold; color: #4ade80;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Accuracy</div>
+            <div id="np-accuracy" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+        </div>
+
+        <div id="np-explanation" style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-top: 20px; color: #e5e7eb; line-height: 1.6;"></div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+          <button class="btn-export" onclick="NumberPriming.exportCSV()">Export CSV</button>
+          <button class="btn-export" onclick="NumberPriming.exportXLSX()">Export Excel</button>
+          <button class="btn btn-secondary" onclick="NumberPriming.close()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Number Priming Template Builder Overlay -->
+  <div class="template-builder-overlay" id="number-priming-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Number Priming - Template Builder</h1>
+        <button class="builder-close" onclick="NumberPriming.closeBuilder()">&times;</button>
+      </div>
+
+      <div class="collapsible-section expanded" id="np-section-identity" onclick="toggleSection('np-section-identity', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">1</span>
+          <div>
+            <div class="collapsible-title">Your Experiment Identity</div>
+            <div class="collapsible-subtitle">Email and Experiment ID for data access</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Your Email</label>
+              <input type="email" id="npExperimenterEmail" placeholder="your.email@university.edu"
+                     style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4); background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                     onclick="event.stopPropagation()">
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Experiment ID</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="npExperimentId" placeholder="my_number_exp"
+                       style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.4); background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                       onclick="event.stopPropagation()">
+                <button class="btn btn-secondary" onclick="NumberPriming.generateExperimentId(); event.stopPropagation();">Generate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible-section" id="np-section-settings" onclick="toggleSection('np-section-settings', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">2</span>
+          <div>
+            <div class="collapsible-title">Experiment Settings</div>
+            <div class="collapsible-subtitle">Configure mode, timing, and trials</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Priming Mode</label>
+                <select id="builder-np-mode" onchange="NumberPriming.updateBuilderSettings(); event.stopPropagation();" onclick="event.stopPropagation()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="masked">Masked (43ms prime)</option>
+                  <option value="explicit">Explicit (200ms prime)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Reference Number</label>
+                <select id="builder-np-reference" onchange="NumberPriming.updateBuilderSettings(); event.stopPropagation();" onclick="event.stopPropagation()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="5" selected>5 (standard)</option>
+                  <option value="4">4</option>
+                  <option value="6">6</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Prime Duration (ms)</label>
+                <input type="number" id="builder-np-prime-duration" value="43" min="17" max="300"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Trials per Condition</label>
+                <select id="builder-np-trials" onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="6">6 (quick)</option>
+                  <option value="12" selected>12 (standard)</option>
+                  <option value="24">24 (extended)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Forward Mask (ms)</label>
+                <input type="number" id="builder-np-forward-mask" value="71" min="30" max="200"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Backward Mask (ms)</label>
+                <input type="number" id="builder-np-backward-mask" value="71" min="30" max="200"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+            </div>
+            <div style="margin-top: 20px;">
+              <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
+                <input type="checkbox" id="builder-np-show-feedback" checked onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+                Show feedback after each trial
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="builder-actions" style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.1), rgba(102, 126, 234, 0.1)); border-radius: 16px; border: 1px solid rgba(255, 77, 184, 0.3);">
+        <button class="btn-preview" onclick="NumberPriming.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="NumberPriming.generateLink()">Generate Shareable Link</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script src="js/core.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/stroop.js"></script>
+  <script src="js/number-priming.js"></script>
 
   <!-- Main Application Script -->
   <script>
@@ -961,6 +1155,45 @@
     // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
       PTA.initSupabase();
+    });
+
+    // Timeline drag functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const track = document.getElementById('timeline-track');
+      const events = document.querySelectorAll('.timeline-event');
+
+      events.forEach(event => {
+        let isDragging = false;
+
+        event.addEventListener('mousedown', function(e) {
+          if (e.target.closest('.event-box')) {
+            isDragging = true;
+            event.style.zIndex = '100';
+          }
+        });
+
+        document.addEventListener('mousemove', function(e) {
+          if (!isDragging) return;
+
+          const trackRect = track.getBoundingClientRect();
+          const trackLeft = trackRect.left + 40; // account for padding
+          const trackWidth = trackRect.width - 80; // account for padding on both sides
+
+          let newLeft = (e.clientX - trackLeft) / trackWidth;
+          newLeft = Math.max(0, Math.min(1, newLeft)); // clamp between 0 and 1
+
+          event.style.left = (newLeft * 100) + '%';
+          event.dataset.position = newLeft.toFixed(2);
+          event.querySelector('.event-time').textContent = newLeft.toFixed(2);
+        });
+
+        document.addEventListener('mouseup', function() {
+          if (isDragging) {
+            isDragging = false;
+            event.style.zIndex = '';
+          }
+        });
+      });
     });
 
     // Current experiment config
@@ -1006,83 +1239,57 @@
             save_to_supabase: true,
             table_name: 'experiment_results'
           }
-        },
-        semantic: {
-          id: 'semantic-priming',
-          name: 'Semantic Priming',
-          description: 'Lexical decision task with related/unrelated primes',
-          primes: {
-            type: 'text',
-            items: ['DOCTOR', 'BREAD', 'TABLE', 'BIRD']
-          },
-          targets: {
-            type: 'text',
-            items: ['NURSE', 'BUTTER', 'CHAIR', 'WING']
-          },
-          presentation: {
-            mode: 'sequential',
-            fixation_ms: 500,
-            prime_duration_ms: 200,
-            ISI_ms: 50,
-            ITI_ms: 1500
-          },
-          response: {
-            type: 'key_press',
-            keys: { 'word': 'J', 'nonword': 'F' }
-          },
-          trials: {
-            randomize: true,
-            repetitions: 2
-          },
-          data: {
-            save_to_supabase: true,
-            table_name: 'experiment_results'
-          }
-        },
-        affective: {
-          id: 'affective-priming',
-          name: 'Affective Priming',
-          description: 'Evaluate target valence after emotional primes',
-          primes: {
-            type: 'text',
-            items: ['HAPPY', 'LOVE', 'SAD', 'HATE']
-          },
-          targets: {
-            type: 'text',
-            items: ['JOY', 'PEACE', 'FEAR', 'ANGER']
-          },
-          presentation: {
-            mode: 'sequential',
-            fixation_ms: 500,
-            prime_duration_ms: 150,
-            ISI_ms: 100,
-            ITI_ms: 1500
-          },
-          response: {
-            type: 'key_press',
-            keys: { 'positive': 'P', 'negative': 'N' }
-          },
-          trials: {
-            randomize: true,
-            repetitions: 2
-          },
-          data: {
-            save_to_supabase: true,
-            table_name: 'experiment_results'
-          }
         }
       };
 
       currentConfig = configs[type] || null;
     }
 
+    // Show experiment selector modal
+    function showExperimentSelector() {
+      const modal = document.createElement('div');
+      modal.id = 'experiment-selector-modal';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); z-index: 2000;
+        display: flex; justify-content: center; align-items: center;
+      `;
+      modal.innerHTML = `
+        <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 20px; padding: 40px; max-width: 600px; text-align: center;">
+          <h2 style="color: #ffffff; margin-bottom: 25px;">Select an Experiment</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); Stroop.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Stroop Task</strong><br><small style="color: #9aa6b2;">Color-word interference</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); NumberPriming.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Number Priming</strong><br><small style="color: #9aa6b2;">Numerical magnitude</small>
+            </button>
+          </div>
+          <button onclick="document.getElementById('experiment-selector-modal').remove();" style="margin-top: 25px; padding: 12px 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer;">Cancel</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
     // Show Try Experiment
     function showTryExperiment() {
       const type = document.getElementById('experimentSelect').value;
 
-      // Default to Stroop if nothing selected, or use Stroop module for Stroop experiment
-      if (type === 'stroop' || !type) {
+      // If nothing selected, show experiment selector modal
+      if (!type) {
+        showExperimentSelector();
+        return;
+      }
+
+      // Use Stroop module for Stroop experiment
+      if (type === 'stroop') {
         Stroop.open();
+        return;
+      }
+
+      // Use Number Priming module for number priming experiment
+      if (type === 'number-priming') {
+        NumberPriming.open();
         return;
       }
 
@@ -1223,6 +1430,12 @@
         return;
       }
 
+      // Use Number Priming Builder
+      if (type === 'number-priming') {
+        NumberPriming.openBuilder();
+        return;
+      }
+
       document.getElementById('templateBuilderOverlay').classList.add('active');
     }
 
@@ -1242,16 +1455,11 @@
         preview.style.color = '#ff0000';
         primeValue.textContent = 'Word: "BLUE"';
         targetValue.textContent = 'Color: Red';
-      } else if (type === 'semantic') {
-        preview.textContent = 'NURSE';
+      } else if (type === 'number-priming') {
+        preview.textContent = '7';
         preview.style.color = '#ffffff';
-        primeValue.textContent = 'Prime: "DOCTOR"';
-        targetValue.textContent = 'Target: "NURSE"';
-      } else if (type === 'affective') {
-        preview.textContent = 'JOY';
-        preview.style.color = '#ffffff';
-        primeValue.textContent = 'Prime: "HAPPY"';
-        targetValue.textContent = 'Target: "JOY"';
+        primeValue.textContent = 'Prime: "3"';
+        targetValue.textContent = 'Target: "7"';
       }
     }
 
@@ -1382,8 +1590,11 @@
 
       // First check for Stroop URL config (participant links)
       if (!Stroop.checkUrlConfig()) {
-        // If not a Stroop participant link, check for generic config
-        checkUrlConfig();
+        // Check for Number Priming participant link
+        if (!NumberPriming.checkUrlConfig()) {
+          // If not a participant link, check for generic config
+          checkUrlConfig();
+        }
       }
     });
   </script>

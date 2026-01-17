@@ -1,18 +1,35 @@
-/* =====================================================
-   PrimingToolbox - Generic Priming Engine
-   Version: 1.0
-
-   Based on the ABCD Framework (Sivroni & Stark, 2025):
-   - A = Prime (influencing information)
-   - B = Target (input to process)
-   - C = Baseline outcome (without A)
-   - D = Measured outcome (with A)
-
-   Three characteristics of priming:
-   1. Association - relationship between A and B
-   2. Secondariness - A is not required for the task
-   3. Modulation - A changes outcome from C to D
-   ===================================================== */
+/**
+ * =====================================================
+ * PrimingToolbox - Generic Priming Engine
+ * =====================================================
+ *
+ * Core experiment engine implementing the ABCD Framework
+ * for priming research (Sivroni & Stark, 2025).
+ *
+ * ABCD Framework:
+ * - A = Prime (influencing information)
+ * - B = Target (input to process)
+ * - C = Baseline outcome (without A)
+ * - D = Measured outcome (with A)
+ * - Priming Effect = D ≠ C
+ *
+ * Three diagnostic criteria for priming:
+ * 1. Association - relationship between A and B
+ * 2. Secondariness - A is not required for the task
+ * 3. Modulation - A changes outcome from C to D
+ *
+ * Supports:
+ * - Sequential presentation (prime → ISI → target)
+ * - Simultaneous presentation (Stroop-style)
+ * - Configurable timing parameters
+ * - Keyboard response collection
+ * - Automatic data saving to Supabase
+ *
+ * @module PTA.Engine
+ * @version 1.0
+ * @requires PTA (core.js)
+ * =====================================================
+ */
 
 const PTA = window.PTA || {};
 
@@ -47,7 +64,12 @@ PTA.Engine = {
      Initialization
      ===================================================== */
 
-  // Initialize engine with configuration
+  /**
+   * Initialize engine with experiment configuration.
+   * Resets state and prepares for new experiment.
+   * @param {Object} config - Experiment configuration object
+   * @returns {Object} This engine instance (for chaining)
+   */
   init: function(config) {
     this.config = config;
     this.state = {
@@ -65,7 +87,11 @@ PTA.Engine = {
     return this;
   },
 
-  // Bind DOM elements
+  /**
+   * Bind DOM elements by ID for quick access.
+   * @param {Object} elementIds - Map of key names to element IDs
+   * @returns {Object} This engine instance (for chaining)
+   */
   bindElements: function(elementIds) {
     for (const [key, id] of Object.entries(elementIds)) {
       this.elements[key] = document.getElementById(id);
@@ -77,7 +103,12 @@ PTA.Engine = {
      Trial Generation
      ===================================================== */
 
-  // Generate trial list based on configuration
+  /**
+   * Generate trial list based on experiment configuration.
+   * Handles Stroop and generic priming paradigms.
+   * Applies randomization if specified in config.
+   * @returns {Object} This engine instance (for chaining)
+   */
   generateTrials: function() {
     const trials = [];
     const config = this.config;
@@ -137,7 +168,12 @@ PTA.Engine = {
     return this;
   },
 
-  // Generate Stroop-specific trials (congruent/incongruent)
+  /**
+   * Generate Stroop-specific trials with congruent/incongruent conditions.
+   * Congruent: word meaning matches ink color.
+   * Incongruent: word meaning differs from ink color.
+   * @param {Array} trials - Array to populate with trial objects
+   */
   generateStroopTrials: function(trials) {
     const config = this.config;
     const colors = Object.keys(config.colors);
@@ -181,7 +217,10 @@ PTA.Engine = {
      Experiment Flow
      ===================================================== */
 
-  // Start the experiment
+  /**
+   * Start the experiment.
+   * Initializes state, hides setup screen, shows trial screen.
+   */
   start: function() {
     if (this.state.isRunning) {
       console.warn('PTA Engine: Already running');
@@ -207,7 +246,10 @@ PTA.Engine = {
     this.runTrial();
   },
 
-  // Run current trial
+  /**
+   * Run current trial.
+   * Determines presentation mode and initiates stimulus sequence.
+   */
   runTrial: function() {
     const trial = this.state.trials[this.state.currentTrial];
 
@@ -231,7 +273,11 @@ PTA.Engine = {
     }
   },
 
-  // Present stimuli simultaneously
+  /**
+   * Present stimuli simultaneously (Stroop-style).
+   * Shows fixation, then combined prime+target.
+   * @param {Object} trial - Current trial object
+   */
   presentSimultaneous: function(trial) {
     const presentation = this.config.presentation;
 
@@ -246,7 +292,11 @@ PTA.Engine = {
     }
   },
 
-  // Present stimuli sequentially
+  /**
+   * Present stimuli sequentially (semantic priming style).
+   * Sequence: fixation → prime → ISI → target.
+   * @param {Object} trial - Current trial object
+   */
   presentSequential: function(trial) {
     const presentation = this.config.presentation;
 
@@ -261,7 +311,10 @@ PTA.Engine = {
     }
   },
 
-  // Show fixation cross
+  /**
+   * Display fixation cross in stimulus area.
+   * Centers attention before stimulus presentation.
+   */
   showFixation: function() {
     if (this.elements.stimulusDisplay) {
       this.elements.stimulusDisplay.innerHTML = '<span class="fixation">+</span>';
@@ -269,7 +322,11 @@ PTA.Engine = {
     }
   },
 
-  // Show prime stimulus (for sequential)
+  /**
+   * Display prime stimulus (A in ABCD framework).
+   * After prime duration, advances to ISI or target.
+   * @param {Object} trial - Current trial with prime data
+   */
   showPrime: function(trial) {
     const presentation = this.config.presentation;
 
@@ -287,7 +344,11 @@ PTA.Engine = {
     }, presentation.prime_duration_ms);
   },
 
-  // Show inter-stimulus interval (blank)
+  /**
+   * Display inter-stimulus interval (blank screen).
+   * Separates prime from target in sequential presentation.
+   * @param {Object} trial - Current trial object
+   */
   showISI: function(trial) {
     const presentation = this.config.presentation;
 
@@ -300,7 +361,11 @@ PTA.Engine = {
     }, presentation.ISI_ms);
   },
 
-  // Show target stimulus (for sequential)
+  /**
+   * Display target stimulus (B in ABCD framework).
+   * Records target onset time and begins response collection.
+   * @param {Object} trial - Current trial with target data
+   */
   showTarget: function(trial) {
     if (this.elements.stimulusDisplay) {
       this.elements.stimulusDisplay.innerHTML = this.renderStimulus(trial.target, this.config.targets.type);
@@ -311,7 +376,11 @@ PTA.Engine = {
     this.listenForResponse(trial);
   },
 
-  // Show both stimuli simultaneously
+  /**
+   * Display both stimuli simultaneously (Stroop-style).
+   * Prime and target combined in single display.
+   * @param {Object} trial - Current trial object
+   */
   showStimulusSimultaneous: function(trial) {
     // For Stroop-like experiments, prime and target are shown together
     // The prime might be a property (word meaning) and target another (ink color)
@@ -324,7 +393,13 @@ PTA.Engine = {
     this.listenForResponse(trial);
   },
 
-  // Render single stimulus
+  /**
+   * Render single stimulus as HTML.
+   * Supports text, image, and color types.
+   * @param {string} stimulus - Stimulus content (text, URL, or color)
+   * @param {string} type - Stimulus type: 'text', 'image', or 'color'
+   * @returns {string} HTML string for stimulus display
+   */
   renderStimulus: function(stimulus, type) {
     switch (type) {
       case 'text':
@@ -338,7 +413,12 @@ PTA.Engine = {
     }
   },
 
-  // Render simultaneous stimulus (e.g., Stroop)
+  /**
+   * Render combined prime+target stimulus for simultaneous display.
+   * Handles Stroop (word in colored ink) and other combined displays.
+   * @param {Object} trial - Trial with prime and target properties
+   * @returns {string} HTML string for combined stimulus
+   */
   renderSimultaneousStimulus: function(trial) {
     // Check if this is a Stroop trial
     if (this.config.type === 'stroop' && trial.inkHex && trial.word) {
@@ -360,10 +440,19 @@ PTA.Engine = {
      Response Handling
      ===================================================== */
 
-  // Current response handler
+  /**
+   * Current keyboard event handler reference.
+   * Stored to allow removal when response received.
+   * @type {Function|null}
+   */
   responseHandler: null,
 
-  // Listen for keyboard response
+  /**
+   * Attach keyboard listener for participant response.
+   * Validates key presses against configured response keys.
+   * Handles response timeout if configured.
+   * @param {Object} trial - Current trial object
+   */
   listenForResponse: function(trial) {
     const responseConfig = this.config.response;
 
@@ -405,7 +494,13 @@ PTA.Engine = {
     }
   },
 
-  // Record response and move to next trial
+  /**
+   * Record participant response and compute trial outcome.
+   * Calculates RT from target onset. Builds result object.
+   * Shows feedback if configured, then advances to next trial.
+   * @param {Object} trial - Current trial object with targetOnset
+   * @param {string|null} response - Response value or null if timeout
+   */
   recordResponse: function(trial, response) {
     const rt = Date.now() - trial.targetOnset;
     const correct = trial.correctResponse ? (response === trial.correctResponse) : null;
@@ -450,7 +545,12 @@ PTA.Engine = {
     }
   },
 
-  // Show feedback
+  /**
+   * Display accuracy feedback to participant.
+   * Uses config text for correct/incorrect messages.
+   * @param {boolean} correct - Whether response was correct
+   * @param {Function} callback - Function to call after feedback duration
+   */
   showFeedback: function(correct, callback) {
     if (this.elements.stimulusDisplay) {
       const feedbackText = correct ? (this.config.feedback.correct_text || 'Correct') : (this.config.feedback.incorrect_text || 'Incorrect');
@@ -463,7 +563,10 @@ PTA.Engine = {
     }, this.config.feedback.duration_ms || 500);
   },
 
-  // Move to next trial
+  /**
+   * Advance to next trial or end experiment.
+   * Clears display during ITI, then triggers next trial.
+   */
   nextTrial: function() {
     this.state.currentTrial++;
 
@@ -481,7 +584,10 @@ PTA.Engine = {
     }
   },
 
-  // Update progress display
+  /**
+   * Update progress bar and trial counter display.
+   * Called at start of each trial.
+   */
   updateProgress: function() {
     const progress = ((this.state.currentTrial) / this.state.totalTrials) * 100;
 
@@ -497,7 +603,11 @@ PTA.Engine = {
      Experiment End
      ===================================================== */
 
-  // End experiment and show results
+  /**
+   * Finalize experiment and show results screen.
+   * Calculates summary statistics, emits completion event.
+   * Saves data to Supabase if configured.
+   */
   endExperiment: function() {
     this.state.isRunning = false;
 
@@ -521,7 +631,13 @@ PTA.Engine = {
     }
   },
 
-  // Calculate and display results
+  /**
+   * Calculate summary statistics from results.
+   * Computes mean RT, accuracy, error rate.
+   * For Stroop: computes congruent/incongruent RT and Stroop effect.
+   * Emits 'experimentComplete' event with results and stats.
+   * @returns {Object} Summary statistics object
+   */
   displayResults: function() {
     const results = this.state.results;
     let stats;
@@ -573,7 +689,12 @@ PTA.Engine = {
     return stats;
   },
 
-  // Save results to Supabase
+  /**
+   * Save all trial results to Supabase database.
+   * Adds metadata: experiment ID, participant ID, experimenter info.
+   * @async
+   * @returns {Promise<void>}
+   */
   saveResults: async function() {
     const tableName = this.config.data.table_name || 'experiment_results';
 
@@ -597,12 +718,19 @@ PTA.Engine = {
     }
   },
 
-  // Get results for export
+  /**
+   * Get all trial results for export or display.
+   * @returns {Array} Array of trial result objects
+   */
   getResults: function() {
     return this.state.results;
   },
 
-  // Reset engine
+  /**
+   * Reset engine to initial state for new experiment.
+   * Clears trials, results, removes event listeners.
+   * @returns {Object} This engine instance (for chaining)
+   */
   reset: function() {
     this.state = {
       isRunning: false,

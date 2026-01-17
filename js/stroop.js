@@ -1,22 +1,43 @@
 /**
- * Stroop Language Dominance Module
- * Based on V30 - Full bilingual Stroop experiment with language dominance analysis
+ * =====================================================
+ * PrimingToolbox - Stroop Language Dominance Module
+ * =====================================================
  *
- * This module provides:
+ * Bilingual Stroop experiment with language dominance analysis.
+ * Based on V30 - Full implementation.
+ *
+ * Features:
  * - 8 language support (EN, HE, ES, FR, DE, RU, AR, ZH)
- * - Bilingual testing (48 trials: 2 lang x 4 colors x 2 congruency x 3 reps)
- * - Language dominance analysis with detailed explanations
+ * - 48 trials: 2 languages x 4 colors x 2 congruency x 3 reps
+ * - Automatic language dominance calculation
  * - Template Builder for experiment customization
  * - Supabase data collection
  * - Export to CSV/Excel
+ *
+ * ABCD Framework mapping:
+ * - A (Prime): Word semantic content (color name)
+ * - B (Target): Ink color (visual property)
+ * - C (Baseline): Congruent trials (word matches ink)
+ * - D (Measured): Incongruent trials (word differs from ink)
+ * - Stroop Effect = RT(Incongruent) - RT(Congruent)
+ *
+ * @module Stroop
+ * @version 1.0
+ * @requires PTA (core.js)
+ * =====================================================
  */
 
-// Stroop namespace
+/**
+ * Stroop namespace - global experiment controller.
+ * @namespace Stroop
+ */
 window.Stroop = {
 
-  // =====================================================
-  // DATA CONFIGURATION
-  // =====================================================
+  /**
+   * Color and language configuration data.
+   * Contains hex colors, response keys, and word translations.
+   * @type {Object}
+   */
   data: {
     colors: {
       red: { hex: '#ff4444', keys: ['r'] },
@@ -46,9 +67,11 @@ window.Stroop = {
     }
   },
 
-  // =====================================================
-  // STATE
-  // =====================================================
+  /**
+   * Experiment state object.
+   * Tracks languages, trials, results, and UI state.
+   * @type {Object}
+   */
   state: {
     lang1: 'en',
     lang2: 'he',
@@ -60,7 +83,11 @@ window.Stroop = {
     openedFromBuilder: false
   },
 
-  // Template Builder stimuli
+  /**
+   * Template Builder stimulus configuration.
+   * Default 4 colors; can be customized via builder.
+   * @type {Array<Object>}
+   */
   builderStimuli: [
     { id: 'red', color: '#ff4444', wordLang1: 'RED', wordLang2: 'אדום', key: 'R' },
     { id: 'green', color: '#44ff44', wordLang1: 'GREEN', wordLang2: 'ירוק', key: 'G' },
@@ -68,23 +95,25 @@ window.Stroop = {
     { id: 'yellow', color: '#ffff44', wordLang1: 'YELLOW', wordLang2: 'צהוב', key: 'Y' }
   ],
 
-  // Experimenter info
+  /** @type {string} Experimenter email for data attribution */
   experimenterEmail: '',
   userExperimentId: '',
   isParticipantMode: false,
 
-  // =====================================================
-  // INITIALIZATION
-  // =====================================================
+  /**
+   * Initialize Stroop module.
+   * Sets up keyboard event listener.
+   */
   init: function() {
     // Set up keyboard listener
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     console.log('Stroop module initialized');
   },
 
-  // =====================================================
-  // OVERLAY CONTROL
-  // =====================================================
+  /**
+   * Open Stroop experiment overlay.
+   * Shows setup screen, renders response keys.
+   */
   open: function() {
     document.getElementById('stroop-overlay').classList.add('active');
     document.getElementById('stroop-setup').style.display = 'block';
@@ -93,6 +122,10 @@ window.Stroop = {
     this.renderResponseKeys();
   },
 
+  /**
+   * Close Stroop overlay.
+   * Returns to builder or shows thank-you if participant mode.
+   */
   close: function() {
     document.getElementById('stroop-overlay').classList.remove('active');
     this.state.awaitingResponse = false;
@@ -105,6 +138,10 @@ window.Stroop = {
     }
   },
 
+  /**
+   * Display thank-you modal for participants.
+   * Clears URL parameters and shows completion message.
+   */
   showThankYou: function() {
     window.history.replaceState({}, document.title, window.location.pathname);
     this.isParticipantMode = false;
@@ -129,9 +166,10 @@ window.Stroop = {
     document.body.appendChild(modal);
   },
 
-  // =====================================================
-  // RESPONSE KEYS
-  // =====================================================
+  /**
+   * Render response key hints in UI.
+   * Creates clickable key indicators for each color.
+   */
   renderResponseKeys: function() {
     const container = document.getElementById('stroop-keys-container');
     if (!container) return;
@@ -163,9 +201,11 @@ window.Stroop = {
     });
   },
 
-  // =====================================================
-  // TRIAL GENERATION
-  // =====================================================
+  /**
+   * Generate randomized trial list.
+   * Creates 48 trials: 2 languages x 4 colors x 2 congruency x 3 reps.
+   * @returns {Array} Shuffled array of trial objects
+   */
   generateTrials: function() {
     const trials = [];
     const colors = Object.keys(this.data.colors);
@@ -206,9 +246,10 @@ window.Stroop = {
     return trials;
   },
 
-  // =====================================================
-  // EXPERIMENT FLOW
-  // =====================================================
+  /**
+   * Start experiment after language selection.
+   * Validates languages, generates trials, shows trial screen.
+   */
   start: function() {
     this.state.lang1 = document.getElementById('language1').value;
     this.state.lang2 = document.getElementById('language2').value;
@@ -231,6 +272,10 @@ window.Stroop = {
     this.runTrial();
   },
 
+  /**
+   * Execute current trial.
+   * Shows fixation, then stimulus. Records onset time.
+   */
   runTrial: function() {
     if (this.state.currentTrial >= this.state.trials.length) {
       this.showResults();
@@ -260,6 +305,11 @@ window.Stroop = {
     }, 500);
   },
 
+  /**
+   * Process participant response.
+   * Calculates RT, checks correctness, shows feedback.
+   * @param {string} key - Pressed key (r/g/b/y)
+   */
   handleResponse: function(key) {
     if (!this.state.awaitingResponse) return;
 
@@ -289,6 +339,11 @@ window.Stroop = {
     setTimeout(() => this.runTrial(), 300);
   },
 
+  /**
+   * Keyboard event handler.
+   * Filters for valid response keys when trial active.
+   * @param {KeyboardEvent} e - Keyboard event
+   */
   handleKeydown: function(e) {
     const overlay = document.getElementById('stroop-overlay');
     const trial = document.getElementById('stroop-trial');
@@ -303,9 +358,10 @@ window.Stroop = {
     }
   },
 
-  // =====================================================
-  // RESULTS
-  // =====================================================
+  /**
+   * Calculate and display experiment results.
+   * Computes Stroop effect for each language, determines dominance.
+   */
   showResults: function() {
     document.getElementById('stroop-trial').classList.remove('active');
     document.getElementById('stroop-results').classList.add('active');
@@ -346,6 +402,13 @@ window.Stroop = {
     this.saveResults();
   },
 
+  /**
+   * Generate natural language explanation of dominance results.
+   * Handles various Stroop effect patterns.
+   * @param {number} stroop1 - Stroop effect in language 1 (ms)
+   * @param {number} stroop2 - Stroop effect in language 2 (ms)
+   * @returns {string} Explanation text
+   */
   generateExplanation: function(stroop1, stroop2) {
     const lang1Name = this.data.languageNames[this.state.lang1];
     const lang2Name = this.data.languageNames[this.state.lang2];
@@ -376,9 +439,10 @@ window.Stroop = {
     }
   },
 
-  // =====================================================
-  // DATA SAVING
-  // =====================================================
+  /**
+   * Save trial results to Supabase.
+   * Sends each trial with metadata to database.
+   */
   saveResults: function() {
     const experimentId = 'stroop_lang_' + this.state.lang1 + '_' + this.state.lang2;
     const participantId = 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
@@ -405,9 +469,10 @@ window.Stroop = {
     });
   },
 
-  // =====================================================
-  // EXPORT
-  // =====================================================
+  /**
+   * Export results to CSV file.
+   * UTF-8 with BOM for Excel compatibility.
+   */
   exportCSV: function() {
     if (!this.state.results.length) {
       alert('No results to export');
@@ -436,6 +501,10 @@ window.Stroop = {
     link.click();
   },
 
+  /**
+   * Export results to Excel file.
+   * Requires SheetJS library.
+   */
   exportXLSX: function() {
     if (!this.state.results.length) {
       alert('No results to export');
@@ -467,25 +536,33 @@ window.Stroop = {
     XLSX.writeFile(wb, `stroop_results_${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
-  // =====================================================
-  // TEMPLATE BUILDER
-  // =====================================================
-
-  // Preview cycle state
+  /** @type {number} Current preview stimulus index */
   previewIndex: 0,
+  /** @type {number|null} Preview animation interval ID */
   previewInterval: null,
 
+  /**
+   * Open Template Builder overlay.
+   * Renders stimulus table, starts preview animation.
+   */
   openBuilder: function() {
     document.getElementById('stroop-builder-overlay').classList.add('active');
     this.renderStimulusTable();
     this.startPreviewCycle();
   },
 
+  /**
+   * Close Template Builder overlay.
+   */
   closeBuilder: function() {
     document.getElementById('stroop-builder-overlay').classList.remove('active');
     this.stopPreviewCycle();
   },
 
+  /**
+   * Launch experiment preview from builder settings.
+   * Transfers configuration to main experiment.
+   */
   previewFromBuilder: function() {
     // Get settings from builder
     const lang1 = document.getElementById('builder-lang1').value;
@@ -505,12 +582,20 @@ window.Stroop = {
     this.open();
   },
 
+  /**
+   * Generate unique experiment ID.
+   * Format: stroop_{base36_timestamp}
+   */
   generateExperimentId: function() {
     const el = document.getElementById('stroopExperimentId');
     el.value = 'stroop_' + Date.now().toString(36);
     el.style.borderColor = 'rgba(74, 222, 128, 0.7)';
   },
 
+  /**
+   * Render editable stimulus table in builder.
+   * Each row: color ID, hex, words in both languages, response key.
+   */
   renderStimulusTable: function() {
     const tbody = document.getElementById('stimulus-table-body');
     if (!tbody) return;
@@ -559,12 +644,22 @@ window.Stroop = {
     this.updateExamples();
   },
 
+  /**
+   * Update stimulus property from table input.
+   * @param {number} index - Stimulus array index
+   * @param {string} field - Property name (id, color, wordLang1, etc.)
+   * @param {string} value - New value
+   */
   updateStimulus: function(index, field, value) {
     this.builderStimuli[index][field] = value;
     this.updateExamples();
     this.updatePreview();
   },
 
+  /**
+   * Add new stimulus row to builder table.
+   * Creates empty color with default values.
+   */
   addStimulusRow: function() {
     const newId = 'color' + (this.builderStimuli.length + 1);
     this.builderStimuli.push({
@@ -577,6 +672,11 @@ window.Stroop = {
     this.renderStimulusTable();
   },
 
+  /**
+   * Remove stimulus row from builder.
+   * Minimum 2 colors required.
+   * @param {number} index - Row index to remove
+   */
   removeStimulusRow: function(index) {
     if (this.builderStimuli.length <= 2) {
       alert('You need at least 2 colors for the Stroop task.');
@@ -586,6 +686,10 @@ window.Stroop = {
     this.renderStimulusTable();
   },
 
+  /**
+   * Update congruent/incongruent examples in builder.
+   * Shows first two stimuli as examples.
+   */
   updateExamples: function() {
     if (this.builderStimuli.length < 2) return;
 
@@ -605,6 +709,10 @@ window.Stroop = {
     }
   },
 
+  /**
+   * Update live preview display in builder.
+   * Shows current stimulus with alternating color.
+   */
   updatePreview: function() {
     if (this.builderStimuli.length === 0) return;
 
@@ -619,6 +727,10 @@ window.Stroop = {
     }
   },
 
+  /**
+   * Start preview animation cycle.
+   * Rotates through stimuli every 2 seconds.
+   */
   startPreviewCycle: function() {
     this.updatePreview();
     this.previewInterval = setInterval(() => {
@@ -627,6 +739,9 @@ window.Stroop = {
     }, 2000);
   },
 
+  /**
+   * Stop preview animation cycle.
+   */
   stopPreviewCycle: function() {
     if (this.previewInterval) {
       clearInterval(this.previewInterval);
@@ -634,6 +749,11 @@ window.Stroop = {
     }
   },
 
+  /**
+   * Test Supabase connection.
+   * Updates status indicator in builder.
+   * @async
+   */
   testConnection: async function() {
     const statusEl = document.getElementById('connection-status');
     const statusText = statusEl.querySelector('.status-text');
@@ -658,6 +778,11 @@ window.Stroop = {
     }
   },
 
+  /**
+   * Generate shareable experiment link.
+   * Encodes configuration as Base64 URL parameter.
+   * Shows modal with copyable link.
+   */
   generateLink: function() {
     const lang1 = document.getElementById('builder-lang1').value;
     const lang2 = document.getElementById('builder-lang2').value;
@@ -768,9 +893,11 @@ window.Stroop = {
     }
   },
 
-  // =====================================================
-  // URL PARAMETER HANDLING
-  // =====================================================
+  /**
+   * Check URL for experiment configuration.
+   * Parses ?exp= parameter, applies config, enters participant mode.
+   * @returns {boolean} True if valid experiment config found
+   */
   checkUrlConfig: function() {
     const urlParams = new URLSearchParams(window.location.search);
     const expConfig = urlParams.get('exp');

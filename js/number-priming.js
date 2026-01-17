@@ -1,34 +1,72 @@
 /**
- * Number Priming Module (Dehaene Masked Number Priming)
- * Based on Dehaene et al. (1998) - "Imaging unconscious semantic priming"
+ * =====================================================
+ * PrimingToolbox - Number Priming Module
+ * =====================================================
  *
- * This module provides:
- * - Masked (subliminal) and explicit (supraliminal) number priming
- * - Number comparison task (larger/smaller than 5)
- * - Configurable timing for prime, masks, target
+ * Implementation of the Dehaene Masked Number Priming paradigm.
+ * Demonstrates unconscious semantic priming with numerical stimuli.
+ *
+ * ABCD Framework Mapping:
+ * - A (Prime): Masked/explicit number
+ * - B (Target): Visible number to compare
+ * - C (Baseline): Incongruent prime-target pairs
+ * - D (Outcome): RT difference showing priming effect
+ *
+ * Features:
+ * - Masked (subliminal) and explicit (supraliminal) modes
+ * - Number comparison task (larger/smaller than reference)
+ * - Configurable timing parameters
  * - Template Builder for experiment customization
  * - Supabase data collection
  * - Export to CSV/Excel
+ *
+ * References:
+ * - Dehaene, S., Naccache, L., Le Clec'H, G., Koechlin, E., Mueller, M.,
+ *   Dehaene-Lambertz, G., van de Moortele, P.F., & Le Bihan, D. (1998).
+ *   Imaging unconscious semantic priming. Nature, 395(6702), 597-600.
+ *
+ * @module NumberPriming
+ * @version 1.0
+ * =====================================================
  */
 
 // NumberPriming namespace
 window.NumberPriming = {
 
-  // =====================================================
-  // DATA CONFIGURATION
-  // =====================================================
+  /* =====================================================
+     DATA CONFIGURATION
+     ===================================================== */
+
+  /**
+   * Configuration data for the experiment.
+   * @type {Object}
+   */
   data: {
-    // Numbers to use (1-9 excluding 5)
+    /**
+     * Numbers to use in the experiment.
+     * @type {number[]}
+     */
     numbers: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+
+    /**
+     * Reference number for comparison.
+     * @type {number}
+     */
     referenceNumber: 5,
 
-    // Response configuration
+    /**
+     * Response configuration.
+     * @type {Object}
+     */
     responses: {
       smaller: { label: 'Smaller', key: 'arrowleft' },
       larger: { label: 'Larger', key: 'arrowright' }
     },
 
-    // Default timing (in ms)
+    /**
+     * Default timing parameters in milliseconds.
+     * @type {Object}
+     */
     timing: {
       fixation: 500,
       forwardMask: 71,
@@ -39,16 +77,25 @@ window.NumberPriming = {
       iti: 1000
     },
 
-    // Mask characters
+    /**
+     * Mask characters for subliminal presentation.
+     * @type {string}
+     */
     maskChar: '####',
 
-    // Priming modes
+    /**
+     * Priming mode configurations.
+     * @type {Object}
+     */
     modes: {
       masked: { name: 'Masked (Subliminal)', primeDuration: 43 },
       explicit: { name: 'Explicit (Supraliminal)', primeDuration: 200 }
     },
 
-    // Instructions
+    /**
+     * Localized instruction text.
+     * @type {Object}
+     */
     instructions: {
       en: {
         title: 'Number Comparison Task',
@@ -77,9 +124,14 @@ window.NumberPriming = {
     }
   },
 
-  // =====================================================
-  // STATE
-  // =====================================================
+  /* =====================================================
+     STATE
+     ===================================================== */
+
+  /**
+   * Current experiment state.
+   * @type {Object}
+   */
   state: {
     mode: 'masked',           // 'masked' or 'explicit'
     trials: [],
@@ -94,7 +146,10 @@ window.NumberPriming = {
     currentPhase: 'setup'     // 'setup', 'instructions', 'trial', 'results'
   },
 
-  // Template Builder settings
+  /**
+   * Template Builder settings.
+   * @type {Object}
+   */
   builderSettings: {
     mode: 'masked',
     primeDuration: 43,
@@ -113,22 +168,44 @@ window.NumberPriming = {
     maskChar: '####'
   },
 
-  // Experimenter info
+  /**
+   * Experimenter email for data collection.
+   * @type {string}
+   */
   experimenterEmail: '',
+
+  /**
+   * User-defined experiment identifier.
+   * @type {string}
+   */
   userExperimentId: '',
+
+  /**
+   * Whether running in participant mode (via shared link).
+   * @type {boolean}
+   */
   isParticipantMode: false,
 
-  // =====================================================
-  // INITIALIZATION
-  // =====================================================
+  /* =====================================================
+     INITIALIZATION
+     ===================================================== */
+
+  /**
+   * Initialize NumberPriming module.
+   * Sets up keyboard listener.
+   */
   init: function() {
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     console.log('NumberPriming module initialized');
   },
 
-  // =====================================================
-  // OVERLAY CONTROL
-  // =====================================================
+  /* =====================================================
+     OVERLAY CONTROL
+     ===================================================== */
+
+  /**
+   * Open experiment overlay.
+   */
   open: function() {
     const overlay = document.getElementById('number-priming-overlay');
     if (overlay) {
@@ -137,6 +214,10 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Close experiment overlay.
+   * Handles return to builder or thank you screen.
+   */
   close: function() {
     const overlay = document.getElementById('number-priming-overlay');
     if (overlay) {
@@ -152,6 +233,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Show setup screen.
+   */
   showSetup: function() {
     this.state.currentPhase = 'setup';
     const setup = document.getElementById('number-priming-setup');
@@ -165,6 +249,9 @@ window.NumberPriming = {
     this.renderResponseKeys();
   },
 
+  /**
+   * Display thank you modal for participants.
+   */
   showThankYou: function() {
     window.history.replaceState({}, document.title, window.location.pathname);
     this.isParticipantMode = false;
@@ -189,9 +276,13 @@ window.NumberPriming = {
     document.body.appendChild(modal);
   },
 
-  // =====================================================
-  // RESPONSE KEYS DISPLAY
-  // =====================================================
+  /* =====================================================
+     RESPONSE KEYS DISPLAY
+     ===================================================== */
+
+  /**
+   * Render response key hints in UI.
+   */
   renderResponseKeys: function() {
     const container = document.getElementById('number-priming-keys-container');
     if (!container) return;
@@ -216,9 +307,15 @@ window.NumberPriming = {
     `;
   },
 
-  // =====================================================
-  // TRIAL GENERATION
-  // =====================================================
+  /* =====================================================
+     TRIAL GENERATION
+     ===================================================== */
+
+  /**
+   * Generate trial list for number priming experiment.
+   * Creates congruent and incongruent trials.
+   * @returns {Array} Shuffled array of trial objects
+   */
   generateTrials: function() {
     const trials = [];
     const ref = this.builderSettings.referenceNumber || 5;
@@ -283,9 +380,14 @@ window.NumberPriming = {
     return trials;
   },
 
-  // =====================================================
-  // EXPERIMENT FLOW
-  // =====================================================
+  /* =====================================================
+     EXPERIMENT FLOW
+     ===================================================== */
+
+  /**
+   * Start the experiment.
+   * Gets settings from UI and initializes trials.
+   */
   start: function() {
     // Get settings from UI if present
     const modeSelect = document.getElementById('number-priming-mode');
@@ -315,6 +417,10 @@ window.NumberPriming = {
     this.runTrial();
   },
 
+  /**
+   * Run current trial.
+   * Presents fixation, mask, prime, mask, target sequence.
+   */
   runTrial: function() {
     if (this.state.currentTrial >= this.state.trials.length) {
       this.showResults();
@@ -381,6 +487,10 @@ window.NumberPriming = {
     }, this.builderSettings.fixationDuration);
   },
 
+  /**
+   * Handle participant response.
+   * @param {string} response - Response value ('smaller' or 'larger')
+   */
   handleResponse: function(response) {
     if (!this.state.awaitingResponse) return;
 
@@ -430,6 +540,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Handle response timeout.
+   */
   handleTimeout: function() {
     const trial = this.state.trials[this.state.currentTrial];
 
@@ -466,6 +579,10 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Handle keyboard events.
+   * @param {KeyboardEvent} e - Keyboard event
+   */
   handleKeydown: function(e) {
     const overlay = document.getElementById('number-priming-overlay');
     const trial = document.getElementById('number-priming-trial');
@@ -488,9 +605,14 @@ window.NumberPriming = {
     }
   },
 
-  // =====================================================
-  // RESULTS
-  // =====================================================
+  /* =====================================================
+     RESULTS
+     ===================================================== */
+
+  /**
+   * Calculate and display experiment results.
+   * Computes priming effect and accuracy.
+   */
   showResults: function() {
     this.state.currentPhase = 'results';
 
@@ -540,6 +662,12 @@ window.NumberPriming = {
     this.saveResults();
   },
 
+  /**
+   * Generate priming effect explanation text.
+   * @param {number} primingEffect - RT difference in milliseconds
+   * @param {number} accuracy - Accuracy percentage
+   * @returns {string} Explanation text
+   */
   generateExplanation: function(primingEffect, accuracy) {
     const mode = this.builderSettings.mode === 'masked' ? 'masked (subliminal)' : 'explicit';
     const ref = this.builderSettings.referenceNumber || 5;
@@ -561,9 +689,13 @@ window.NumberPriming = {
     }
   },
 
-  // =====================================================
-  // DATA SAVING
-  // =====================================================
+  /* =====================================================
+     DATA SAVING
+     ===================================================== */
+
+  /**
+   * Save trial results to Supabase.
+   */
   saveResults: function() {
     if (!window.PTA || !PTA.supabase) {
       console.log('NumberPriming: Supabase not available, skipping save');
@@ -605,9 +737,13 @@ window.NumberPriming = {
     console.log('NumberPriming: Saved', dataToSave.length, 'trials');
   },
 
-  // =====================================================
-  // EXPORT
-  // =====================================================
+  /* =====================================================
+     EXPORT
+     ===================================================== */
+
+  /**
+   * Export results to CSV file.
+   */
   exportCSV: function() {
     if (!this.state.results.length) {
       alert('No results to export');
@@ -639,6 +775,10 @@ window.NumberPriming = {
     link.click();
   },
 
+  /**
+   * Export results to Excel file.
+   * Requires SheetJS library.
+   */
   exportXLSX: function() {
     if (!this.state.results.length) {
       alert('No results to export');
@@ -673,12 +813,25 @@ window.NumberPriming = {
     XLSX.writeFile(wb, `number_priming_results_${new Date().toISOString().slice(0, 10)}.xlsx`);
   },
 
-  // =====================================================
-  // TEMPLATE BUILDER
-  // =====================================================
+  /* =====================================================
+     TEMPLATE BUILDER
+     ===================================================== */
+
+  /**
+   * Preview cycle index for builder.
+   * @type {number}
+   */
   previewIndex: 0,
+
+  /**
+   * Preview cycle interval reference.
+   * @type {number|null}
+   */
   previewInterval: null,
 
+  /**
+   * Open Template Builder overlay.
+   */
   openBuilder: function() {
     const overlay = document.getElementById('number-priming-builder-overlay');
     if (overlay) {
@@ -688,6 +841,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Close Template Builder overlay.
+   */
   closeBuilder: function() {
     const overlay = document.getElementById('number-priming-builder-overlay');
     if (overlay) {
@@ -696,6 +852,9 @@ window.NumberPriming = {
     this.stopPreviewCycle();
   },
 
+  /**
+   * Initialize builder UI with current settings.
+   */
   initBuilderUI: function() {
     // Set form values from builderSettings
     const modeEl = document.getElementById('builder-np-mode');
@@ -733,6 +892,9 @@ window.NumberPriming = {
     this.updateBuilderPreview();
   },
 
+  /**
+   * Update builder settings from UI.
+   */
   updateBuilderSettings: function() {
     const modeEl = document.getElementById('builder-np-mode');
     const primeDurEl = document.getElementById('builder-np-prime-duration');
@@ -779,6 +941,9 @@ window.NumberPriming = {
     this.updateBuilderPreview();
   },
 
+  /**
+   * Update builder preview display.
+   */
   updateBuilderPreview: function() {
     const previewNumber = document.getElementById('np-preview-number');
     const previewMask = document.getElementById('np-preview-mask');
@@ -792,6 +957,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Start preview animation cycle.
+   */
   startPreviewCycle: function() {
     this.updateBuilderPreview();
     this.previewInterval = setInterval(() => {
@@ -800,6 +968,9 @@ window.NumberPriming = {
     }, 1500);
   },
 
+  /**
+   * Stop preview animation cycle.
+   */
   stopPreviewCycle: function() {
     if (this.previewInterval) {
       clearInterval(this.previewInterval);
@@ -807,6 +978,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Preview experiment from builder settings.
+   */
   previewFromBuilder: function() {
     this.updateBuilderSettings();
     this.state.openedFromBuilder = true;
@@ -814,6 +988,9 @@ window.NumberPriming = {
     this.open();
   },
 
+  /**
+   * Generate unique experiment ID.
+   */
   generateExperimentId: function() {
     const el = document.getElementById('npExperimentId');
     if (el) {
@@ -822,6 +999,10 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Test Supabase connection.
+   * @async
+   */
   testConnection: async function() {
     const statusEl = document.getElementById('np-connection-status');
     const statusText = statusEl ? statusEl.querySelector('.status-text') : null;
@@ -846,6 +1027,9 @@ window.NumberPriming = {
     }
   },
 
+  /**
+   * Generate shareable experiment link.
+   */
   generateLink: function() {
     this.updateBuilderSettings();
 
@@ -961,9 +1145,15 @@ window.NumberPriming = {
     }
   },
 
-  // =====================================================
-  // URL PARAMETER HANDLING
-  // =====================================================
+  /* =====================================================
+     URL PARAMETER HANDLING
+     ===================================================== */
+
+  /**
+   * Check URL for experiment configuration.
+   * Auto-starts experiment if valid config found.
+   * @returns {boolean} True if config was loaded
+   */
   checkUrlConfig: function() {
     const urlParams = new URLSearchParams(window.location.search);
     const expConfig = urlParams.get('exp');

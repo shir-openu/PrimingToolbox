@@ -1,21 +1,52 @@
-/* =====================================================
-   PrimingToolbox - Core Module
-   Version: 1.0
-   Supabase connection and utility functions
-   ===================================================== */
+/**
+ * =====================================================
+ * PrimingToolbox - Core Module
+ * =====================================================
+ *
+ * Central module for the PrimingToolbox platform.
+ * Provides Supabase database connectivity, utility functions,
+ * data storage operations, and UI helpers.
+ *
+ * @module PTA
+ * @version 1.0
+ * @author Dr. Shir Sivroni, The Open University of Israel
+ *
+ * Dependencies:
+ * - Supabase JS Client (loaded via CDN)
+ * - SheetJS (optional, for Excel export)
+ *
+ * Usage:
+ * 1. Include this script after Supabase SDK
+ * 2. Call PTA.initSupabase() to connect to database
+ * 3. Use PTA.saveTrialResult() or PTA.saveAllResults() for data
+ * =====================================================
+ */
 
 const PTA = window.PTA || {};
 
-// Supabase configuration
+/**
+ * Global configuration object.
+ * Contains Supabase credentials and version info.
+ * @type {Object}
+ */
 PTA.config = {
   supabaseUrl: 'https://luhgdmzksitdkbysdfbr.supabase.co',
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aGdkbXprc2l0ZGtieXNkZmJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjU0MDMsImV4cCI6MjA4MDEwMTQwM30.kxiMmJE4N5U5pM-3d81URKCwZ5PSsE-19AIr5KWOMlQ',
   version: '1.0'
 };
 
-// Initialize Supabase client
+/**
+ * Supabase client instance.
+ * Initialized by calling PTA.initSupabase().
+ * @type {Object|null}
+ */
 PTA.supabase = null;
 
+/**
+ * Initialize connection to Supabase database.
+ * Must be called after Supabase SDK is loaded.
+ * @returns {boolean} True if initialization successful, false otherwise
+ */
 PTA.initSupabase = function() {
   if (typeof supabase !== 'undefined') {
     PTA.supabase = supabase.createClient(PTA.config.supabaseUrl, PTA.config.supabaseKey);
@@ -31,12 +62,19 @@ PTA.initSupabase = function() {
    Utility Functions
    ===================================================== */
 
-// Generate unique participant ID
+/**
+ * Generate unique participant ID.
+ * Format: p_{timestamp}_{random9chars}
+ * @returns {string} Unique participant identifier
+ */
 PTA.generateParticipantId = function() {
   return 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 };
 
-// Get URL parameters
+/**
+ * Parse URL query parameters into an object.
+ * @returns {Object} Key-value pairs of URL parameters
+ */
 PTA.getUrlParams = function() {
   const params = new URLSearchParams(window.location.search);
   const result = {};
@@ -46,7 +84,12 @@ PTA.getUrlParams = function() {
   return result;
 };
 
-// Decode experiment config from URL
+/**
+ * Decode Base64-encoded experiment configuration.
+ * Used to parse experiment parameters from shared URL.
+ * @param {string} encodedConfig - Base64 encoded JSON string
+ * @returns {Object|null} Parsed configuration object, or null on failure
+ */
 PTA.decodeConfig = function(encodedConfig) {
   try {
     const decoded = atob(encodedConfig);
@@ -57,7 +100,11 @@ PTA.decodeConfig = function(encodedConfig) {
   }
 };
 
-// Encode experiment config for URL
+/**
+ * Encode experiment configuration to Base64 for URL sharing.
+ * @param {Object} config - Experiment configuration object
+ * @returns {string|null} Base64 encoded string, or null on failure
+ */
 PTA.encodeConfig = function(config) {
   try {
     const json = JSON.stringify(config);
@@ -68,7 +115,11 @@ PTA.encodeConfig = function(config) {
   }
 };
 
-// Format date for display
+/**
+ * Format date for human-readable display.
+ * @param {Date|string} date - Date object or parseable date string
+ * @returns {string} Formatted date string (e.g., "Jan 15, 2025, 10:30 AM")
+ */
 PTA.formatDate = function(date) {
   return new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -79,7 +130,12 @@ PTA.formatDate = function(date) {
   });
 };
 
-// Shuffle array (Fisher-Yates)
+/**
+ * Shuffle array using Fisher-Yates algorithm.
+ * Returns a new shuffled array; does not modify original.
+ * @param {Array} array - Array to shuffle
+ * @returns {Array} New shuffled array
+ */
 PTA.shuffleArray = function(array) {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -89,13 +145,21 @@ PTA.shuffleArray = function(array) {
   return shuffled;
 };
 
-// Calculate mean
+/**
+ * Calculate arithmetic mean of numeric array.
+ * @param {number[]} arr - Array of numbers
+ * @returns {number} Mean value, or 0 for empty array
+ */
 PTA.mean = function(arr) {
   if (arr.length === 0) return 0;
   return arr.reduce((a, b) => a + b, 0) / arr.length;
 };
 
-// Calculate standard deviation
+/**
+ * Calculate population standard deviation.
+ * @param {number[]} arr - Array of numbers
+ * @returns {number} Standard deviation, or 0 for empty array
+ */
 PTA.std = function(arr) {
   if (arr.length === 0) return 0;
   const avg = PTA.mean(arr);
@@ -103,7 +167,11 @@ PTA.std = function(arr) {
   return Math.sqrt(PTA.mean(squareDiffs));
 };
 
-// Calculate median
+/**
+ * Calculate median of numeric array.
+ * @param {number[]} arr - Array of numbers
+ * @returns {number} Median value, or 0 for empty array
+ */
 PTA.median = function(arr) {
   if (arr.length === 0) return 0;
   const sorted = [...arr].sort((a, b) => a - b);
@@ -115,7 +183,13 @@ PTA.median = function(arr) {
    Data Storage Functions
    ===================================================== */
 
-// Save single trial result to Supabase
+/**
+ * Save single trial result to Supabase database.
+ * @async
+ * @param {string} tableName - Target database table name
+ * @param {Object} trialData - Trial data object to insert
+ * @returns {Promise<Object>} Result with data or error property
+ */
 PTA.saveTrialResult = async function(tableName, trialData) {
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized');
@@ -139,7 +213,14 @@ PTA.saveTrialResult = async function(tableName, trialData) {
   }
 };
 
-// Save multiple trial results to Supabase
+/**
+ * Save multiple trial results to Supabase in batch.
+ * More efficient than saving trials individually.
+ * @async
+ * @param {string} tableName - Target database table name
+ * @param {Object[]} trialsData - Array of trial data objects
+ * @returns {Promise<Object>} Result with data or error property
+ */
 PTA.saveAllResults = async function(tableName, trialsData) {
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized');
@@ -164,7 +245,15 @@ PTA.saveAllResults = async function(tableName, trialsData) {
   }
 };
 
-// Fetch experimenter's data from Supabase
+/**
+ * Fetch experiment data for a specific experimenter.
+ * Retrieves all trials matching experimenter email and experiment ID.
+ * @async
+ * @param {string} tableName - Source database table name
+ * @param {string} experimenterEmail - Experimenter's email address
+ * @param {string} experimentId - User-defined experiment identifier
+ * @returns {Promise<Object>} Result with data array or error property
+ */
 PTA.fetchExperimenterData = async function(tableName, experimenterEmail, experimentId) {
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized');
@@ -190,7 +279,15 @@ PTA.fetchExperimenterData = async function(tableName, experimenterEmail, experim
   }
 };
 
-// Check if external ID already participated
+/**
+ * Check if participant with external ID already completed experiment.
+ * Used to prevent duplicate participation.
+ * @async
+ * @param {string} tableName - Database table to check
+ * @param {string} experimentId - Experiment identifier
+ * @param {string} externalId - External participant ID (e.g., Prolific ID)
+ * @returns {Promise<Object>} Result with isDuplicate boolean or error
+ */
 PTA.checkDuplicateParticipation = async function(tableName, experimentId, externalId) {
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized');
@@ -221,7 +318,12 @@ PTA.checkDuplicateParticipation = async function(tableName, experimentId, extern
    Export Functions
    ===================================================== */
 
-// Export to CSV
+/**
+ * Export data array to CSV file and trigger download.
+ * Handles escaping of commas and quotes in values.
+ * @param {Object[]} data - Array of data objects to export
+ * @param {string} [filename='experiment_data.csv'] - Download filename
+ */
 PTA.exportToCSV = function(data, filename) {
   if (!data || data.length === 0) {
     console.warn('PTA: No data to export');
@@ -255,7 +357,12 @@ PTA.exportToCSV = function(data, filename) {
   URL.revokeObjectURL(url);
 };
 
-// Export to Excel (requires SheetJS)
+/**
+ * Export data array to Excel file and trigger download.
+ * Requires SheetJS (XLSX) library to be loaded.
+ * @param {Object[]} data - Array of data objects to export
+ * @param {string} [filename='experiment_data.xlsx'] - Download filename
+ */
 PTA.exportToExcel = function(data, filename) {
   if (typeof XLSX === 'undefined') {
     console.error('PTA: SheetJS (XLSX) not loaded');
@@ -279,7 +386,10 @@ PTA.exportToExcel = function(data, filename) {
    UI Helper Functions
    ===================================================== */
 
-// Show element
+/**
+ * Show a DOM element by removing 'hidden' class.
+ * @param {HTMLElement|string} element - Element or element ID
+ */
 PTA.show = function(element) {
   if (typeof element === 'string') {
     element = document.getElementById(element);
@@ -290,7 +400,10 @@ PTA.show = function(element) {
   }
 };
 
-// Hide element
+/**
+ * Hide a DOM element by adding 'hidden' class.
+ * @param {HTMLElement|string} element - Element or element ID
+ */
 PTA.hide = function(element) {
   if (typeof element === 'string') {
     element = document.getElementById(element);
@@ -300,7 +413,10 @@ PTA.hide = function(element) {
   }
 };
 
-// Show overlay
+/**
+ * Show overlay element by adding 'active' class.
+ * @param {string} overlayId - ID of overlay element
+ */
 PTA.showOverlay = function(overlayId) {
   const overlay = document.getElementById(overlayId);
   if (overlay) {
@@ -308,7 +424,10 @@ PTA.showOverlay = function(overlayId) {
   }
 };
 
-// Hide overlay
+/**
+ * Hide overlay element by removing 'active' class.
+ * @param {string} overlayId - ID of overlay element
+ */
 PTA.hideOverlay = function(overlayId) {
   const overlay = document.getElementById(overlayId);
   if (overlay) {
@@ -316,7 +435,12 @@ PTA.hideOverlay = function(overlayId) {
   }
 };
 
-// Display message
+/**
+ * Display status message in container element.
+ * @param {HTMLElement|string} container - Container element or ID
+ * @param {string} message - Message text to display
+ * @param {string} [type='success'] - Message type ('success' or 'error')
+ */
 PTA.showMessage = function(container, message, type = 'success') {
   const msgDiv = document.createElement('div');
   msgDiv.className = type + '-message';

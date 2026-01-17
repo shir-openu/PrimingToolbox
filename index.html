@@ -12,6 +12,11 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Google Font for Chinese characters (AMP paradigm) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/main.css?v=1.5">
   <link rel="stylesheet" href="css/experiment.css?v=1.1">
@@ -58,7 +63,10 @@
         <option value="">-- Select --</option>
         <option value="stroop">Stroop Task</option>
         <option value="semantic">Semantic Priming</option>
-        <option value="affective">Affective Priming</option>
+        <option value="number-priming">Number Priming</option>
+        <option value="subliminal">Subliminal Priming</option>
+        <option value="amp">AMP (Affect Misattribution)</option>
+        <option value="evaluative">Evaluative Conditioning</option>
       </select>
 
       <div class="sidebar-footer">
@@ -123,7 +131,9 @@
               <ul class="module-options">
                 <li>Stroop Task</li>
                 <li>Semantic Priming</li>
-                <li>Affective Priming</li>
+                <li>Number Priming</li>
+                <li>Subliminal Priming</li>
+                <li>AMP & Evaluative</li>
               </ul>
             </div>
           </div>
@@ -938,10 +948,1576 @@
     </div>
   </div>
 
+  <!-- Semantic Priming Overlay -->
+  <div class="stroop-overlay" id="semantic-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="semantic-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Semantic Priming - Lexical Decision Task</h2>
+        <p class="subtitle">Discover how word meaning spreads through your semantic memory</p>
+
+        <!-- Clear Instructions Box -->
+        <div style="background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.4); border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left;">
+          <h3 style="color: #ff4db8; margin-bottom: 15px; font-size: 1.1rem;">Instructions / How to Play:</h3>
+
+          <p style="color: #e5e7eb; margin-bottom: 20px; font-size: 1rem; line-height: 1.6;">
+            You will see a sequence of two items:<br>
+            1. First, a <strong style="color: #667eea;">PRIME word</strong> appears briefly<br>
+            2. Then, a <strong style="color: #ff4db8;">TARGET</strong> appears - is it a real WORD or a NONWORD?
+          </p>
+
+          <!-- Visual Example -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #9aa6b2; margin-bottom: 15px; font-size: 0.9rem;">Example Trial:</p>
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;">
+              <div style="text-align: center;">
+                <span style="font-size: 1.5rem; font-weight: bold; color: #667eea;">DOCTOR</span>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">Prime (appears first)</p>
+              </div>
+              <div style="font-size: 2rem; color: #9aa6b2;">→</div>
+              <div style="text-align: center;">
+                <span style="font-size: 1.5rem; font-weight: bold; color: #4ade80;">NURSE</span>
+                <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">Target (real word)</p>
+                <p style="color: #4ade80; font-size: 0.9rem; margin-top: 5px;">Press <strong>→ RIGHT</strong> for WORD</p>
+              </div>
+            </div>
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+              <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; justify-content: center;">
+                <div style="text-align: center;">
+                  <span style="font-size: 1.5rem; font-weight: bold; color: #667eea;">TABLE</span>
+                  <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">Prime</p>
+                </div>
+                <div style="font-size: 2rem; color: #9aa6b2;">→</div>
+                <div style="text-align: center;">
+                  <span style="font-size: 1.5rem; font-weight: bold; color: #ff6b6b;">FLIRP</span>
+                  <p style="color: #9aa6b2; font-size: 0.85rem; margin-top: 8px;">Target (not a word)</p>
+                  <p style="color: #ff6b6b; font-size: 0.9rem; margin-top: 5px;">Press <strong>← LEFT</strong> for NONWORD</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p style="color: #ffff44; font-size: 0.95rem; margin-bottom: 0;">
+            Respond as FAST and ACCURATELY as possible!
+          </p>
+        </div>
+
+        <!-- Hebrew Instructions -->
+        <details style="background: rgba(255, 77, 184, 0.1); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 25px; cursor: pointer;">
+          <summary style="color: #ff4db8; font-size: 0.95rem;">Click for Hebrew Instructions / הוראות בעברית</summary>
+          <div style="margin-top: 15px; text-align: right; direction: rtl;">
+            <p style="color: #e5e7eb; line-height: 1.8; font-size: 0.95rem;">
+              <strong>הוראות:</strong><br>
+              תראה/י רצף של שני פריטים:<br>
+              1. קודם מופיעה <strong style="color: #667eea;">מילת תיחול</strong> לזמן קצר<br>
+              2. אחר כך מופיע <strong style="color: #ff4db8;">גירוי מטרה</strong> - האם זו מילה אמיתית או מילה בדויה?<br><br>
+              <span style="color: #4ade80;">J = מילה אמיתית</span> | <span style="color: #ff6b6b;">F = מילה בדויה</span><br><br>
+              <span style="color: #ffff44;">הגיב/י מהר ומדויק ככל האפשר!</span>
+            </p>
+          </div>
+        </details>
+
+        <button class="btn" onclick="Semantic.start()">Start Experiment</button>
+        <button class="btn btn-secondary" style="margin-left: 15px;" onclick="Semantic.close()">Cancel</button>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="semantic-trial">
+        <button onclick="Semantic.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="stroop-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="semantic-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">Trial <span id="semantic-current-trial">1</span> of <span id="semantic-total-trials">60</span></div>
+        </div>
+        <div class="stroop-stimulus" id="semantic-stimulus">
+          <span class="semantic-fixation">+</span>
+        </div>
+        <p class="stroop-instruction">Is the TARGET a real WORD or a NONWORD?</p>
+        <div class="stroop-keys" id="semantic-keys-container"></div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="semantic-results">
+        <h2>Your Results</h2>
+
+        <div class="dominance-result">
+          <h3>Semantic Priming Effect</h3>
+          <div class="dominance-language" id="semantic-priming-effect">-</div>
+          <p class="dominance-explanation" id="semantic-explanation"></p>
+        </div>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>Related Pairs</h3>
+            <div class="result-value" id="semantic-related-rt">-</div>
+            <div class="result-unit">ms avg RT</div>
+          </div>
+          <div class="result-card">
+            <h3>Unrelated Pairs</h3>
+            <div class="result-value" id="semantic-unrelated-rt">-</div>
+            <div class="result-unit">ms avg RT</div>
+          </div>
+          <div class="result-card">
+            <h3>Nonword Targets</h3>
+            <div class="result-value" id="semantic-nonword-rt">-</div>
+            <div class="result-unit">ms avg RT</div>
+          </div>
+          <div class="result-card">
+            <h3>Accuracy</h3>
+            <div class="result-value" id="semantic-accuracy">-</div>
+            <div class="result-unit">correct responses</div>
+          </div>
+        </div>
+
+        <div class="stroop-buttons">
+          <button class="btn" onclick="Semantic.start()">Try Again</button>
+          <button class="btn btn-secondary" onclick="Semantic.close()">Close</button>
+        </div>
+
+        <div class="export-section">
+          <h4>Export Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn btn-export" onclick="Semantic.exportCSV()">Download CSV</button>
+              <p class="export-desc">Universal format for data analysis software (Python, R, MATLAB, SPSS)</p>
+            </div>
+            <div class="export-option">
+              <button class="btn btn-export" onclick="Semantic.exportXLSX()">Download Excel</button>
+              <p class="export-desc">Opens directly in Excel with formatted sheets</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semantic Priming Template Builder Overlay -->
+  <div class="template-builder-overlay" id="semantic-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Semantic Priming - Template Builder</h1>
+        <button class="builder-close" onclick="Semantic.closeBuilder()">&times;</button>
+      </div>
+
+      <!-- Step 1: Experimenter Identification -->
+      <div class="collapsible-section expanded" id="semantic-section-identity" onclick="toggleSection('semantic-section-identity', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">1</span>
+          <div>
+            <div class="collapsible-title">Your Experiment Identity</div>
+            <div class="collapsible-subtitle">Email and Experiment ID for data access</div>
+          </div>
+          <span class="collapsible-status"></span>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
+              These two fields identify YOUR specific experiment. You'll need both to download your data later.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Your Email</label>
+              <input type="email" id="semanticExperimenterEmail" placeholder="your.email@university.edu"
+                     style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                            background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                     oninput="this.style.borderColor = this.validity.valid && this.value ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                     onclick="event.stopPropagation()">
+            </div>
+
+            <div>
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Experiment ID <span style="color: #9aa6b2; font-weight: normal;">(a unique name)</span></label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="semanticExperimentId" placeholder="e.g., semantic_study_dec2025"
+                       style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                              background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                       oninput="this.style.borderColor = this.value.length >= 3 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                       onclick="event.stopPropagation()">
+                <button onclick="event.stopPropagation(); Semantic.generateExperimentId()" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: ABCD Framework -->
+      <div class="collapsible-section" id="semantic-section-abcd" onclick="toggleSection('semantic-section-abcd', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">2</span>
+          <div>
+            <div class="collapsible-title">ABCD Framework Structure</div>
+            <div class="collapsible-subtitle">Prime (A) → Target (B) = Sequential presentation</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div class="stimulus-combined" style="margin-bottom: 20px;">
+              <h3 style="margin-bottom: 15px;">Trial Sequence (A → B)</h3>
+              <div style="display: flex; align-items: center; justify-content: center; gap: 30px; margin-bottom: 15px;">
+                <div style="text-align: center;">
+                  <div class="stimulus-preview stimulus-preview-live" style="font-size: 2rem; padding: 20px;">
+                    <span id="semantic-preview-prime" style="color: #667eea;">DOCTOR</span>
+                  </div>
+                  <p style="color: #667eea; margin-top: 8px;">Prime (A)</p>
+                </div>
+                <div style="font-size: 2rem; color: #9aa6b2;">→</div>
+                <div style="text-align: center;">
+                  <div class="stimulus-preview stimulus-preview-live" style="font-size: 2rem; padding: 20px;">
+                    <span id="semantic-preview-target" style="color: #4ade80;">NURSE</span>
+                  </div>
+                  <p style="color: #4ade80; margin-top: 8px;">Target (B)</p>
+                </div>
+              </div>
+              <p style="color: #9aa6b2; font-size: 0.9rem;">
+                In Semantic Priming, the prime appears <strong style="color: #ff4db8;">before</strong> the target with a configurable delay (SOA)
+              </p>
+
+              <div class="stimulus-breakdown">
+                <div class="stimulus-part prime">
+                  <div class="stimulus-part-label">A (Prime)</div>
+                  <div class="stimulus-part-name">Prime Word</div>
+                  <div class="stimulus-part-desc">Activates semantic associations in memory</div>
+                </div>
+                <div class="stimulus-part target">
+                  <div class="stimulus-part-label">B (Target)</div>
+                  <div class="stimulus-part-name">Target Word/Nonword</div>
+                  <div class="stimulus-part-desc">Participant decides: real word or nonword?</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="outcomes-row" style="margin-bottom: 20px;">
+              <div class="outcome-box baseline">
+                <div class="outcome-letter">C</div>
+                <div class="outcome-name">Baseline Outcome</div>
+                <div class="outcome-condition">Unrelated pairs</div>
+                <div class="outcome-example">"BREAD" → "NURSE"</div>
+              </div>
+
+              <div class="effect-formula">
+                <strong>Priming Effect</strong><br>
+                C - D
+              </div>
+
+              <div class="outcome-box measured">
+                <div class="outcome-letter">D</div>
+                <div class="outcome-name">Measured Outcome</div>
+                <div class="outcome-condition">Related pairs</div>
+                <div class="outcome-example">"DOCTOR" → "NURSE"</div>
+              </div>
+            </div>
+
+            <div class="criteria-section">
+              <div class="criteria-title">Three Priming Criteria (All Met)</div>
+              <div class="criteria-list">
+                <div class="criterion">
+                  <div class="criterion-check">&#10003;</div>
+                  <div class="criterion-name">Association</div>
+                  <div class="criterion-desc">Prime and target share semantic relationship</div>
+                </div>
+                <div class="criterion">
+                  <div class="criterion-check">&#10003;</div>
+                  <div class="criterion-name">Secondariness</div>
+                  <div class="criterion-desc">Prime is irrelevant to task (lexical decision on target only)</div>
+                </div>
+                <div class="criterion">
+                  <div class="criterion-check">&#10003;</div>
+                  <div class="criterion-name">Modulation</div>
+                  <div class="criterion-desc">Related primes speed up target recognition (D &lt; C)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Define Stimuli -->
+      <div class="collapsible-section" id="semantic-section-stimuli" onclick="toggleSection('semantic-section-stimuli', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">3</span>
+          <div>
+            <div class="collapsible-title">Define Your Stimuli</div>
+            <div class="collapsible-subtitle">Word pairs and nonwords</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <!-- Related Pairs -->
+            <div class="stimulus-editor" style="margin-bottom: 25px;">
+              <div class="stimulus-editor-header">
+                <span class="stimulus-editor-title" style="color: #4ade80;">Related Word Pairs (Semantic Associates)</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); Semantic.addPair('related')">+ Add Pair</button>
+              </div>
+              <table class="stimulus-table">
+                <thead>
+                  <tr>
+                    <th>Prime</th>
+                    <th>Target</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="semantic-related-tbody"></tbody>
+              </table>
+            </div>
+
+            <!-- Unrelated Pairs -->
+            <div class="stimulus-editor" style="margin-bottom: 25px;">
+              <div class="stimulus-editor-header">
+                <span class="stimulus-editor-title" style="color: #ff6b6b;">Unrelated Word Pairs (Control)</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); Semantic.addPair('unrelated')">+ Add Pair</button>
+              </div>
+              <table class="stimulus-table">
+                <thead>
+                  <tr>
+                    <th>Prime</th>
+                    <th>Target</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="semantic-unrelated-tbody"></tbody>
+              </table>
+            </div>
+
+            <!-- Nonword Targets -->
+            <div class="stimulus-editor">
+              <div class="stimulus-editor-header">
+                <span class="stimulus-editor-title" style="color: #9aa6b2;">Nonword Targets (Pseudowords)</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); Semantic.addNonword()">+ Add Nonword</button>
+              </div>
+              <table class="stimulus-table">
+                <thead>
+                  <tr>
+                    <th>Nonword</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="semantic-nonword-tbody"></tbody>
+              </table>
+              <p class="stimulus-note">
+                Nonwords should be pronounceable but not real words (e.g., FLIRP, BRANE, SLONT)
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Try It Yourself -->
+      <div class="collapsible-section" id="semantic-section-preview" onclick="toggleSection('semantic-section-preview', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">4</span>
+          <div>
+            <div class="collapsible-title">Try It Yourself</div>
+            <div class="collapsible-subtitle">Preview the experiment as a participant</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div class="try-it-cta" onclick="event.stopPropagation()">
+              <div class="try-it-content">
+                <div class="try-it-title">
+                  TRY IT YOURSELF
+                  <span class="try-it-arrow">--></span>
+                </div>
+                <div class="try-it-desc">
+                  Experience the experiment from a participant's perspective. See how your stimuli will look and feel in action.
+                </div>
+              </div>
+              <button class="btn-try-it" onclick="event.stopPropagation(); Semantic.previewFromBuilder()">START PREVIEW</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Parameters -->
+      <div class="collapsible-section" id="semantic-section-params" onclick="toggleSection('semantic-section-params', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">5</span>
+          <div>
+            <div class="collapsible-title">Experiment Parameters</div>
+            <div class="collapsible-subtitle">Timing, trials, and feedback settings</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <div class="params-grid">
+              <div class="param-group">
+                <label for="semantic-builder-trials">Trials per Condition</label>
+                <select id="semantic-builder-trials">
+                  <option value="5">5 (Quick - ~150 trials)</option>
+                  <option value="10" selected>10 (Standard - ~300 trials)</option>
+                  <option value="20">20 (Extended - ~600 trials)</option>
+                </select>
+                <div class="param-hint">More trials = more reliable results</div>
+              </div>
+
+              <div class="param-group">
+                <label for="semantic-builder-fixation">Fixation Duration (ms)</label>
+                <input type="number" id="semantic-builder-fixation" value="500" min="200" max="2000" step="100">
+                <div class="param-hint">How long the + symbol appears (typical: 500ms)</div>
+              </div>
+
+              <div class="param-group">
+                <label for="semantic-builder-prime-duration">Prime Duration (ms)</label>
+                <input type="number" id="semantic-builder-prime-duration" value="200" min="50" max="500" step="50">
+                <div class="param-hint">How long the prime word is shown (typical: 200ms)</div>
+              </div>
+
+              <div class="param-group">
+                <label for="semantic-builder-soa">SOA - Stimulus Onset Asynchrony (ms)</label>
+                <input type="number" id="semantic-builder-soa" value="250" min="50" max="1500" step="50">
+                <div class="param-hint">Time from prime onset to target onset. &lt;300ms = automatic, &gt;500ms = strategic</div>
+              </div>
+
+              <div class="param-group">
+                <label for="semantic-builder-feedback">Show Feedback</label>
+                <select id="semantic-builder-feedback">
+                  <option value="yes">Yes - show correct/incorrect</option>
+                  <option value="no">No - proceed immediately</option>
+                </select>
+                <div class="param-hint">Whether to show if response was correct</div>
+              </div>
+
+              <div class="param-group">
+                <label>Response Keys</label>
+                <div style="display: flex; gap: 20px; margin-top: 8px;">
+                  <div style="background: rgba(74, 222, 128, 0.2); padding: 12px 20px; border-radius: 8px; border: 1px solid rgba(74, 222, 128, 0.4);">
+                    <span style="font-weight: bold; font-size: 1.5rem;">→</span> = WORD
+                  </div>
+                  <div style="background: rgba(255, 107, 107, 0.2); padding: 12px 20px; border-radius: 8px; border: 1px solid rgba(255, 107, 107, 0.4);">
+                    <span style="font-weight: bold; font-size: 1.5rem;">←</span> = NONWORD
+                  </div>
+                </div>
+                <div class="param-hint">Arrow keys for lexical decision response</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Data Collection -->
+      <div class="collapsible-section" id="semantic-section-data" onclick="toggleSection('semantic-section-data', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">6</span>
+          <div>
+            <div class="collapsible-title">Data Collection</div>
+            <div class="collapsible-subtitle">Cloud storage and connection status</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <p class="data-description">
+              Participant results are automatically saved to a secure cloud database.
+              No setup required - data collection works out of the box.
+            </p>
+
+            <div class="connection-status" id="semantic-connection-status">
+              <div class="status-dot"></div>
+              <div class="status-text">
+                <strong>Connected</strong> - Data will be saved automatically
+              </div>
+            </div>
+
+            <button class="btn-test-connection" onclick="event.stopPropagation(); Semantic.testConnection()">Test Connection</button>
+
+            <details class="data-info">
+              <summary>Data fields collected</summary>
+              <div class="data-info-content">
+                <p>Each trial saves:</p>
+                <ul style="margin-top: 10px; padding-left: 20px; font-size: 0.9rem;">
+                  <li><code>experiment_id</code>, <code>participant_id</code></li>
+                  <li><code>trial_number</code>, <code>prime_word</code>, <code>target_word</code></li>
+                  <li><code>target_type</code> (word/nonword), <code>condition</code> (related/unrelated/nonword)</li>
+                  <li><code>response</code>, <code>correct</code>, <code>rt</code> (reaction time)</li>
+                  <li><code>soa</code> (stimulus onset asynchrony used)</li>
+                  <li><code>experimenter_email</code>, <code>user_experiment_id</code></li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="builder-actions" style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.1), rgba(102, 126, 234, 0.1)); border-radius: 16px; border: 1px solid rgba(255, 77, 184, 0.3);">
+        <button class="btn-preview" onclick="Semantic.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="Semantic.generateLink()">Generate Shareable Link</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Evaluative Conditioning Overlay -->
+  <div class="stroop-overlay" id="evaluative-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="evaluative-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Evaluative Conditioning</h2>
+        <p class="subtitle">Learn associations through repeated pairings, then rate your feelings</p>
+
+        <!-- Instructions Box -->
+        <div style="background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.4); border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left;">
+          <h3 style="color: #ff4db8; margin-bottom: 15px; font-size: 1.1rem;">How This Works:</h3>
+
+          <p style="color: #e5e7eb; margin-bottom: 20px; font-size: 1rem; line-height: 1.6;">
+            This experiment has <strong>two phases</strong>:
+          </p>
+
+          <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+            <div style="flex: 1; min-width: 200px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;">
+              <h4 style="color: #4ade80; margin-bottom: 8px;">Phase 1: Learning</h4>
+              <p style="color: #9aa6b2; font-size: 0.9rem; line-height: 1.5;">
+                Watch pairs of stimuli appear together.<br>
+                <strong>No response needed</strong> - just pay attention.
+              </p>
+            </div>
+            <div style="flex: 1; min-width: 200px; background: rgba(0,0,0,0.3); border-radius: 10px; padding: 15px;">
+              <h4 style="color: #ff4db8; margin-bottom: 8px;">Phase 2: Rating</h4>
+              <p style="color: #9aa6b2; font-size: 0.9rem; line-height: 1.5;">
+                Rate how pleasant each stimulus feels.<br>
+                <strong>Use scale 1-7</strong> or keyboard keys.
+              </p>
+            </div>
+          </div>
+
+          <p style="color: #ffff44; font-size: 0.95rem;">
+            This demonstrates how associations can change our feelings about neutral stimuli!
+          </p>
+        </div>
+
+        <button class="btn" onclick="EvaluativeConditioning.start()">Start Experiment</button>
+        <button class="btn btn-secondary" style="margin-left: 15px;" onclick="EvaluativeConditioning.close()">Cancel</button>
+      </div>
+
+      <!-- Learning Phase Screen -->
+      <div class="stroop-trial" id="evaluative-learning">
+        <button onclick="EvaluativeConditioning.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="stroop-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="learning-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">Learning Phase - Trial <span id="learning-current-trial">1</span> of <span id="learning-total-trials">32</span></div>
+        </div>
+        <div class="stroop-stimulus" id="learning-stimulus">
+          <span class="stroop-fixation">+</span>
+        </div>
+        <p class="stroop-instruction" style="color: #4ade80;">Watch and pay attention - no response needed</p>
+      </div>
+
+      <!-- Test Phase Screen -->
+      <div class="stroop-trial" id="evaluative-test">
+        <button onclick="EvaluativeConditioning.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="stroop-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="test-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text">Rating Phase - Trial <span id="test-current-trial">1</span> of <span id="test-total-trials">4</span></div>
+        </div>
+        <div class="stroop-stimulus" id="test-stimulus">
+          <span class="stroop-fixation">+</span>
+        </div>
+
+        <!-- Rating Scale -->
+        <div class="rating-scale-container" id="rating-scale-container">
+          <p style="color: #9aa6b2; margin-bottom: 15px; font-size: 0.95rem;">How pleasant is this stimulus?</p>
+          <div style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+            <button class="rating-button" data-value="1" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(248, 113, 113, 0.6); background: rgba(248, 113, 113, 0.2); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">1</button>
+            <button class="rating-button" data-value="2" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">2</button>
+            <button class="rating-button" data-value="3" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">3</button>
+            <button class="rating-button" data-value="4" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.1); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">4</button>
+            <button class="rating-button" data-value="5" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.05); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">5</button>
+            <button class="rating-button" data-value="6" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(74, 222, 128, 0.4); background: rgba(74, 222, 128, 0.1); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">6</button>
+            <button class="rating-button" data-value="7" style="width: 50px; height: 50px; border-radius: 10px; border: 2px solid rgba(74, 222, 128, 0.6); background: rgba(74, 222, 128, 0.2); color: white; cursor: pointer; font-size: 1.1rem; font-weight: bold; transition: all 0.2s;">7</button>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85rem; color: #9aa6b2;">
+            <span>Very Unpleasant</span>
+            <span>Very Pleasant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="evaluative-results">
+        <h2>Your Results</h2>
+
+        <div class="dominance-result">
+          <h3>Evaluative Conditioning Effect</h3>
+          <div class="dominance-language" id="result-ec-effect">-</div>
+          <p class="dominance-explanation" id="ec-explanation"></p>
+        </div>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>Positive-Paired CS</h3>
+            <div class="result-value" id="result-positive-avg">-</div>
+            <div class="result-unit">avg rating</div>
+          </div>
+          <div class="result-card">
+            <h3>Negative-Paired CS</h3>
+            <div class="result-value" id="result-negative-avg">-</div>
+            <div class="result-unit">avg rating</div>
+          </div>
+        </div>
+
+        <div class="stroop-buttons">
+          <button class="btn" onclick="EvaluativeConditioning.start()">Try Again</button>
+          <button class="btn btn-secondary" onclick="EvaluativeConditioning.close()">Close</button>
+        </div>
+
+        <div class="export-section">
+          <h4>Export Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn btn-export" onclick="EvaluativeConditioning.exportCSV()">Download CSV</button>
+              <p class="export-desc">Universal format for data analysis</p>
+            </div>
+            <div class="export-option">
+              <button class="btn btn-export" onclick="EvaluativeConditioning.exportXLSX()">Download Excel</button>
+              <p class="export-desc">Opens directly in Excel</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evaluative Conditioning Template Builder Overlay -->
+  <div class="template-builder-overlay" id="evaluative-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Evaluative Conditioning - Template Builder</h1>
+        <button class="builder-close" onclick="EvaluativeConditioning.closeBuilder()">&times;</button>
+      </div>
+
+      <!-- Step 1: Experimenter Identity -->
+      <div class="collapsible-section expanded" id="ec-section-identity" onclick="toggleSection('ec-section-identity', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">1</span>
+          <div>
+            <div class="collapsible-title">Your Experiment Identity</div>
+            <div class="collapsible-subtitle">Email and Experiment ID for data access</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
+              These two fields identify YOUR specific experiment. You'll need both to download your data later.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Your Email</label>
+              <input type="email" id="ecExperimenterEmail" placeholder="your.email@university.edu"
+                     style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                            background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                     oninput="this.style.borderColor = this.validity.valid && this.value ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                     onclick="event.stopPropagation()">
+            </div>
+
+            <div>
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Experiment ID</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="ecExperimentId" placeholder="e.g., ec_study_dec2025"
+                       style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                              background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                       oninput="this.style.borderColor = this.value.length >= 3 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                       onclick="event.stopPropagation()">
+                <button onclick="event.stopPropagation(); EvaluativeConditioning.generateExperimentId()" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: ABCD Framework -->
+      <div class="collapsible-section" id="ec-section-abcd" onclick="toggleSection('ec-section-abcd', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">2</span>
+          <div>
+            <div class="collapsible-title">ABCD Framework Structure</div>
+            <div class="collapsible-subtitle">US (Prime) transfers valence to CS (Target) through repeated pairings</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div class="stimulus-combined" style="margin-bottom: 20px;">
+              <h3 style="margin-bottom: 15px;">Evaluative Conditioning Structure</h3>
+              <p style="color: #9aa6b2; font-size: 0.95rem; line-height: 1.6; margin-bottom: 15px;">
+                Unlike single-trial priming, EC involves a <strong style="color: #ff4db8;">learning phase</strong> with repeated CS-US pairings,
+                followed by a <strong style="color: #ff4db8;">test phase</strong> to measure acquired valence.
+              </p>
+
+              <div class="stimulus-breakdown">
+                <div class="stimulus-part prime">
+                  <div class="stimulus-part-label">A (US)</div>
+                  <div class="stimulus-part-name">Unconditioned Stimulus</div>
+                  <div class="stimulus-part-desc">Positive or negative stimulus that transfers its valence</div>
+                </div>
+                <div class="stimulus-part target">
+                  <div class="stimulus-part-label">B (CS)</div>
+                  <div class="stimulus-part-name">Conditioned Stimulus</div>
+                  <div class="stimulus-part-desc">Initially neutral stimulus that acquires valence</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="outcomes-row" style="margin-bottom: 20px;">
+              <div class="outcome-box baseline">
+                <div class="outcome-letter">C</div>
+                <div class="outcome-name">Baseline</div>
+                <div class="outcome-condition">CS rating before pairing</div>
+                <div class="outcome-example">Neutral (~4 on 1-7 scale)</div>
+              </div>
+
+              <div class="effect-formula">
+                <strong>EC Effect</strong><br>
+                D - C
+              </div>
+
+              <div class="outcome-box measured">
+                <div class="outcome-letter">D</div>
+                <div class="outcome-name">Measured</div>
+                <div class="outcome-condition">CS rating after pairing</div>
+                <div class="outcome-example">Positive-paired: >4, Negative-paired: <4</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Define CS Stimuli -->
+      <div class="collapsible-section" id="ec-section-cs" onclick="toggleSection('ec-section-cs', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">3</span>
+          <div>
+            <div class="collapsible-title">Define CS (Neutral Stimuli)</div>
+            <div class="collapsible-subtitle">Stimuli that will be paired with positive or negative US</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div class="stimulus-editor">
+              <div class="stimulus-editor-header" onclick="event.stopPropagation()">
+                <span class="stimulus-editor-title">Neutral Stimuli (CS)</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); EvaluativeConditioning.addCS()">+ Add CS</button>
+              </div>
+
+              <table class="stimulus-table" onclick="event.stopPropagation()">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Label</th>
+                    <th>Color</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="cs-table-body">
+                  <!-- Rows generated by JavaScript -->
+                </tbody>
+              </table>
+
+              <p class="stimulus-note">
+                Half of these will be paired with positive US, half with negative US. Use at least 2 CS (ideally 4+).
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Define US Stimuli -->
+      <div class="collapsible-section" id="ec-section-us" onclick="toggleSection('ec-section-us', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">4</span>
+          <div>
+            <div class="collapsible-title">Define US (Valenced Stimuli)</div>
+            <div class="collapsible-subtitle">Positive and negative stimuli that transfer valence</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <!-- Positive US -->
+            <div class="stimulus-editor" style="margin-bottom: 20px;">
+              <div class="stimulus-editor-header" onclick="event.stopPropagation()">
+                <span class="stimulus-editor-title" style="color: #4ade80;">Positive US</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); EvaluativeConditioning.addUS('positive')">+ Add</button>
+              </div>
+
+              <table class="stimulus-table" onclick="event.stopPropagation()">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Word</th>
+                    <th>Color</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="positive-us-table-body">
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Negative US -->
+            <div class="stimulus-editor">
+              <div class="stimulus-editor-header" onclick="event.stopPropagation()">
+                <span class="stimulus-editor-title" style="color: #f87171;">Negative US</span>
+                <button class="btn-add-stimulus" onclick="event.stopPropagation(); EvaluativeConditioning.addUS('negative')">+ Add</button>
+              </div>
+
+              <table class="stimulus-table" onclick="event.stopPropagation()">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Word</th>
+                    <th>Color</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="negative-us-table-body">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Parameters -->
+      <div class="collapsible-section" id="ec-section-params" onclick="toggleSection('ec-section-params', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">5</span>
+          <div>
+            <div class="collapsible-title">Experiment Parameters</div>
+            <div class="collapsible-subtitle">Number of pairings, timing, and rating scale</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <div class="params-grid">
+              <div class="param-group">
+                <label for="builder-pairings">Pairings per CS</label>
+                <select id="builder-pairings">
+                  <option value="5">5 (Quick - ~20 learning trials)</option>
+                  <option value="8" selected>8 (Standard - ~32 learning trials)</option>
+                  <option value="10">10 (Extended - ~40 learning trials)</option>
+                </select>
+                <div class="param-hint">Optimal range is 5-10 based on literature</div>
+              </div>
+
+              <div class="param-group">
+                <label for="builder-cs-duration">CS Duration (ms)</label>
+                <input type="number" id="builder-cs-duration" value="2000" min="500" max="5000" step="100">
+                <div class="param-hint">How long each stimulus pair is shown</div>
+              </div>
+
+              <div class="param-group">
+                <label for="builder-iti">Inter-trial Interval (ms)</label>
+                <input type="number" id="builder-iti" value="1500" min="500" max="3000" step="100">
+                <div class="param-hint">Pause between trials</div>
+              </div>
+
+              <div class="param-group">
+                <label for="builder-rating-scale">Rating Scale</label>
+                <select id="builder-rating-scale">
+                  <option value="7" selected>1-7 (Standard)</option>
+                  <option value="9">1-9 (Extended)</option>
+                </select>
+                <div class="param-hint">Scale for valence ratings</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6: Try It -->
+      <div class="collapsible-section" id="ec-section-preview" onclick="toggleSection('ec-section-preview', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">6</span>
+          <div>
+            <div class="collapsible-title">Try It Yourself</div>
+            <div class="collapsible-subtitle">Preview the experiment as a participant</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div class="try-it-cta" onclick="event.stopPropagation()">
+              <div class="try-it-content">
+                <div class="try-it-title">
+                  TRY IT YOURSELF
+                  <span class="try-it-arrow">--></span>
+                </div>
+                <div class="try-it-desc">
+                  Experience the full learning and rating phases from a participant's perspective.
+                </div>
+              </div>
+              <button class="btn-try-it" onclick="event.stopPropagation(); EvaluativeConditioning.previewFromBuilder()">START PREVIEW</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="builder-actions" style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.1), rgba(102, 126, 234, 0.1)); border-radius: 16px; border: 1px solid rgba(255, 77, 184, 0.3);">
+        <button class="btn-preview" onclick="EvaluativeConditioning.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="EvaluativeConditioning.generateLink()">Generate Shareable Link</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AMP (Affect Misattribution Procedure) Overlay -->
+  <div class="stroop-overlay" id="amp-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="amp-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>AMP - Affect Misattribution Procedure</h2>
+        <p class="subtitle">Discover how brief images influence your judgments</p>
+
+        <!-- Instructions Box -->
+        <div style="background: rgba(102, 126, 234, 0.15); border: 2px solid rgba(102, 126, 234, 0.4); border-radius: 15px; padding: 25px; margin-bottom: 30px; text-align: left;">
+          <h3 style="color: #ff4db8; margin-bottom: 15px; font-size: 1.1rem;">Instructions / How to Play:</h3>
+
+          <p style="color: #e5e7eb; margin-bottom: 20px; font-size: 1rem; line-height: 1.6;">
+            You will see a quick sequence:<br>
+            1. A <strong style="color: #667eea;">brief image</strong> flashes on screen<br>
+            2. A <strong style="color: #ff4db8;">Chinese character</strong> appears<br>
+            3. Judge the character as <strong style="color: #4ade80;">Pleasant</strong> or <strong style="color: #ff6b6b;">Unpleasant</strong>
+          </p>
+
+          <!-- Visual Example -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+            <p style="color: #9aa6b2; margin-bottom: 15px; font-size: 0.9rem;">Trial sequence:</p>
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap; justify-content: center;">
+              <div style="text-align: center; padding: 10px;">
+                <span style="font-size: 1.5rem; color: #9aa6b2;">+</span>
+                <p style="color: #666; font-size: 0.75rem; margin-top: 5px;">Fixation</p>
+              </div>
+              <span style="color: #666;">→</span>
+              <div style="text-align: center; padding: 10px;">
+                <span style="font-size: 2rem;">😊</span>
+                <p style="color: #667eea; font-size: 0.75rem; margin-top: 5px;">Image (brief!)</p>
+              </div>
+              <span style="color: #666;">→</span>
+              <div style="text-align: center; padding: 10px;">
+                <span style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">會</span>
+                <p style="color: #ff4db8; font-size: 0.75rem; margin-top: 5px;">Character</p>
+              </div>
+              <span style="color: #666;">→</span>
+              <div style="text-align: center; padding: 10px;">
+                <span style="font-size: 1.2rem; color: #9aa6b2;">▓▓▓</span>
+                <p style="color: #666; font-size: 0.75rem; margin-top: 5px;">Mask</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: center; gap: 40px; margin-bottom: 15px;">
+            <div style="text-align: center;">
+              <span style="display: inline-block; background: rgba(255, 107, 107, 0.3); border: 2px solid #ff6b6b; border-radius: 8px; padding: 10px 20px; font-size: 1.5rem; font-weight: bold; color: white;">←</span>
+              <p style="color: #ff6b6b; font-size: 0.9rem; margin-top: 5px;">Unpleasant</p>
+            </div>
+            <div style="text-align: center;">
+              <span style="display: inline-block; background: rgba(74, 222, 128, 0.3); border: 2px solid #4ade80; border-radius: 8px; padding: 10px 20px; font-size: 1.5rem; font-weight: bold; color: white;">→</span>
+              <p style="color: #4ade80; font-size: 0.9rem; margin-top: 5px;">Pleasant</p>
+            </div>
+          </div>
+
+          <p style="color: #ffff44; font-size: 0.95rem; margin-bottom: 10px;">
+            <strong>Important:</strong> Judge only the CHINESE CHARACTER, not the image!
+          </p>
+          <p style="color: #9aa6b2; font-size: 0.85rem; margin-bottom: 0;">
+            Go with your gut feeling - respond quickly!
+          </p>
+        </div>
+
+        <!-- Hebrew Instructions -->
+        <details style="background: rgba(255, 77, 184, 0.1); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 10px; padding: 15px; margin-bottom: 25px; cursor: pointer;">
+          <summary style="color: #ff4db8; font-size: 0.95rem;">Click for Hebrew Instructions / הוראות בעברית</summary>
+          <div style="margin-top: 15px; text-align: right; direction: rtl;">
+            <p style="color: #e5e7eb; line-height: 1.8; font-size: 0.95rem;">
+              <strong>הוראות:</strong><br>
+              תראה/י רצף מהיר:<br>
+              1. תמונה מהבהבת לרגע קצר<br>
+              2. תו סיני מופיע<br>
+              3. שפוט/י את התו כ<strong style="color: #4ade80;">נעים</strong> או <strong style="color: #ff6b6b;">לא נעים</strong><br><br>
+              <span style="color: #4ade80;">I = נעים</span> | <span style="color: #ff6b6b;">E = לא נעים</span><br><br>
+              <strong style="color: #ffff44;">חשוב: שפוט/י רק את התו הסיני, לא את התמונה!</strong>
+            </p>
+          </div>
+        </details>
+
+        <button class="btn" onclick="AMP.start()">Start Experiment</button>
+        <button class="btn btn-secondary" style="margin-left: 15px;" onclick="AMP.close()">Cancel</button>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="amp-trial">
+        <button onclick="AMP.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="stroop-progress">
+          <div class="progress-bar">
+            <div class="progress-fill" id="amp-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-text" id="amp-progress-text">Trial 1 of 24</div>
+        </div>
+        <div class="stroop-stimulus" id="amp-stimulus">
+          <span class="amp-fixation">+</span>
+        </div>
+        <p class="stroop-instruction" id="amp-instruction">Is the Chinese character PLEASANT or UNPLEASANT?</p>
+        <div class="stroop-keys" id="amp-keys" style="display: flex; justify-content: center; gap: 40px; margin-top: 20px;">
+          <div class="key-hint" onclick="AMP.handleResponse('unpleasant')" style="cursor: pointer;">
+            <span class="key">←</span>
+            <span class="label" style="color: #ff6b6b;">Unpleasant</span>
+          </div>
+          <div class="key-hint" onclick="AMP.handleResponse('pleasant')" style="cursor: pointer;">
+            <span class="key">→</span>
+            <span class="label" style="color: #4ade80;">Pleasant</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="amp-results">
+        <h2>Your Results</h2>
+
+        <div class="dominance-result">
+          <h3>AMP Effect</h3>
+          <div class="dominance-language" id="amp-effect">-</div>
+          <p style="color: #9aa6b2; font-size: 0.9rem;">difference in pleasant judgments</p>
+          <p class="dominance-explanation" id="amp-interpretation"></p>
+        </div>
+
+        <div class="results-grid">
+          <div class="result-card">
+            <h3>After Positive Primes</h3>
+            <div class="result-value" id="amp-pos-pleasant">-</div>
+            <div class="result-unit">judged pleasant</div>
+          </div>
+          <div class="result-card">
+            <h3>After Negative Primes</h3>
+            <div class="result-value" id="amp-neg-pleasant">-</div>
+            <div class="result-unit">judged pleasant</div>
+          </div>
+          <div class="result-card">
+            <h3>Average RT</h3>
+            <div class="result-value" id="amp-avg-rt">-</div>
+            <div class="result-unit">milliseconds</div>
+          </div>
+        </div>
+
+        <div class="stroop-buttons">
+          <button class="btn" onclick="AMP.start()">Try Again</button>
+          <button class="btn btn-secondary" onclick="AMP.close()">Close</button>
+        </div>
+
+        <div class="export-section">
+          <h4>Export Results</h4>
+          <div class="export-options">
+            <div class="export-option">
+              <button class="btn btn-export" onclick="AMP.exportCSV()">Download CSV</button>
+              <p class="export-desc">Universal format for data analysis software</p>
+            </div>
+            <div class="export-option">
+              <button class="btn btn-export" onclick="AMP.exportXLSX()">Download Excel</button>
+              <p class="export-desc">Opens directly in Excel with formatted sheets</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMP Template Builder Overlay -->
+  <div class="template-builder-overlay" id="amp-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>AMP - Template Builder</h1>
+        <button class="builder-close" onclick="AMP.closeBuilder()">&times;</button>
+      </div>
+
+      <!-- Step 1: Experimenter Identification -->
+      <div class="collapsible-section expanded" id="amp-section-identity" onclick="toggleSection('amp-section-identity', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">1</span>
+          <div>
+            <div class="collapsible-title">Your Experiment Identity</div>
+            <div class="collapsible-subtitle">Email and Experiment ID for data access</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <p style="color: #c0c0c0; margin-bottom: 20px; font-size: 14px;">
+              These two fields identify YOUR specific experiment. You'll need both to download your data later.
+            </p>
+
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Your Email</label>
+              <input type="email" id="ampExperimenterEmail" placeholder="your.email@university.edu"
+                     style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                            background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                     oninput="this.style.borderColor = this.validity.valid && this.value ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                     onclick="event.stopPropagation()">
+            </div>
+
+            <div>
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px; font-weight: 500;">Experiment ID</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="ampExperimentId" placeholder="e.g., amp_study_dec2025"
+                       style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4);
+                              background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                       oninput="this.style.borderColor = this.value.length >= 3 ? 'rgba(74, 222, 128, 0.7)' : 'rgba(255, 77, 184, 0.4)'"
+                       onclick="event.stopPropagation()">
+                <button onclick="event.stopPropagation(); AMP.generateExperimentId()" style="padding: 15px 20px; border-radius: 10px; border: none; background: rgba(102, 126, 234, 0.5); color: white; cursor: pointer; font-size: 14px; white-space: nowrap;">Generate ID</button>
+              </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+              <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;" onclick="event.stopPropagation()">
+                <input type="checkbox" id="amp-require-external-id" style="width: 20px; height: 20px;">
+                <span>Require Participant ID (for Prolific/MTurk/SONA)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: ABCD Framework -->
+      <div class="collapsible-section" id="amp-section-abcd" onclick="toggleSection('amp-section-abcd', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">2</span>
+          <div>
+            <div class="collapsible-title">ABCD Framework Structure</div>
+            <div class="collapsible-subtitle">Prime (A) → Target (B) = Affect misattribution</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+              <div style="text-align: center; padding: 15px; background: rgba(102, 126, 234, 0.2); border-radius: 10px; border: 1px solid rgba(102, 126, 234, 0.4);">
+                <div style="color: #667eea; font-size: 0.8rem; margin-bottom: 5px;">A (Prime)</div>
+                <div style="font-size: 2rem;">😊</div>
+                <div style="color: #9aa6b2; font-size: 0.75rem; margin-top: 5px;">75ms</div>
+              </div>
+              <span style="font-size: 1.5rem; color: #666;">→</span>
+              <div style="text-align: center; padding: 15px; background: rgba(255, 77, 184, 0.2); border-radius: 10px; border: 1px solid rgba(255, 77, 184, 0.4);">
+                <div style="color: #ff4db8; font-size: 0.8rem; margin-bottom: 5px;">B (Target)</div>
+                <div style="font-size: 2rem; font-weight: bold; color: white;">會</div>
+                <div style="color: #9aa6b2; font-size: 0.75rem; margin-top: 5px;">Judge this!</div>
+              </div>
+            </div>
+            <p style="color: #9aa6b2; font-size: 0.9rem; text-align: center;">
+              Participants "misattribute" their feelings about the brief prime to the neutral target
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Stimuli -->
+      <div class="collapsible-section" id="amp-section-stimuli" onclick="toggleSection('amp-section-stimuli', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">3</span>
+          <div>
+            <div class="collapsible-title">Prime Stimuli</div>
+            <div class="collapsible-subtitle">Positive and negative images</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <!-- Positive Primes -->
+            <h4 style="color: #4ade80; margin-bottom: 10px;">Positive Primes</h4>
+            <p style="color: #9aa6b2; font-size: 0.85rem; margin-bottom: 15px;">Pleasant images (emoji placeholders - can use image URLs)</p>
+            <div id="amp-positive-primes" class="stimulus-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;"></div>
+            <button onclick="event.stopPropagation(); AMP.addBuilderStimulus('positive')" class="btn btn-secondary" style="margin-bottom: 25px; font-size: 0.85rem; padding: 8px 15px;">+ Add Positive Prime</button>
+
+            <!-- Negative Primes -->
+            <h4 style="color: #ff6b6b; margin-bottom: 10px;">Negative Primes</h4>
+            <p style="color: #9aa6b2; font-size: 0.85rem; margin-bottom: 15px;">Unpleasant images (emoji placeholders - can use image URLs)</p>
+            <div id="amp-negative-primes" class="stimulus-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px;"></div>
+            <button onclick="event.stopPropagation(); AMP.addBuilderStimulus('negative')" class="btn btn-secondary" style="font-size: 0.85rem; padding: 8px 15px;">+ Add Negative Prime</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Timing -->
+      <div class="collapsible-section" id="amp-section-timing" onclick="toggleSection('amp-section-timing', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">4</span>
+          <div>
+            <div class="collapsible-title">Timing Parameters</div>
+            <div class="collapsible-subtitle">Control presentation durations</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <div class="param-group">
+              <label for="amp-builder-fixation">Fixation Duration (ms)</label>
+              <input type="number" id="amp-builder-fixation" value="500" min="200" max="2000" step="50">
+              <div class="param-hint">How long the + symbol appears</div>
+            </div>
+
+            <div class="param-group">
+              <label for="amp-builder-prime">Prime Duration (ms) - CRITICAL!</label>
+              <input type="number" id="amp-builder-prime" value="75" min="50" max="200" step="5">
+              <div class="param-hint">Brief presentation (75ms is standard). Longer = more conscious processing.</div>
+            </div>
+
+            <div class="param-group">
+              <label for="amp-builder-isi">ISI - Inter-Stimulus Interval (ms)</label>
+              <input type="number" id="amp-builder-isi" value="125" min="50" max="500" step="25">
+              <div class="param-hint">Blank screen between prime and target</div>
+            </div>
+
+            <div class="param-group">
+              <label for="amp-builder-target">Target Duration (ms)</label>
+              <input type="number" id="amp-builder-target" value="200" min="100" max="500" step="50">
+              <div class="param-hint">How long the Chinese character is visible</div>
+            </div>
+
+            <div class="param-group">
+              <label for="amp-builder-trials">Trials per Condition</label>
+              <select id="amp-builder-trials">
+                <option value="6">6 (Quick - 12 trials total)</option>
+                <option value="12" selected>12 (Standard - 24 trials)</option>
+                <option value="24">24 (Extended - 48 trials)</option>
+                <option value="36">36 (Research - 72 trials)</option>
+              </select>
+              <div class="param-hint">More trials = more reliable results</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Data Collection -->
+      <div class="collapsible-section" id="amp-section-data" onclick="toggleSection('amp-section-data', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">5</span>
+          <div>
+            <div class="collapsible-title">Data Collection</div>
+            <div class="collapsible-subtitle">Cloud storage and connection status</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner" onclick="event.stopPropagation()">
+            <p class="data-description">
+              Participant results are automatically saved to a secure cloud database.
+            </p>
+
+            <div class="connection-status" id="amp-connection-status">
+              <div class="status-dot"></div>
+              <div class="status-text">
+                <strong>Connected</strong> - Data will be saved automatically
+              </div>
+            </div>
+
+            <button class="btn-test-connection" onclick="event.stopPropagation(); AMP.testConnection()">Test Connection</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="builder-actions" style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.1), rgba(102, 126, 234, 0.1)); border-radius: 16px; border: 1px solid rgba(255, 77, 184, 0.3);">
+        <button class="btn-preview" onclick="AMP.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="AMP.generateLink()">Generate Shareable Link</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Number Priming Overlay -->
+  <div class="stroop-overlay" id="number-priming-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="number-priming-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Number Comparison Task</h2>
+        <p class="subtitle">Masked numerical priming (Dehaene et al., 1998)</p>
+
+        <div class="setup-card">
+          <h3>Instructions</h3>
+          <ol style="color: #9aa6b2; line-height: 1.8; padding-left: 20px;">
+            <li>A fixation cross (+) will appear - focus on it</li>
+            <li>Symbols will flash briefly (ignore them)</li>
+            <li>A number will appear - compare it to 5</li>
+            <li>Press <strong>LEFT ARROW</strong> if the number is SMALLER than 5</li>
+            <li>Press <strong>RIGHT ARROW</strong> if the number is LARGER than 5</li>
+            <li>Respond as quickly and accurately as possible</li>
+          </ol>
+        </div>
+
+        <div id="number-priming-keys-container" class="response-keys" style="display: flex; justify-content: center; gap: 40px; margin: 30px 0;"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="btn" onclick="NumberPriming.start()">Start Experiment</button>
+          <button class="btn btn-secondary" onclick="NumberPriming.close()" style="margin-left: 15px;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="number-priming-trial">
+        <button onclick="NumberPriming.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="trial-header">
+          <span>Trial <span id="np-current-trial">1</span> of <span id="np-total-trials">48</span></span>
+          <div class="progress-bar" style="width: 200px;">
+            <div id="np-progress-fill" class="progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div id="np-stimulus" class="stimulus-display">
+          <span class="np-fixation">+</span>
+        </div>
+
+        <div class="response-hint">
+          Press <strong>E</strong> = Smaller than 5, <strong>I</strong> = Larger than 5
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="number-priming-results">
+        <h2>Experiment Complete</h2>
+
+        <div class="results-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 25px 0;">
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Congruent RT</div>
+            <div id="np-congruent-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Incongruent RT</div>
+            <div id="np-incongruent-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Priming Effect</div>
+            <div id="np-priming-effect" class="value" style="font-size: 2rem; font-weight: bold; color: #4ade80;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Accuracy</div>
+            <div id="np-accuracy" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+        </div>
+
+        <div id="np-explanation" style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-top: 20px; color: #e5e7eb; line-height: 1.6;"></div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+          <button class="btn-export" onclick="NumberPriming.exportCSV()">Export CSV</button>
+          <button class="btn-export" onclick="NumberPriming.exportXLSX()">Export Excel</button>
+          <button class="btn btn-secondary" onclick="NumberPriming.close()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Number Priming Template Builder Overlay -->
+  <div class="template-builder-overlay" id="number-priming-builder-overlay">
+    <div class="template-builder">
+      <div class="builder-header">
+        <h1>Number Priming - Template Builder</h1>
+        <button class="builder-close" onclick="NumberPriming.closeBuilder()">&times;</button>
+      </div>
+
+      <div class="collapsible-section expanded" id="np-section-identity" onclick="toggleSection('np-section-identity', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">1</span>
+          <div>
+            <div class="collapsible-title">Your Experiment Identity</div>
+            <div class="collapsible-subtitle">Email and Experiment ID for data access</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Your Email</label>
+              <input type="email" id="npExperimenterEmail" placeholder="your.email@university.edu"
+                     style="width: 100%; padding: 15px; border-radius: 10px; border: 2px solid rgba(255, 77, 184, 0.4); background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                     onclick="event.stopPropagation()">
+            </div>
+            <div style="margin-bottom: 20px;">
+              <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Experiment ID</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="npExperimentId" placeholder="my_number_exp"
+                       style="flex: 1; padding: 15px; border-radius: 10px; border: 2px solid rgba(102, 126, 234, 0.4); background: rgba(0,0,0,0.3); color: white; font-size: 16px;"
+                       onclick="event.stopPropagation()">
+                <button class="btn btn-secondary" onclick="NumberPriming.generateExperimentId(); event.stopPropagation();">Generate</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="collapsible-section" id="np-section-settings" onclick="toggleSection('np-section-settings', event)">
+        <div class="collapsible-header">
+          <span class="collapsible-step">2</span>
+          <div>
+            <div class="collapsible-title">Experiment Settings</div>
+            <div class="collapsible-subtitle">Configure mode, timing, and trials</div>
+          </div>
+          <span class="collapsible-arrow">▼</span>
+        </div>
+        <div class="collapsible-content">
+          <div class="collapsible-inner">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Priming Mode</label>
+                <select id="builder-np-mode" onchange="NumberPriming.updateBuilderSettings(); event.stopPropagation();" onclick="event.stopPropagation()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="masked">Masked (43ms prime)</option>
+                  <option value="explicit">Explicit (200ms prime)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Reference Number</label>
+                <select id="builder-np-reference" onchange="NumberPriming.updateBuilderSettings(); event.stopPropagation();" onclick="event.stopPropagation()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="5" selected>5 (standard)</option>
+                  <option value="4">4</option>
+                  <option value="6">6</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Prime Duration (ms)</label>
+                <input type="number" id="builder-np-prime-duration" value="43" min="17" max="300"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Trials per Condition</label>
+                <select id="builder-np-trials" onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()"
+                        style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                  <option value="6">6 (quick)</option>
+                  <option value="12" selected>12 (standard)</option>
+                  <option value="24">24 (extended)</option>
+                </select>
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Forward Mask (ms)</label>
+                <input type="number" id="builder-np-forward-mask" value="71" min="30" max="200"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+              <div>
+                <label style="display: block; color: #e0e0e0; margin-bottom: 8px;">Backward Mask (ms)</label>
+                <input type="number" id="builder-np-backward-mask" value="71" min="30" max="200"
+                       style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;"
+                       onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+              </div>
+            </div>
+            <div style="margin-top: 20px;">
+              <label style="display: flex; align-items: center; gap: 10px; color: #e0e0e0; cursor: pointer;">
+                <input type="checkbox" id="builder-np-show-feedback" checked onclick="event.stopPropagation()" onchange="NumberPriming.updateBuilderSettings()">
+                Show feedback after each trial
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="builder-actions" style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(255, 77, 184, 0.1), rgba(102, 126, 234, 0.1)); border-radius: 16px; border: 1px solid rgba(255, 77, 184, 0.3);">
+        <button class="btn-preview" onclick="NumberPriming.previewFromBuilder()">Preview Experiment</button>
+        <button class="btn-generate" onclick="NumberPriming.generateLink()">Generate Shareable Link</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Subliminal Priming Overlay -->
+  <div class="stroop-overlay" id="subliminal-overlay" tabindex="-1">
+    <div class="stroop-container">
+      <!-- Setup Screen -->
+      <div class="stroop-setup" id="subliminal-setup" style="max-height: 90vh; overflow-y: auto;">
+        <h2>Subliminal Priming Task</h2>
+        <p class="subtitle">Masked semantic priming (Marcel, 1983)</p>
+
+        <div class="setup-card">
+          <h3>Instructions</h3>
+          <ol style="color: #9aa6b2; line-height: 1.8; padding-left: 20px;">
+            <li>A fixation cross (+) will appear - focus on it</li>
+            <li>Symbols will flash very briefly</li>
+            <li>A letter string will appear</li>
+            <li>Press <strong>← LEFT ARROW</strong> if it is a NONWORD (not a real word)</li>
+            <li>Press <strong>→ RIGHT ARROW</strong> if it is a WORD (a real word)</li>
+            <li>Respond as quickly and accurately as possible</li>
+          </ol>
+        </div>
+
+        <div id="subliminal-keys-container" class="response-keys" style="display: flex; justify-content: center; gap: 40px; margin: 30px 0;"></div>
+
+        <div style="text-align: center; margin-top: 30px;">
+          <button class="btn" onclick="Subliminal.start()">Start Experiment</button>
+          <button class="btn btn-secondary" onclick="Subliminal.close()" style="margin-left: 15px;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Trial Screen -->
+      <div class="stroop-trial" id="subliminal-trial">
+        <button onclick="Subliminal.close()" style="position: absolute; top: 15px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #9aa6b2; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">Exit</button>
+        <div class="trial-header">
+          <span>Trial <span id="subliminal-current-trial">1</span> of <span id="subliminal-total-trials">60</span></span>
+          <div class="progress-bar" style="width: 200px;">
+            <div id="subliminal-progress-fill" class="progress-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div id="subliminal-stimulus" class="stimulus-display">
+          <span class="subliminal-fixation">+</span>
+        </div>
+
+        <div class="response-hint">
+          Press <strong>F</strong> = Nonword, <strong>J</strong> = Word
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div class="stroop-results" id="subliminal-results">
+        <h2>Experiment Complete</h2>
+
+        <div class="results-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 25px 0;">
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Related RT</div>
+            <div id="subliminal-related-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Unrelated RT</div>
+            <div id="subliminal-unrelated-rt" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Priming Effect</div>
+            <div id="subliminal-priming-effect" class="value" style="font-size: 2rem; font-weight: bold; color: #4ade80;">---</div>
+          </div>
+          <div class="result-item" style="background: rgba(17, 24, 39, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; text-align: center;">
+            <div class="label" style="font-size: 0.85rem; color: #9aa6b2; margin-bottom: 8px;">Accuracy</div>
+            <div id="subliminal-accuracy" class="value" style="font-size: 2rem; font-weight: bold; color: #ffffff;">---</div>
+          </div>
+        </div>
+
+        <div id="subliminal-explanation" style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-top: 20px; color: #e5e7eb; line-height: 1.6;"></div>
+
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 30px;">
+          <button class="btn-export" onclick="Subliminal.exportCSV()">Export CSV</button>
+          <button class="btn-export" onclick="Subliminal.exportXLSX()">Export Excel</button>
+          <button class="btn btn-secondary" onclick="Subliminal.close()">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script src="js/core.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/stroop.js"></script>
+  <script src="js/semantic.js"></script>
+  <script src="js/evaluative.js"></script>
+  <script src="js/amp.js"></script>
+  <script src="js/number-priming.js"></script>
+  <script src="js/subliminal.js"></script>
 
   <!-- Main Application Script -->
   <script>
@@ -1028,7 +2604,7 @@
           },
           response: {
             type: 'key_press',
-            keys: { 'word': 'J', 'nonword': 'F' }
+            keys: { 'word': 'ArrowRight', 'nonword': 'ArrowLeft' }
           },
           trials: {
             randomize: true,
@@ -1076,13 +2652,87 @@
       currentConfig = configs[type] || null;
     }
 
+    // Show experiment selector modal
+    function showExperimentSelector() {
+      const modal = document.createElement('div');
+      modal.id = 'experiment-selector-modal';
+      modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.9); z-index: 2000;
+        display: flex; justify-content: center; align-items: center;
+      `;
+      modal.innerHTML = `
+        <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 20px; padding: 40px; max-width: 600px; text-align: center;">
+          <h2 style="color: #ffffff; margin-bottom: 25px;">Select an Experiment</h2>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); Stroop.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Stroop Task</strong><br><small style="color: #9aa6b2;">Color-word interference</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); Semantic.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Semantic Priming</strong><br><small style="color: #9aa6b2;">Word associations</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); NumberPriming.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Number Priming</strong><br><small style="color: #9aa6b2;">Numerical magnitude</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); Subliminal.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Subliminal Priming</strong><br><small style="color: #9aa6b2;">Masked presentation</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); AMP.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>AMP</strong><br><small style="color: #9aa6b2;">Affect Misattribution</small>
+            </button>
+            <button onclick="document.getElementById('experiment-selector-modal').remove(); EvaluativeConditioning.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
+              <strong>Evaluative Conditioning</strong><br><small style="color: #9aa6b2;">Learned associations</small>
+            </button>
+          </div>
+          <button onclick="document.getElementById('experiment-selector-modal').remove();" style="margin-top: 25px; padding: 12px 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer;">Cancel</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
     // Show Try Experiment
     function showTryExperiment() {
       const type = document.getElementById('experimentSelect').value;
 
-      // Default to Stroop if nothing selected, or use Stroop module for Stroop experiment
-      if (type === 'stroop' || !type) {
+      // If nothing selected, show experiment selector modal
+      if (!type) {
+        showExperimentSelector();
+        return;
+      }
+
+      // Use Stroop module for Stroop experiment
+      if (type === 'stroop') {
         Stroop.open();
+        return;
+      }
+
+      // Use Semantic Priming module for semantic experiment
+      if (type === 'semantic') {
+        Semantic.open();
+        return;
+      }
+
+      // Use Evaluative Conditioning module for EC experiment
+      if (type === 'evaluative') {
+        EvaluativeConditioning.open();
+        return;
+      }
+
+      // Use AMP module for AMP experiment
+      if (type === 'amp') {
+        AMP.open();
+        return;
+      }
+
+      // Use Number Priming module for number priming experiment
+      if (type === 'number-priming') {
+        NumberPriming.open();
+        return;
+      }
+
+      // Use Subliminal module for subliminal priming experiment
+      if (type === 'subliminal') {
+        Subliminal.open();
         return;
       }
 
@@ -1220,6 +2870,36 @@
       // Use Stroop Builder for Stroop experiment (or default to Stroop if nothing selected)
       if (type === 'stroop' || !type) {
         Stroop.openBuilder();
+        return;
+      }
+
+      // Use Semantic Priming Builder
+      if (type === 'semantic') {
+        Semantic.openBuilder();
+        return;
+      }
+
+      // Use Evaluative Conditioning Builder
+      if (type === 'evaluative') {
+        EvaluativeConditioning.openBuilder();
+        return;
+      }
+
+      // Use AMP Builder
+      if (type === 'amp') {
+        AMP.openBuilder();
+        return;
+      }
+
+      // Use Number Priming Builder
+      if (type === 'number-priming') {
+        NumberPriming.openBuilder();
+        return;
+      }
+
+      // Use Subliminal Priming Builder
+      if (type === 'subliminal') {
+        Subliminal.openBuilder();
         return;
       }
 
@@ -1382,8 +3062,23 @@
 
       // First check for Stroop URL config (participant links)
       if (!Stroop.checkUrlConfig()) {
-        // If not a Stroop participant link, check for generic config
-        checkUrlConfig();
+        // Check for Semantic Priming participant link
+        if (!Semantic.checkUrlConfig()) {
+          // Check for Evaluative Conditioning participant link
+          if (!EvaluativeConditioning.checkUrlConfig()) {
+            // Check for AMP participant link
+            if (!AMP.checkUrlConfig()) {
+              // Check for Number Priming participant link
+              if (!NumberPriming.checkUrlConfig()) {
+                // Check for Subliminal Priming participant link
+                if (!Subliminal.checkUrlConfig()) {
+                  // If not a participant link, check for generic config
+                  checkUrlConfig();
+                }
+              }
+            }
+          }
+        }
       }
     });
   </script>

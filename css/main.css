@@ -312,6 +312,36 @@ h1 {
   cursor: default;
 }
 
+/* Emphasized cards (working features) */
+.module-card.emphasized {
+  animation: subtle-glow 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes subtle-glow {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3), 0 0 30px rgba(102, 126, 234, 0.15);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(102, 126, 234, 0.5), 0 0 40px rgba(102, 126, 234, 0.25);
+  }
+}
+
+.module-card.emphasized .card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #000;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 10;
+}
+
 .module-content {
   position: relative;
   z-index: 1;

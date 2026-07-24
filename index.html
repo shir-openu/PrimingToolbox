@@ -67,6 +67,8 @@
         <option value="subliminal">Subliminal Priming</option>
         <option value="amp">AMP (Affect Misattribution)</option>
         <option value="evaluative">Evaluative Conditioning</option>
+        <option value="affective">Affective Priming</option>
+        <option value="social">Social Priming</option>
       </select>
 
       <div class="sidebar-footer">
@@ -2509,8 +2511,8 @@
     </div>
   </div>
 
-  <!-- JavaScript Modules -->
-  <script src="js/core.js"></script>
+  <!-- JavaScript Modules (V2 _fab build) -->
+  <script src="js/core_fab.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/stroop.js"></script>
   <script src="js/semantic.js"></script>
@@ -2518,6 +2520,9 @@
   <script src="js/amp.js"></script>
   <script src="js/number-priming.js"></script>
   <script src="js/subliminal.js"></script>
+  <script src="js/affective_fab.js"></script>
+  <script src="js/social_fab.js"></script>
+  <script src="js/timeline_fab.js"></script>
 
   <!-- Main Application Script -->
   <script>
@@ -2539,8 +2544,8 @@
       PTA.initSupabase();
     });
 
-    // Current experiment config
-    let currentConfig = null;
+    // Current experiment config (V2: on window so TimelinePlanner can read/write it)
+    window.currentConfig = null;
     let retrievedData = null;
 
     // Load experiment configuration
@@ -2736,6 +2741,10 @@
         return;
       }
 
+      // V2 _fab paradigms
+      if (type === 'affective') { Affective.open(); return; }
+      if (type === 'social') { Social.open(); return; }
+
       loadExperimentConfig(type);
       if (!currentConfig) {
         alert('Configuration not found.');
@@ -2902,6 +2911,10 @@
         Subliminal.openBuilder();
         return;
       }
+
+      // V2 _fab paradigms
+      if (type === 'affective') { Affective.openBuilder(); return; }
+      if (type === 'social') { Social.openBuilder(); return; }
 
       document.getElementById('templateBuilderOverlay').classList.add('active');
     }
@@ -3072,8 +3085,13 @@
               if (!NumberPriming.checkUrlConfig()) {
                 // Check for Subliminal Priming participant link
                 if (!Subliminal.checkUrlConfig()) {
-                  // If not a participant link, check for generic config
-                  checkUrlConfig();
+                  // V2 _fab paradigm participant links
+                  if (!Affective.checkUrlConfig()) {
+                    if (!Social.checkUrlConfig()) {
+                      // If not a participant link, check for generic config
+                      checkUrlConfig();
+                    }
+                  }
                 }
               }
             }

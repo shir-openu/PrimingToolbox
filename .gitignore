@@ -17,3 +17,44 @@ Thumbs.db
 
 # Auto Claude data directory
 .auto-claude/
+
+# Secrets - NEVER commit these
+*CREDENTIALS*.txt
+*credentials*.txt
+CLAUDE_DATABASE_ACCESS.txt
+PASSWORD_BACKUP.txt
+PASSWORD*.txt
+*.env
+.env.*
+
+# Local-only build artifacts / backups (not for the public repo)
+*_OLD.html
+*_OLD.js
+BACKUP_*/
+*BACKUP*/
+GITHUB_COPY_*/
+UPDATED_LOCAL_REPO_*/
+TEMP_GITHUB_*/
+_V1_ARCHIVE_STAGING/
+Auto-Claude/
+*.exe
+QUESTIONS____________________________/
+AGENTS/
+AUTO_CLAUDE_AGENTS/
+CGPT/
+DOCX/
+PDFs/
+PRESENTATIONS/
+REFRENCES/
+FIGURES/
+FRAMES-FROM-VIDEO*/
+SUBMISSION*/
+In_Practice*/
+QUESTIONS*/
+*.docx
+*.pdf
+*.mp4
+*.ai
+*.tif
+*.jpg
+nul

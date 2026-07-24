@@ -2548,6 +2548,15 @@
     window.currentConfig = null;
     let retrievedData = null;
 
+    // Merge the trial-timeline plan (set by "Insert into experiment draft")
+    // into a freshly built config. Must run AFTER loadExperimentConfig(),
+    // which rebuilds currentConfig from the pristine defaults.
+    function applyTimelinePlan(cfg) {
+      if (!window.PTA_trialPlan || !cfg) return;
+      cfg.presentation = Object.assign({}, cfg.presentation, window.PTA_trialPlan);
+      cfg.trial_plan = window.PTA_trialPlan;
+    }
+
     // Load experiment configuration
     function loadExperimentConfig(type) {
       // Predefined experiment configurations
@@ -2750,6 +2759,7 @@
         alert('Configuration not found.');
         return;
       }
+      applyTimelinePlan(currentConfig);
 
       // Set up the experiment UI
       document.getElementById('experimentTitle').textContent = currentConfig.name;
@@ -2964,6 +2974,7 @@
         alert('Please select an experiment type.');
         return;
       }
+      applyTimelinePlan(currentConfig);
 
       // Add experimenter info to config
       currentConfig.experimenter = {

@@ -9,7 +9,7 @@
  *
  * @module PTA
  * @version 1.0
- * @author Dr. Shir Sivroni, The Open University of Israel
+ * @author Dr. Shir Sivroni
  *
  * Dependencies:
  * - Supabase JS Client (loaded via CDN)

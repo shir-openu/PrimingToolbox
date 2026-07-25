@@ -110,6 +110,17 @@ const TimelinePlanner = (function () {
          .forEach(el => el.remove());
     els = [];
 
+    // css/experiment.css:507 pins a bare "ms" label to the end of the axis -
+    // a leftover from the old static timeline. Every block and the end-of-trial
+    // label now carry their own "ms", so it just floats there. Suppressed from
+    // here rather than by editing the original stylesheet.
+    if (!document.getElementById('tl-style-fab')) {
+      const st = document.createElement('style');
+      st.id = 'tl-style-fab';
+      st.textContent = '.timeline-axis::after{content:none !important;}';
+      (document.head || document.documentElement).appendChild(st);
+    }
+
     // Blocks are absolutely positioned inside the track; while a drag pushes
     // the trial past the visible span the overflow is clipped rather than
     // spilling over the card.

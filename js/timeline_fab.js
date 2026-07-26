@@ -371,6 +371,25 @@ const TimelinePlanner = (function () {
     persist();
   }
 
+  /* ---------- the drag instruction, above the track ---------- */
+
+  // Sits between the header and the track, on the container's darker
+  // background, so it reads clearly and costs the timeline no height.
+  function buildHint() {
+    const container = document.querySelector('.timeline-container');
+    const track = document.getElementById('timeline-track');
+    if (!container || !track || document.getElementById('tl-hint-fab')) return;
+
+    const hint = document.createElement('div');
+    hint.id = 'tl-hint-fab';
+    hint.style.cssText =
+      'font-size:.72rem;color:rgba(255,255,255,.8);margin:0 0 6px 2px;line-height:1.35;';
+    hint.innerHTML =
+      'Drag the right edge of any block to make that phase longer or shorter ' +
+      '(hold <b>Shift</b> for 1 ms steps, or focus a block and use the arrow keys).';
+    container.insertBefore(hint, track);
+  }
+
   /* ---------- the editor panel (inputs color-matched to blocks) ---------- */
 
   function buildEditor() {
@@ -383,14 +402,11 @@ const TimelinePlanner = (function () {
       'display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;' +
       'margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.2);';
 
-    const hint = document.createElement('div');
-    hint.id = 'tl-hint-fab';
-    hint.style.cssText = 'flex-basis:100%;font-size:.7rem;color:rgba(255,255,255,.65);margin-bottom:2px;';
-    hint.innerHTML =
-      'Drag the right edge of any block to make that phase longer or shorter ' +
-      '(hold <b>Shift</b> for 1 ms steps, or focus a block and use the arrow keys). ' +
-      'Or type exact values here:';
-    bar.appendChild(hint);
+    const typeHint = document.createElement('div');
+    typeHint.id = 'tl-typehint-fab';
+    typeHint.style.cssText = 'flex-basis:100%;font-size:.7rem;color:rgba(255,255,255,.65);margin-bottom:2px;';
+    typeHint.textContent = 'Or type exact values here:';
+    bar.appendChild(typeHint);
 
     plan.forEach(p => {
       const wrap = document.createElement('label');
@@ -537,6 +553,7 @@ const TimelinePlanner = (function () {
 
   function init() {
     load();
+    buildHint();
     buildEditor();
     renderTrack();
   }

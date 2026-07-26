@@ -428,6 +428,16 @@
         <button class="btn" onclick="generateParticipantLink()" style="margin-top: 20px;">
           Generate Shareable Link
         </button>
+        <button class="btn btn-secondary" onclick="runASMCheck()" style="margin-top: 20px;"
+                title="Check this design against the three defining characteristics of priming">
+          Check design (A&middot;S&middot;M)
+        </button>
+
+        <!-- A/S/M advisory report. asm_validator.js renders a light-theme card,
+             so the panel carries its own light background - on the dark page its
+             #555 / #666 body text would otherwise be unreadable. -->
+        <div id="asm-panel-fab" style="display: none; margin-top: 16px; background: #ffffff;
+             border-radius: 8px; padding: 12px 14px; color: #222;"></div>
 
         <div id="generatedLinkContainer" style="display: none; margin-top: 20px;">
           <label>Participant Link:</label>
@@ -2855,6 +2865,38 @@
       setUpExperimentOverlay();
     }
 
+    // Run the A/S/M definition check (js/asm_validator.js) on the design
+    // currently selected in the Template Builder and show the advisory report.
+    // Advisory only: it never blocks generating a link.
+    function runASMCheck(cfg) {
+      const panel = document.getElementById('asm-panel-fab');
+      if (!panel) return null;
+      if (!window.PTA || typeof PTA.validateASM !== 'function') return null;
+
+      let config = cfg;
+      if (!config) {
+        const expType = document.getElementById('builderExperimentType').value;
+        if (!expType) {
+          panel.style.display = 'block';
+          panel.textContent = 'Choose an experiment type first, then run the check.';
+          return null;
+        }
+        loadExperimentConfig(expType);
+        if (!currentConfig) {
+          panel.style.display = 'block';
+          panel.textContent = 'No configuration found for that experiment type.';
+          return null;
+        }
+        applyTimelinePlan(currentConfig);
+        config = currentConfig;
+      }
+
+      const report = PTA.validateASM(config);
+      PTA.renderASMReport(report, panel);
+      panel.style.display = 'block';
+      return report;
+    }
+
     // Paint the experiment overlay from whatever is in currentConfig.
     // Shared by the experimenter path (config just built) and the participant
     // path (config decoded from the link, timing included).
@@ -3091,6 +3133,10 @@
 
       document.getElementById('generatedLink').value = link;
       document.getElementById('generatedLinkContainer').style.display = 'block';
+
+      // Show the definition check alongside the link. Advisory: the link is
+      // generated either way, the report just says what the design costs.
+      runASMCheck(currentConfig);
     }
 
     function copyLink() {

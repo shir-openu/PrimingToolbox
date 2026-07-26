@@ -171,6 +171,18 @@
     };
   };
 
+  // Report text embeds stimulus strings taken from the config (see the
+  // "Examples: ..." detail in checkSecondariness), and a config can arrive from
+  // a participant URL. Everything interpolated below is therefore escaped; the
+  // colours are looked up in a fixed map and never come from the config.
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  PTA.escapeHtml = esc;
+
   PTA.renderASMReport = function renderASMReport(report, el) {
     if (!el) return;
     const colour = { ok: '#1a7a33', warn: '#b45309', fail: '#c0392b', incomplete: '#b45309' };
@@ -178,14 +190,15 @@
     const rows = report.checks.map(c =>
       '<div style="border-inline-start:4px solid ' + (colour[c.status] || '#999') +
       ';background:#fafafa;border-radius:6px;padding:.5rem .8rem;margin:.4rem 0">' +
-      '<b style="color:' + (colour[c.status] || '#999') + '">' + (label[c.characteristic] || c.characteristic) +
-      ' — ' + c.status + '</b><div style="font-size:.9em;margin-top:.2rem">' + c.message + '</div>' +
-      (c.detail ? '<div style="font-size:.82em;color:#666;margin-top:.2rem">' + c.detail + '</div>' : '') +
+      '<b style="color:' + (colour[c.status] || '#999') + '">' +
+      esc(label[c.characteristic] || c.characteristic) +
+      ' — ' + esc(c.status) + '</b><div style="font-size:.9em;margin-top:.2rem">' + esc(c.message) + '</div>' +
+      (c.detail ? '<div style="font-size:.82em;color:#666;margin-top:.2rem">' + esc(c.detail) + '</div>' : '') +
       '</div>').join('');
     el.innerHTML =
       '<div style="font-family:\'Segoe UI\',Arial,sans-serif">' +
       '<h3 style="margin:.2rem 0;font-size:1rem">Definition check (A·S·M)</h3>' +
-      '<p style="font-size:.88em;color:#555;margin:.2rem 0 .5rem">' + report.summary + '</p>' +
+      '<p style="font-size:.88em;color:#555;margin:.2rem 0 .5rem">' + esc(report.summary) + '</p>' +
       rows +
       '<p style="font-size:.78em;color:#888;margin-top:.5rem">Advisory only — nothing is blocked. ' +
       'A design flagged here may still be a sound experiment; the check reports whether it meets the ' +

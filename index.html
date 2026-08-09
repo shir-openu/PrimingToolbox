@@ -93,6 +93,10 @@
         <option value="evaluative">Evaluative Conditioning</option>
         <option value="affective">Affective Priming</option>
         <option value="social">Social Priming</option>
+        <option value="negative">Negative Priming</option>
+        <option value="masked">Masked Lexical Decision</option>
+        <option value="syntactic">Syntactic Priming</option>
+        <option value="repetition">Repetition Priming</option>
       </select>
 
       <div class="sidebar-footer">
@@ -2559,6 +2563,10 @@
   <script src="js/subliminal.js"></script>
   <script src="js/affective_fab.js"></script>
   <script src="js/social_fab.js"></script>
+  <script src="js/negative_fab.js"></script>
+  <script src="js/masked_fab.js"></script>
+  <script src="js/syntactic_fab.js"></script>
+  <script src="js/repetition_fab.js"></script>
   <script src="js/timeline_fab.js"></script>
   <script src="js/asm_validator.js"></script>
 
@@ -2855,6 +2863,10 @@
       // V2 _fab paradigms
       if (type === 'affective') { Affective.open(); return; }
       if (type === 'social') { Social.open(); return; }
+      if (type === 'negative') { NegativePriming.open(); return; }
+      if (type === 'masked') { MaskedLexical.open(); return; }
+      if (type === 'syntactic') { SyntacticPriming.open(); return; }
+      if (type === 'repetition') { RepetitionPriming.open(); return; }
 
       loadExperimentConfig(type);
       if (!currentConfig) {
@@ -3064,6 +3076,10 @@
       // V2 _fab paradigms
       if (type === 'affective') { Affective.openBuilder(); return; }
       if (type === 'social') { Social.openBuilder(); return; }
+      if (type === 'negative') { NegativePriming.openBuilder(); return; }
+      if (type === 'masked') { MaskedLexical.openBuilder(); return; }
+      if (type === 'syntactic') { SyntacticPriming.openBuilder(); return; }
+      if (type === 'repetition') { RepetitionPriming.openBuilder(); return; }
 
       document.getElementById('templateBuilderOverlay').classList.add('active');
     }
@@ -3250,8 +3266,16 @@
                   // V2 _fab paradigm participant links
                   if (!Affective.checkUrlConfig()) {
                     if (!Social.checkUrlConfig()) {
-                      // If not a participant link, check for generic config
-                      checkUrlConfig();
+                      if (!NegativePriming.checkUrlConfig()) {
+                        if (!MaskedLexical.checkUrlConfig()) {
+                          if (!SyntacticPriming.checkUrlConfig()) {
+                            if (!RepetitionPriming.checkUrlConfig()) {
+                              // If not a participant link, check for generic config
+                              checkUrlConfig();
+                            }
+                          }
+                        }
+                      }
                     }
                   }
                 }

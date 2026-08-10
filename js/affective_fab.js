@@ -54,7 +54,8 @@ window.Affective = {
       source: 'Fazio, Sanbonmatsu, Powell & Kardes (1986)',
       urlParam: 'affective',
       template: 'affective-priming',
-      accent: '#ff4db8',
+      accent: '#ea5cd5',
+      articleAnchor: '#s32',
       defaultExperimentId: 'affective_priming',
       startFn: 'Affective.start()',
       closeFn: 'Affective.close()',
@@ -170,7 +171,7 @@ window.Affective = {
           '<p style="color:#9aa6b2;font-size:.9rem;"><b style="color:#4ade80;">P</b> positive &nbsp; / &nbsp; <b style="color:#f87171;">N</b> negative</p>' +
         '</div>' +
         '<div id="affective-results" style="display:none;">' +
-          '<h2 style="color:#ff4db8;">Complete</h2>' +
+          '<h2 style="color:#ea5cd5;">Complete</h2>' +
           '<div id="affective-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<button class="btn" onclick="Affective.exportCSV()" style="margin-top:10px;">Download CSV</button> ' +
           '<button class="btn" onclick="Affective.exportXLSX()">Download Excel</button> ' +

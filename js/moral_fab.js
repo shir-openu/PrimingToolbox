@@ -82,7 +82,8 @@ window.MoralPriming = {
       source: 'Aquino et al. (2009); Shao et al. (2008)',
       urlParam: 'moral',
       template: 'moral-priming',
-      accent: '#bb7be6',
+      accent: '#d41bb9',
+      articleAnchor: '#s53',
       defaultExperimentId: 'moral_priming',
       startFn: 'MoralPriming.start()',
       closeFn: 'MoralPriming.close()',
@@ -100,7 +101,7 @@ window.MoralPriming = {
         '<div style="display:flex;align-items:center;gap:12px;">' +
           '<span style="color:#64748b;font-size:.8rem;">0</span>' +
           '<div style="flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;">' +
-            '<div style="position:absolute;left:38%;top:-5px;width:16px;height:16px;border-radius:50%;background:#bb7be6;"></div>' +
+            '<div style="position:absolute;left:38%;top:-5px;width:16px;height:16px;border-radius:50%;background:#d41bb9;"></div>' +
           '</div>' +
           '<span style="color:#64748b;font-size:.8rem;">100</span>' +
         '</div>' +
@@ -187,14 +188,14 @@ window.MoralPriming = {
           PTK.progressHtml('moral-item-fill') +
           '<p id="moral-item-text" style="color:#e5e7eb;line-height:1.75;max-width:520px;margin:24px auto;font-size:1.08rem;"></p>' +
           '<input id="moral-slider" type="range" min="0" max="100" value="50" ' +
-                 'style="width:100%;max-width:440px;accent-color:#bb7be6;">' +
-          '<div id="moral-slider-value" style="color:#bb7be6;font-size:1.4rem;font-weight:700;margin-top:10px;">50</div>' +
+                 'style="width:100%;max-width:440px;accent-color:#d41bb9;">' +
+          '<div id="moral-slider-value" style="color:#d41bb9;font-size:1.4rem;font-weight:700;margin-top:10px;">50</div>' +
           '<div style="margin-top:16px;">' +
             '<button class="btn" onclick="MoralPriming.submitItem()">Next</button>' +
           '</div>' +
         '</div>' +
         '<div id="moral-results" style="display:none;">' +
-          '<h2 style="color:#bb7be6;">Complete</h2>' +
+          '<h2 style="color:#d41bb9;">Complete</h2>' +
           '<div id="moral-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="moral-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -408,7 +409,7 @@ window.MoralPriming = {
       body += '<p style="color:#9aa6b2;margin-top:14px;">You ran one condition only - the original ' +
               'between-participants design. The comparison is made across participants.</p>';
     } else if (a.effect !== null) {
-      body += '<p style="color:#bb7be6;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
+      body += '<p style="color:#d41bb9;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
               'Moral priming effect (D &minus; C): ' + (a.effect > 0 ? '+' : '') + a.effect + ' points</p>';
     }
     document.getElementById('moral-results-body').innerHTML = body;

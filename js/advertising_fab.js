@@ -80,7 +80,8 @@ window.AdvertisingPriming = {
       source: 'Ferraro, Bettman & Chartrand (2009); Lee & Labroo (2004)',
       urlParam: 'advertising',
       template: 'advertising-priming',
-      accent: '#61a3ed',
+      accent: '#8ea8ff',
+      articleAnchor: '#s57',
       defaultExperimentId: 'advertising_priming',
       startFn: 'AdvertisingPriming.start()',
       closeFn: 'AdvertisingPriming.close()',
@@ -101,8 +102,8 @@ window.AdvertisingPriming = {
             '<path d="M84 74 Q100 88 116 74" stroke="#0f172a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
             '<rect x="72" y="102" width="56" height="46" rx="12" fill="#334155"/>' +
             '<g transform="translate(250,96)">' +
-              '<rect x="0" y="14" width="26" height="54" rx="6" fill="#61a3ed" opacity=".85"/>' +
-              '<rect x="9" y="2" width="8" height="14" fill="#61a3ed" opacity=".85"/>' +
+              '<rect x="0" y="14" width="26" height="54" rx="6" fill="#8ea8ff" opacity=".85"/>' +
+              '<rect x="9" y="2" width="8" height="14" fill="#8ea8ff" opacity=".85"/>' +
               '<rect x="0" y="32" width="26" height="16" fill="#0b1220" opacity=".75"/>' +
             '</g>' +
             '<text x="160" y="170" font-size="11" text-anchor="middle" fill="#64748b" ' +
@@ -173,8 +174,8 @@ window.AdvertisingPriming = {
       : '<line x1="86" y1="80" x2="114" y2="80" stroke="#0f172a" stroke-width="4" stroke-linecap="round"/>';
     var bottle = brand
       ? '<g transform="translate(250,96)">' +
-          '<rect x="0" y="14" width="26" height="54" rx="6" fill="#61a3ed" opacity=".85"/>' +
-          '<rect x="9" y="2" width="8" height="14" fill="#61a3ed" opacity=".85"/>' +
+          '<rect x="0" y="14" width="26" height="54" rx="6" fill="#8ea8ff" opacity=".85"/>' +
+          '<rect x="9" y="2" width="8" height="14" fill="#8ea8ff" opacity=".85"/>' +
           '<rect x="0" y="32" width="26" height="16" fill="#0b1220" opacity=".75"/>' +
           '<text x="13" y="44" font-size="7" text-anchor="middle" fill="#e5e7eb" ' +
                 'font-family="Segoe UI, Arial, sans-serif" letter-spacing="0.5">' + PTK.esc(brand) + '</text>' +
@@ -212,19 +213,19 @@ window.AdvertisingPriming = {
           '<div id="advertising-expression" style="display:flex;gap:14px;justify-content:center;"></div>' +
         '</div>' +
         '<div id="advertising-choice" style="display:none;">' +
-          '<h3 style="color:#61a3ed;">Pick a bottled water</h3>' +
+          '<h3 style="color:#8ea8ff;">Pick a bottled water</h3>' +
           '<p style="color:#9aa6b2;line-height:1.7;max-width:480px;margin:14px auto;">' +
             'Whichever you would actually choose. There is no right answer.</p>' +
           '<div id="advertising-brands" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:440px;margin:0 auto;"></div>' +
         '</div>' +
         '<div id="advertising-awareness" style="display:none;">' +
-          '<h3 style="color:#61a3ed;">One last question</h3>' +
+          '<h3 style="color:#8ea8ff;">One last question</h3>' +
           '<p style="color:#9aa6b2;line-height:1.7;max-width:520px;margin:16px auto;">' +
             'Did you notice any brand or product in the scenes you just judged?</p>' +
           '<div id="advertising-awareness-options" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;"></div>' +
         '</div>' +
         '<div id="advertising-results" style="display:none;">' +
-          '<h2 style="color:#61a3ed;">Complete</h2>' +
+          '<h2 style="color:#8ea8ff;">Complete</h2>' +
           '<div id="advertising-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="advertising-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -461,7 +462,7 @@ window.AdvertisingPriming = {
         (a.choseExposed === 1 ? '' : 's') + '</p>' +
       '<p>Your rate: ' + (a.rate === null ? '-' : a.rate + '%') +
         ' &nbsp;|&nbsp; baseline with four options: ' + a.baseline + '%</p>' +
-      '<p style="color:#61a3ed;font-weight:700;font-size:1.05rem;">Brand priming effect (D &minus; C): ' +
+      '<p style="color:#8ea8ff;font-weight:700;font-size:1.05rem;">Brand priming effect (D &minus; C): ' +
         (a.effect === null ? '-' : (a.effect > 0 ? '+' : '') + a.effect + ' percentage points') + '</p>' +
       '<p style="color:#64748b;font-size:.86rem;">You said you ' +
         (a.awareness === 'noticed' ? 'DID notice a brand' : 'did NOT notice a brand') +

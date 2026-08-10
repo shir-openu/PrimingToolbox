@@ -90,7 +90,8 @@ window.RepetitionPriming = {
       source: 'Word-fragment completion; Scarborough et al. (1977) for the RT form',
       urlParam: 'repetition',
       template: 'repetition-priming',
-      accent: '#34d399',
+      accent: '#e38b82',
+      articleAnchor: '#s4',
       defaultExperimentId: 'repetition_priming',
       startFn: 'RepetitionPriming.start()',
       closeFn: 'RepetitionPriming.close()',
@@ -103,7 +104,7 @@ window.RepetitionPriming = {
       keyLegend: 'Some fragments come from words you rated earlier and some from words you have never seen. You are not meant to be able to tell which is which.',
       example: '<div style="text-align:center;">' +
         '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">A fragment looks like this:</div>' +
-        '<div style="font-size:2rem;font-weight:700;letter-spacing:6px;color:#34d399;">E _ E _ H A N T</div>' +
+        '<div style="font-size:2rem;font-weight:700;letter-spacing:6px;color:#e38b82;">E _ E _ H A N T</div>' +
         '<div style="color:#4ade80;font-size:.92rem;margin-top:10px;">&rarr; type ELEPHANT</div>' +
         '<div style="color:#9aa6b2;font-size:.82rem;margin-top:6px;">the underscores are the missing letters</div>' +
       '</div>',
@@ -178,7 +179,7 @@ window.RepetitionPriming = {
         '</div>' +
 
         '<div id="repetition-bridge" style="display:none;">' +
-          '<h3 style="color:#34d399;">Part 2</h3>' +
+          '<h3 style="color:#e38b82;">Part 2</h3>' +
           '<p style="color:#9aa6b2;line-height:1.7;max-width:520px;margin:14px auto;">Some letters are missing from each word below.<br>' +
             'Type the first complete word that comes to mind. If nothing comes, leave it blank and continue.</p>' +
           '<button class="btn" onclick="RepetitionPriming.beginTest()">Continue</button>' +
@@ -187,7 +188,7 @@ window.RepetitionPriming = {
         '<div id="repetition-test" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="repetition-test-progress"></div>' +
           PTK.progressHtml('repetition-test-fill') +
-          '<div id="repetition-fragment" style="font-size:2.6rem;font-weight:700;margin:30px 0;letter-spacing:6px;color:#34d399;"></div>' +
+          '<div id="repetition-fragment" style="font-size:2.6rem;font-weight:700;margin:30px 0;letter-spacing:6px;color:#e38b82;"></div>' +
           '<input id="repetition-answer" type="text" autocomplete="off" spellcheck="false" ' +
                  'style="font-size:1.5rem;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.3);' +
                  'background:rgba(255,255,255,.08);color:#fff;text-align:center;letter-spacing:3px;text-transform:uppercase;width:280px;">' +
@@ -198,7 +199,7 @@ window.RepetitionPriming = {
         '</div>' +
 
         '<div id="repetition-results" style="display:none;">' +
-          '<h2 style="color:#34d399;">Complete</h2>' +
+          '<h2 style="color:#e38b82;">Complete</h2>' +
           '<div id="repetition-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="repetition-verdict"></div>' +
           '<div id="repetition-interpretation"></div>' +
@@ -424,7 +425,7 @@ window.RepetitionPriming = {
       '<p>Fragments attempted: ' + a.n + ' &nbsp;|&nbsp; words studied earlier: ' + a.studied + '</p>' +
       '<p>Completed - studied words: ' + pct(a.studiedRate) + '</p>' +
       '<p>Completed - never seen: ' + pct(a.unstudiedRate) + '</p>' +
-      '<p style="color:#34d399;font-weight:700;font-size:1.05rem;">Completion advantage (D &minus; C): ' +
+      '<p style="color:#e38b82;font-weight:700;font-size:1.05rem;">Completion advantage (D &minus; C): ' +
         (a.effect !== null ? a.effect + ' percentage points' : '-') + '</p>' +
       '<p style="color:#9aa6b2;">Mean time per fragment: ' + (a.meanRT !== null ? a.meanRT + ' ms' : '-') + '</p>';
 

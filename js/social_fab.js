@@ -58,7 +58,8 @@ window.Social = {
       source: 'Bargh, Chen & Burrows (1996)',
       urlParam: 'social',
       template: 'social-priming',
-      accent: '#ff4db8',
+      accent: '#ff9b1e',
+      articleAnchor: '#s33',
       defaultExperimentId: 'social_priming',
       startFn: 'Social.start()',
       closeFn: 'Social.close()',
@@ -170,7 +171,7 @@ window.Social = {
           '<button class="btn btn-secondary" onclick="Social.resetItem()">Reset this item</button>' +
         '</div>' +
         '<div id="social-results" style="display:none;">' +
-          '<h2 style="color:#ff4db8;">Complete</h2>' +
+          '<h2 style="color:#ff9b1e;">Complete</h2>' +
           '<div id="social-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<p style="color:#9aa6b2;font-size:.82rem;max-width:520px;margin:10px auto;">Note: online measure is sentence-completion latency, a proxy for the classic walking-speed measure.</p>' +
           '<button class="btn" onclick="Social.exportCSV()">Download CSV</button> ' +

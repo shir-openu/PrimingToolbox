@@ -80,7 +80,8 @@ window.MaskedLexical = {
       source: 'Forster & Davis (1984)',
       urlParam: 'masked',
       template: 'masked-lexical',
-      accent: '#a78bfa',
+      accent: '#bb7be6',
+      articleAnchor: '#s2',
       defaultExperimentId: 'masked_lexical_decision',
       startFn: 'MaskedLexical.start()',
       closeFn: 'MaskedLexical.close()',
@@ -182,7 +183,7 @@ window.MaskedLexical = {
           '<div id="masked-keyhint" style="color:#64748b;font-size:.85rem;"></div>' +
         '</div>' +
         '<div id="masked-results" style="display:none;">' +
-          '<h2 style="color:#a78bfa;">Complete</h2>' +
+          '<h2 style="color:#bb7be6;">Complete</h2>' +
           '<div id="masked-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="masked-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -469,7 +470,7 @@ window.MaskedLexical = {
         (a.timedOut ? ' &nbsp;|&nbsp; timed out: ' + a.timedOut : '') + '</p>' +
       '<p>Word RT - repetition prime: ' + (a.repetitionRT !== null ? a.repetitionRT + ' ms' : '-') + '</p>' +
       '<p>Word RT - unrelated prime: ' + (a.unrelatedRT !== null ? a.unrelatedRT + ' ms' : '-') + '</p>' +
-      '<p style="color:#a78bfa;font-weight:700;font-size:1.05rem;">Masked priming effect (C &minus; D): ' +
+      '<p style="color:#bb7be6;font-weight:700;font-size:1.05rem;">Masked priming effect (C &minus; D): ' +
         (a.effect !== null ? a.effect + ' ms' : '-') + '</p>';
 
     document.getElementById('masked-interpretation').innerHTML = PTK.interpret({

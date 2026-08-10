@@ -89,7 +89,8 @@ window.MoneyPriming = {
       source: 'Vohs, Mead & Goode (2006); Caruso et al. (2017)',
       urlParam: 'money',
       template: 'money-priming',
-      accent: '#4ade80',
+      accent: '#2fd4c4',
+      articleAnchor: '#s54',
       defaultExperimentId: 'money_priming',
       startFn: 'MoneyPriming.start()',
       closeFn: 'MoneyPriming.close()',
@@ -105,11 +106,11 @@ window.MoneyPriming = {
           '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The sentence part</div>' +
           '<div style="font-size:1.05rem;color:#e5e7eb;letter-spacing:.5px;">' +
             '<span style="opacity:.35;">stone</span> &nbsp; we &nbsp; the &nbsp; song &nbsp; heard</div>' +
-          '<div style="color:#4ade80;font-size:.9rem;margin-top:8px;">&rarr; &ldquo;we heard the song&rdquo;</div>' +
+          '<div style="color:#2fd4c4;font-size:.9rem;margin-top:8px;">&rarr; &ldquo;we heard the song&rdquo;</div>' +
         '</div>' +
         '<div>' +
           '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The puzzle part</div>' +
-          '<div style="font-size:1.5rem;font-weight:700;color:#4ade80;letter-spacing:8px;">Q X Z J V K</div>' +
+          '<div style="font-size:1.5rem;font-weight:700;color:#2fd4c4;letter-spacing:8px;">Q X Z J V K</div>' +
           '<div style="color:#9aa6b2;font-size:.88rem;margin-top:8px;">stay with it, or ask for a hint</div>' +
         '</div>' +
       '</div>',
@@ -185,7 +186,7 @@ window.MoneyPriming = {
         '<div id="money-prime" style="display:none;"></div>' +
         '<div id="money-puzzle" style="display:none;">' +
           '<div style="color:#64748b;font-size:.8rem;letter-spacing:2px;margin-top:10px;">UNSCRAMBLE THIS WORD</div>' +
-          '<div id="money-puzzle-letters" style="font-size:2.6rem;font-weight:700;margin:26px 0;letter-spacing:10px;color:#4ade80;"></div>' +
+          '<div id="money-puzzle-letters" style="font-size:2.6rem;font-weight:700;margin:26px 0;letter-spacing:10px;color:#2fd4c4;"></div>' +
           '<input id="money-puzzle-answer" type="text" autocomplete="off" spellcheck="false" ' +
                  'style="font-size:1.4rem;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.3);' +
                  'background:rgba(255,255,255,.08);color:#fff;text-align:center;letter-spacing:3px;text-transform:uppercase;width:280px;">' +
@@ -199,13 +200,13 @@ window.MoneyPriming = {
           '</div>' +
         '</div>' +
         '<div id="money-preference" style="display:none;">' +
-          '<h3 style="color:#4ade80;">One question</h3>' +
+          '<h3 style="color:#2fd4c4;">One question</h3>' +
           '<p style="color:#9aa6b2;line-height:1.7;max-width:520px;margin:16px auto;">' +
             'If there were another task like that one, how would you rather do it?</p>' +
           '<div id="money-preference-options" style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;"></div>' +
         '</div>' +
         '<div id="money-results" style="display:none;">' +
-          '<h2 style="color:#4ade80;">Complete</h2>' +
+          '<h2 style="color:#2fd4c4;">Complete</h2>' +
           '<div id="money-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="money-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -276,7 +277,7 @@ window.MoneyPriming = {
     if (!block) { this.showResults(); return; }
     var intro = document.getElementById('money-block-intro');
     intro.innerHTML =
-      '<h3 style="color:#4ade80;">Part ' + (this.state.blockIndex + 1) + ' of ' + this.state.blocks.length + '</h3>' +
+      '<h3 style="color:#2fd4c4;">Part ' + (this.state.blockIndex + 1) + ' of ' + this.state.blocks.length + '</h3>' +
       '<p style="color:#9aa6b2;line-height:1.7;max-width:520px;margin:16px auto;">Sentences first, then a puzzle.</p>';
     var go = document.createElement('button');
     go.className = 'btn';
@@ -439,7 +440,7 @@ window.MoneyPriming = {
       body += '<p style="color:#9aa6b2;margin-top:14px;">You ran one condition only - the original ' +
               'between-participants design. The comparison is made across participants.</p>';
     } else if (a.latencyEffect !== null) {
-      body += '<p style="color:#4ade80;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
+      body += '<p style="color:#2fd4c4;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
               'Self-sufficiency effect (D &minus; C): ' + a.latencyEffect + ' s longer before asking for help</p>' +
               '<p style="color:#64748b;font-size:.86rem;">Solo-work preference shift: ' +
               (a.soloShift > 0 ? 'toward working alone after the money cue'
@@ -488,7 +489,7 @@ window.MoneyPriming = {
     var m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:flex;justify-content:center;align-items:center;';
     m.innerHTML = '<div style="background:rgba(17,24,39,.97);border:1px solid rgba(74,222,128,.5);border-radius:20px;padding:44px;max-width:460px;text-align:center;color:#e5e7eb;">' +
-      '<h2 style="color:#4ade80;">Thank You!</h2><p style="color:#c0c0c0;">Your responses were recorded. You may close this window.</p>' +
+      '<h2 style="color:#2fd4c4;">Thank You!</h2><p style="color:#c0c0c0;">Your responses were recorded. You may close this window.</p>' +
       '<button class="btn" onclick="this.closest(\'div\').parentElement.remove()">Close</button></div>';
     document.body.appendChild(m);
   },

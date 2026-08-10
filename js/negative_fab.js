@@ -58,7 +58,8 @@ window.NegativePriming = {
       source: 'Tipper (1985)',
       urlParam: 'negative',
       template: 'negative-priming',
-      accent: '#22d3ee',
+      accent: '#61a3ed',
+      articleAnchor: '#s2',
       defaultExperimentId: 'negative_priming',
       startFn: 'NegativePriming.start()',
       closeFn: 'NegativePriming.close()',
@@ -156,7 +157,7 @@ window.NegativePriming = {
           '<div id="negative-keyhint" style="color:#64748b;font-size:.85rem;"></div>' +
         '</div>' +
         '<div id="negative-results" style="display:none;">' +
-          '<h2 style="color:#22d3ee;">Complete</h2>' +
+          '<h2 style="color:#61a3ed;">Complete</h2>' +
           '<div id="negative-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="negative-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -463,7 +464,7 @@ window.NegativePriming = {
       '<p>Displays completed: ' + a.n + ' &nbsp;|&nbsp; accuracy ' + a.accuracy + '%</p>' +
       '<p>Probe RT - ignored repetition: ' + (a.ignoredRepetitionRT !== null ? a.ignoredRepetitionRT + ' ms' : '-') + '</p>' +
       '<p>Probe RT - control: ' + (a.controlRT !== null ? a.controlRT + ' ms' : '-') + '</p>' +
-      '<p style="color:#22d3ee;font-weight:700;font-size:1.05rem;">Negative priming effect (D &minus; C): ' +
+      '<p style="color:#61a3ed;font-weight:700;font-size:1.05rem;">Negative priming effect (D &minus; C): ' +
         (a.effect !== null ? a.effect + ' ms' : '-') + '</p>';
 
     document.getElementById('negative-interpretation').innerHTML = PTK.interpret({

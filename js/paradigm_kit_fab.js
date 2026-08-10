@@ -999,8 +999,12 @@ window.PTK = (function () {
         '<h3 style="color:' + e(accent) + ';margin-bottom:6px;font-size:1.05rem;">What is being measured: the ABCD framework</h3>' +
         '<p style="color:#9aa6b2;font-size:.88rem;line-height:1.6;margin-bottom:16px;">' +
           'Every priming experiment on this platform is described the same way, so designs from different ' +
-          'fields can be compared. <a href="article/abcd-framework.html" style="color:' + e(accent) +
-          ';">Read the framework</a>.</p>' +
+          'fields can be compared. <a href="article/abcd-framework.html' + e(spec.articleAnchor || '') +
+          '" style="color:' + e(accent) + ';font-weight:600;">' +
+          (spec.articleAnchor && spec.articleAnchor !== '#s2'
+            ? 'Read this experiment&rsquo;s case in the framework &rarr;'
+            : 'Read the framework &rarr;') +
+          '</a></p>' +
         '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">' + abcd + '</div>' +
         '<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09);">' +
           '<div style="color:#e5e7eb;font-size:.92rem;margin-bottom:10px;font-weight:600;">' +

@@ -95,7 +95,8 @@ window.GoalPriming = {
       source: 'Bargh & Gollwitzer (1994); Shah & Kruglanski (2003)',
       urlParam: 'goal',
       template: 'goal-priming',
-      accent: '#f59e0b',
+      accent: '#39d461',
+      articleAnchor: '#s52',
       defaultExperimentId: 'goal_priming',
       startFn: 'GoalPriming.start()',
       closeFn: 'GoalPriming.close()',
@@ -116,7 +117,7 @@ window.GoalPriming = {
         '</div>' +
         '<div>' +
           '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The anagram part</div>' +
-          '<div style="font-size:1.5rem;font-weight:700;color:#f59e0b;letter-spacing:8px;">N D G A E R</div>' +
+          '<div style="font-size:1.5rem;font-weight:700;color:#39d461;letter-spacing:8px;">N D G A E R</div>' +
           '<div style="color:#4ade80;font-size:.9rem;margin-top:8px;">&rarr; type GARDEN</div>' +
         '</div>' +
       '</div>',
@@ -190,7 +191,7 @@ window.GoalPriming = {
         '<div id="goal-prime" style="display:none;"></div>' +
         '<div id="goal-anagram" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="goal-anagram-progress"></div>' +
-          '<div id="goal-anagram-letters" style="font-size:2.6rem;font-weight:700;margin:30px 0;letter-spacing:10px;color:#f59e0b;"></div>' +
+          '<div id="goal-anagram-letters" style="font-size:2.6rem;font-weight:700;margin:30px 0;letter-spacing:10px;color:#39d461;"></div>' +
           '<input id="goal-anagram-answer" type="text" autocomplete="off" spellcheck="false" ' +
                  'style="font-size:1.5rem;padding:10px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.3);' +
                  'background:rgba(255,255,255,.08);color:#fff;text-align:center;letter-spacing:3px;text-transform:uppercase;width:280px;">' +
@@ -206,7 +207,7 @@ window.GoalPriming = {
           '</div>' +
         '</div>' +
         '<div id="goal-results" style="display:none;">' +
-          '<h2 style="color:#f59e0b;">Complete</h2>' +
+          '<h2 style="color:#39d461;">Complete</h2>' +
           '<div id="goal-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="goal-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -281,7 +282,7 @@ window.GoalPriming = {
 
     var intro = document.getElementById('goal-block-intro');
     intro.innerHTML =
-      '<h3 style="color:#f59e0b;">Part ' + (this.state.blockIndex + 1) + ' of ' + this.state.blocks.length + '</h3>' +
+      '<h3 style="color:#39d461;">Part ' + (this.state.blockIndex + 1) + ' of ' + this.state.blocks.length + '</h3>' +
       '<p style="color:#9aa6b2;line-height:1.7;max-width:520px;margin:16px auto;">' +
         'First some sentences, then some anagrams.</p>';
     var go = document.createElement('button');
@@ -479,7 +480,7 @@ window.GoalPriming = {
               'between-participants design. The effect comes from comparing this participant with others, ' +
               'so there is no within-person number to show.</p>';
     } else if (a.persistenceEffect !== null) {
-      body += '<p style="color:#f59e0b;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
+      body += '<p style="color:#39d461;font-weight:700;font-size:1.05rem;margin-top:12px;">' +
               'Persistence effect (D &minus; C): ' + a.persistenceEffect + ' s</p>' +
               '<p style="color:#64748b;font-size:.86rem;">Anagrams solved, achievement minus neutral: ' +
               (a.solvedEffect > 0 ? '+' : '') + a.solvedEffect + '</p>';

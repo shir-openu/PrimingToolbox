@@ -116,7 +116,8 @@ window.SyntacticPriming = {
       source: 'Bock (1986); Pickering & Ferreira (2008)',
       urlParam: 'syntactic',
       template: 'syntactic-priming',
-      accent: '#fbbf24',
+      accent: '#ffd166',
+      articleAnchor: '#s51',
       defaultExperimentId: 'syntactic_priming',
       startFn: 'SyntacticPriming.start()',
       closeFn: 'SyntacticPriming.close()',
@@ -222,12 +223,12 @@ window.SyntacticPriming = {
           '</div>' +
           '<div id="syntactic-choice" style="display:none;">' +
             '<div style="color:#64748b;font-size:.8rem;letter-spacing:2px;margin-top:18px;">NOW DESCRIBE THIS EVENT</div>' +
-            '<div id="syntactic-cue" style="font-size:1.15rem;margin:20px 0;color:#fbbf24;"></div>' +
+            '<div id="syntactic-cue" style="font-size:1.15rem;margin:20px 0;color:#ffd166;"></div>' +
             '<div id="syntactic-options" style="display:flex;flex-direction:column;gap:14px;max-width:560px;margin:0 auto;"></div>' +
           '</div>' +
         '</div>' +
         '<div id="syntactic-results" style="display:none;">' +
-          '<h2 style="color:#fbbf24;">Complete</h2>' +
+          '<h2 style="color:#ffd166;">Complete</h2>' +
           '<div id="syntactic-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<div id="syntactic-interpretation"></div>' +
           '<div style="margin-top:20px;">' +
@@ -518,7 +519,7 @@ window.SyntacticPriming = {
         pct(a.overall.afterMarked) + '</p>' +
       '<p style="color:#9aa6b2;font-size:.92rem;">Chose it after the OTHER structure was primed: ' +
         pct(a.overall.afterUnmarked) + '</p>' +
-      '<p style="color:#fbbf24;font-weight:700;font-size:1.05rem;margin-top:10px;">' +
+      '<p style="color:#ffd166;font-weight:700;font-size:1.05rem;margin-top:10px;">' +
         'Syntactic priming effect (D &minus; C): ' +
         (a.overall.effect === null ? '-' : a.overall.effect + ' percentage points') + '</p>' +
       '<p style="color:#64748b;font-size:.86rem;">Dative items: ' +

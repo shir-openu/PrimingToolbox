@@ -2,6 +2,24 @@
 <html lang="en">
 <!--
   ===========================================================================
+  THIS FILE IS A MIRROR OF index.html - DO NOT EDIT IT DIRECTLY
+  ===========================================================================
+  index_fab.html was the V2 development copy. index.html was promoted from
+  it, after which this file stopped being updated and drifted 279 lines
+  behind - while still being tracked, and therefore still served live at
+  https://shir-openu.github.io/PrimingToolbox/index_fab.html
+
+  That meant a second, stale copy of the whole platform was on the internet
+  carrying every bug fixed on 2026-08-10: no tracked timers in any paradigm,
+  Stroop mis-scoring custom keys, a connection light that was always green,
+  and a meta description still crediting "Sivroni & Stark".
+
+  Resynced 2026-08-10 rather than renamed, because any participant link
+  already pointing at index_fab.html would 404 if the file moved. Keep it a
+  byte-for-byte copy of index.html; edit index.html and copy across.
+  ===========================================================================
+
+  ===========================================================================
   BACKUP NOTE - where the previous version of this page is kept
   ===========================================================================
   Before the drag-to-resize trial timeline was added (2026-07-25), the whole
@@ -22,13 +40,28 @@
 
   Older still: the original v1 site lives in the private repo
   shir-openu/PrimingToolbox-v1 (un-deployed).
+
+  ---------------------------------------------------------------------------
+  PREVIOUS VERSIONS OF THIS FILE ON GITHUB
+  ---------------------------------------------------------------------------
+  Newest first. Each link is the file exactly as it was before the next edit.
+
+  Before the article's Section 5 paradigms (goal, moral, money, advertising)
+  were wired in, and before the participant-link chain was flattened:
+      https://github.com/shir-openu/PrimingToolbox/blob/57eef45/index.html
+
+  Before the ABCD-article wiring, the scrollable chooser and the ?open= links:
+      https://github.com/shir-openu/PrimingToolbox/blob/bc0bfdff32f68d9fe23a16eda4187ecc018c5c40/index.html
+
+  Local copy of that same state:
+      D:\Dropbox\Research\PRIMING_TOOLBOX\_BACKUP_index_pre_abcd_link_2026-08-10.html
   ===========================================================================
 -->
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="author" content="Dr. Shir Sivroni">
-  <meta name="description" content="PrimingToolbox - A universal platform for priming experiments based on the ABCD framework (Sivroni & Stark, 2025)">
+  <meta name="description" content="PrimingToolbox - A universal platform for priming experiments based on the ABCD framework (Sivroni, 2025)">
 
   <title>PrimingToolbox</title>
 
@@ -93,6 +126,14 @@
         <option value="evaluative">Evaluative Conditioning</option>
         <option value="affective">Affective Priming</option>
         <option value="social">Social Priming</option>
+        <option value="negative">Negative Priming</option>
+        <option value="masked">Masked Lexical Decision</option>
+        <option value="syntactic">Syntactic Priming</option>
+        <option value="repetition">Repetition Priming</option>
+        <option value="goal">Goal Priming</option>
+        <option value="moral">Moral Priming</option>
+        <option value="money">Money Priming</option>
+        <option value="advertising">Advertising Priming</option>
       </select>
 
       <div class="sidebar-footer">
@@ -213,7 +254,11 @@
         </div>
 
         <!-- ABCD Framework Info - Right Side -->
-          <div class="card abcd-sidebar">
+        <!-- Clickable since 2026-08-10: opens article/abcd-framework.html, which
+             hosts the full framework text and both figures. Before this the card
+             was inert - it looked like a link and did nothing. -->
+          <div class="card abcd-sidebar" onclick="openAbcdArticle()" style="cursor: pointer;"
+               role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openAbcdArticle();}">
             <div class="card-content">
               <h3 class="card-title" style="color: #ff4db8; font-size: 1.4rem;">The ABCD Framework</h3>
               <p style="color: #9aa6b2; line-height: 2; font-size: 1.1rem;">
@@ -226,6 +271,9 @@
                 Three characteristics define priming: <strong>Association</strong> (A-B relationship),
                 <strong>Secondariness</strong> (A is task-irrelevant), and
                 <strong>Modulation</strong> (A changes outcome from C to D).
+              </p>
+              <p style="color: #ff4db8; margin-top: 20px; font-size: 0.98rem; font-weight: 600;">
+                Read the full framework &rarr;
               </p>
             </div>
           </div>
@@ -2551,6 +2599,12 @@
        already declared, so the browser discards the entire file and
        PTA.Engine ends up undefined. See the header of js/engine_fab.js. -->
   <script src="js/engine_fab.js"></script>
+  <!-- paradigm_kit_fab.js (PTK) carries the platform surface the newer
+       paradigms were missing: Template Builder, stimulus editing, timing
+       controls, validated link modal, XLSX export, progress bar, practice
+       block, connection test, tracked timers and the A/S/M design object.
+       Must load before any module that opts into it. -->
+  <script src="js/paradigm_kit_fab.js"></script>
   <script src="js/stroop.js"></script>
   <script src="js/semantic.js"></script>
   <script src="js/evaluative.js"></script>
@@ -2559,6 +2613,18 @@
   <script src="js/subliminal.js"></script>
   <script src="js/affective_fab.js"></script>
   <script src="js/social_fab.js"></script>
+  <script src="js/negative_fab.js"></script>
+  <script src="js/masked_fab.js"></script>
+  <script src="js/syntactic_fab.js"></script>
+  <script src="js/repetition_fab.js"></script>
+  <!-- The article's Section 5 examples that can run in a browser. Racial
+       priming (5.5) needs broadcast video advertisements and naturalistic
+       priming (5.6) needs the participant to physically taste a product, so
+       neither is implemented; both are marked as such on the article page. -->
+  <script src="js/goal_fab.js"></script>
+  <script src="js/moral_fab.js"></script>
+  <script src="js/money_fab.js"></script>
+  <script src="js/advertising_fab.js"></script>
   <script src="js/timeline_fab.js"></script>
   <script src="js/asm_validator.js"></script>
 
@@ -2749,41 +2815,160 @@
     }
 
     // Show experiment selector modal
+    // ------------------------------------------------------------------
+    // The catalog of runnable experiments.
+    //
+    // Rewritten 2026-08-10. The old version hard-coded six buttons in a fixed
+    // grid and had never been updated, so the six paradigms added after it
+    // (affective, social, negative, masked, syntactic, repetition) were
+    // unreachable from this chooser. It is now built from one list, and the
+    // list scrolls - the number of experiments keeps growing.
+    //
+    // A function, not a top-level const: this page has been broken before by a
+    // second file declaring the same global (see js/engine_fab.js).
+    // ------------------------------------------------------------------
+    function experimentCatalog() {
+      return [
+        { type: 'stroop',         name: 'Stroop Task',            blurb: 'Color-word interference' },
+        { type: 'semantic',       name: 'Semantic Priming',       blurb: 'Word associations' },
+        { type: 'number-priming', name: 'Number Priming',         blurb: 'Numerical magnitude' },
+        { type: 'subliminal',     name: 'Subliminal Priming',     blurb: 'Masked presentation' },
+        { type: 'amp',            name: 'AMP',                    blurb: 'Affect misattribution' },
+        { type: 'evaluative',     name: 'Evaluative Conditioning', blurb: 'Learned associations' },
+        { type: 'affective',      name: 'Affective Priming',      blurb: 'Valence congruency (Fazio, 1986)' },
+        { type: 'social',         name: 'Social Priming',         blurb: 'Scrambled sentences (Bargh, 1996)' },
+        { type: 'negative',       name: 'Negative Priming',       blurb: 'Ignored-repetition cost (Tipper, 1985)' },
+        { type: 'masked',         name: 'Masked Lexical Decision', blurb: 'Masked prime (Forster & Davis, 1984)' },
+        { type: 'syntactic',      name: 'Syntactic Priming',      blurb: 'Structure reuse (Bock, 1986)' },
+        // Kept, but labelled. Section 4 of the framework argues repetition
+        // priming is NOT priming: when prime and target are identical the
+        // prime is primary for its own response, so secondariness fails.
+        // Listing it unlabelled next to the others would contradict the paper
+        // this platform is built on.
+        { type: 'repetition',     name: 'Repetition Priming',     blurb: 'Boundary case - secondariness fails', boundary: true },
+        // The framework article's Section 5 examples that a browser can run.
+        { type: 'goal',           name: 'Goal Priming',           blurb: 'Achievement cues + persistence (Bargh & Gollwitzer, 1994)' },
+        { type: 'moral',          name: 'Moral Priming',          blurb: 'Moral reminders + ethical choice (Aquino et al., 2009)' },
+        { type: 'money',          name: 'Money Priming',          blurb: 'Money cues + self-sufficiency (Vohs et al., 2006)' },
+        { type: 'advertising',    name: 'Advertising Priming',    blurb: 'Incidental brand exposure (Ferraro et al., 2009)' }
+      ];
+    }
+
+    function closeExperimentSelector() {
+      const m = document.getElementById('experiment-selector-modal');
+      if (m) m.remove();
+      document.removeEventListener('keydown', experimentSelectorKeydown);
+    }
+
+    function experimentSelectorKeydown(e) {
+      if (e.key === 'Escape') closeExperimentSelector();
+    }
+
+    // Route every choice through the sidebar dropdown + showTryExperiment(), so
+    // this chooser never becomes a second, diverging copy of the open dispatch.
+    function chooseExperiment(type) {
+      closeExperimentSelector();
+      const sel = document.getElementById('experimentSelect');
+      if (sel) sel.value = type;
+      showTryExperiment();
+    }
+
     function showExperimentSelector() {
+      closeExperimentSelector();
+
       const modal = document.createElement('div');
       modal.id = 'experiment-selector-modal';
-      modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0, 0, 0, 0.9); z-index: 2000;
-        display: flex; justify-content: center; align-items: center;
-      `;
-      modal.innerHTML = `
-        <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 20px; padding: 40px; max-width: 600px; text-align: center;">
-          <h2 style="color: #ffffff; margin-bottom: 25px;">Select an Experiment</h2>
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); Stroop.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>Stroop Task</strong><br><small style="color: #9aa6b2;">Color-word interference</small>
-            </button>
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); Semantic.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>Semantic Priming</strong><br><small style="color: #9aa6b2;">Word associations</small>
-            </button>
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); NumberPriming.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>Number Priming</strong><br><small style="color: #9aa6b2;">Numerical magnitude</small>
-            </button>
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); Subliminal.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>Subliminal Priming</strong><br><small style="color: #9aa6b2;">Masked presentation</small>
-            </button>
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); AMP.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>AMP</strong><br><small style="color: #9aa6b2;">Affect Misattribution</small>
-            </button>
-            <button onclick="document.getElementById('experiment-selector-modal').remove(); EvaluativeConditioning.open();" class="exp-select-btn" style="padding: 20px; background: rgba(102, 126, 234, 0.2); border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff; cursor: pointer; transition: all 0.2s;">
-              <strong>Evaluative Conditioning</strong><br><small style="color: #9aa6b2;">Learned associations</small>
-            </button>
-          </div>
-          <button onclick="document.getElementById('experiment-selector-modal').remove();" style="margin-top: 25px; padding: 12px 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #fff; cursor: pointer;">Cancel</button>
-        </div>
-      `;
+      modal.style.cssText =
+        'position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); z-index: 2000;' +
+        'display: flex; justify-content: center; align-items: center; padding: 24px;';
+
+      const panel = document.createElement('div');
+      panel.style.cssText =
+        'background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3);' +
+        'border-radius: 20px; padding: 34px 34px 28px; width: 100%; max-width: 640px;' +
+        'max-height: 88vh; display: flex; flex-direction: column; text-align: center;';
+
+      const heading = document.createElement('h2');
+      heading.style.cssText = 'color: #ffffff; margin-bottom: 6px;';
+      heading.textContent = 'Select an Experiment';
+      panel.appendChild(heading);
+
+      const count = document.createElement('p');
+      count.style.cssText = 'color: #64748b; font-size: .85rem; margin-bottom: 18px;';
+      panel.appendChild(count);
+
+      // The scrolling region she asked for.
+      const scroller = document.createElement('div');
+      scroller.id = 'experiment-selector-scroll';
+      scroller.style.cssText =
+        'overflow-y: auto; overscroll-behavior: contain; flex: 1 1 auto;' +
+        'min-height: 0; padding: 4px 10px 4px 4px; margin-right: -6px;' +
+        'scrollbar-width: thin; scrollbar-color: rgba(255,77,184,.55) transparent;';
+
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;';
+
+      const list = experimentCatalog();
+      count.textContent = list.length + ' experiments available';
+
+      list.forEach(function (exp) {
+        const b = document.createElement('button');
+        b.className = 'exp-select-btn';
+        b.type = 'button';
+        b.style.cssText =
+          'padding: 18px 16px; background: rgba(102, 126, 234, 0.2);' +
+          'border: 1px solid rgba(102, 126, 234, 0.5); border-radius: 12px; color: #fff;' +
+          'cursor: pointer; transition: all 0.2s; text-align: center; font-family: inherit;';
+
+        const title = document.createElement('strong');
+        title.textContent = exp.name;
+        b.appendChild(title);
+        b.appendChild(document.createElement('br'));
+
+        const small = document.createElement('small');
+        small.style.color = exp.boundary ? '#e38b82' : '#9aa6b2';
+        small.textContent = exp.blurb;
+        b.appendChild(small);
+
+        // A boundary case is still runnable - it is the counter-example the
+        // framework uses - but it must not look like the others.
+        const idle = exp.boundary ? 'rgba(153, 15, 35, 0.16)' : 'rgba(102, 126, 234, 0.2)';
+        const idleBorder = exp.boundary ? 'rgba(227, 139, 130, 0.5)' : 'rgba(102, 126, 234, 0.5)';
+        b.style.background = idle;
+        b.style.borderColor = idleBorder;
+        if (exp.boundary) b.title = 'Not priming under the framework: secondariness fails (Section 4).';
+
+        b.onmouseenter = function () {
+          b.style.background = 'rgba(255, 77, 184, 0.18)';
+          b.style.borderColor = 'rgba(255, 77, 184, 0.6)';
+        };
+        b.onmouseleave = function () {
+          b.style.background = idle;
+          b.style.borderColor = idleBorder;
+        };
+        b.onclick = function () { chooseExperiment(exp.type); };
+        grid.appendChild(b);
+      });
+
+      scroller.appendChild(grid);
+      panel.appendChild(scroller);
+
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.style.cssText =
+        'margin-top: 22px; flex: 0 0 auto; align-self: center; padding: 12px 30px;' +
+        'background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);' +
+        'border-radius: 8px; color: #fff; cursor: pointer; font-family: inherit;';
+      cancel.textContent = 'Cancel';
+      cancel.onclick = closeExperimentSelector;
+      panel.appendChild(cancel);
+
+      // Click the backdrop to dismiss, but not a click inside the panel.
+      modal.onclick = function (e) { if (e.target === modal) closeExperimentSelector(); };
+
+      modal.appendChild(panel);
       document.body.appendChild(modal);
+      document.addEventListener('keydown', experimentSelectorKeydown);
     }
 
     // Show Try Experiment
@@ -2855,6 +3040,16 @@
       // V2 _fab paradigms
       if (type === 'affective') { Affective.open(); return; }
       if (type === 'social') { Social.open(); return; }
+      if (type === 'negative') { NegativePriming.open(); return; }
+      if (type === 'masked') { MaskedLexical.open(); return; }
+      if (type === 'syntactic') { SyntacticPriming.open(); return; }
+      if (type === 'repetition') { RepetitionPriming.open(); return; }
+
+      // Section 5 examples from the framework article
+      if (type === 'goal') { GoalPriming.open(); return; }
+      if (type === 'moral') { MoralPriming.open(); return; }
+      if (type === 'money') { MoneyPriming.open(); return; }
+      if (type === 'advertising') { AdvertisingPriming.open(); return; }
 
       loadExperimentConfig(type);
       if (!currentConfig) {
@@ -3064,6 +3259,16 @@
       // V2 _fab paradigms
       if (type === 'affective') { Affective.openBuilder(); return; }
       if (type === 'social') { Social.openBuilder(); return; }
+      if (type === 'negative') { NegativePriming.openBuilder(); return; }
+      if (type === 'masked') { MaskedLexical.openBuilder(); return; }
+      if (type === 'syntactic') { SyntacticPriming.openBuilder(); return; }
+      if (type === 'repetition') { RepetitionPriming.openBuilder(); return; }
+
+      // Section 5 examples from the framework article
+      if (type === 'goal') { GoalPriming.openBuilder(); return; }
+      if (type === 'moral') { MoralPriming.openBuilder(); return; }
+      if (type === 'money') { MoneyPriming.openBuilder(); return; }
+      if (type === 'advertising') { AdvertisingPriming.openBuilder(); return; }
 
       document.getElementById('templateBuilderOverlay').classList.add('active');
     }
@@ -3200,6 +3405,32 @@
       alert('coming soon!');
     }
 
+    // The ABCD Framework card. Opens the article page that carries the full
+    // framework text and both figures.
+    function openAbcdArticle() {
+      window.location.href = 'article/abcd-framework.html';
+    }
+
+    // Deep link used by the "Run this experiment" buttons on the article page:
+    // index.html?open=<experiment type>. Deliberately separate from the
+    // participant-link chain - this carries no configuration, it is only
+    // navigation, so an unknown or misspelled type must fall through quietly
+    // rather than open the wrong task.
+    function checkOpenParam() {
+      const type = new URLSearchParams(window.location.search).get('open');
+      if (!type) return false;
+      const sel = document.getElementById('experimentSelect');
+      if (!sel) return false;
+      const known = Array.from(sel.options).map(function (o) { return o.value; });
+      if (known.indexOf(type) === -1) {
+        console.warn('index.html: ?open=' + type + ' is not an experiment on this build - ignoring.');
+        return false;
+      }
+      sel.value = type;
+      showTryExperiment();
+      return true;
+    }
+
     // Be a Participant function
     function showBeParticipant() {
       // Show a selection of experiments to try as a participant
@@ -3235,30 +3466,40 @@
     document.addEventListener('DOMContentLoaded', function() {
       PTA.initSupabase();
 
-      // First check for Stroop URL config (participant links)
-      if (!Stroop.checkUrlConfig()) {
-        // Check for Semantic Priming participant link
-        if (!Semantic.checkUrlConfig()) {
-          // Check for Evaluative Conditioning participant link
-          if (!EvaluativeConditioning.checkUrlConfig()) {
-            // Check for AMP participant link
-            if (!AMP.checkUrlConfig()) {
-              // Check for Number Priming participant link
-              if (!NumberPriming.checkUrlConfig()) {
-                // Check for Subliminal Priming participant link
-                if (!Subliminal.checkUrlConfig()) {
-                  // V2 _fab paradigm participant links
-                  if (!Affective.checkUrlConfig()) {
-                    if (!Social.checkUrlConfig()) {
-                      // If not a participant link, check for generic config
-                      checkUrlConfig();
-                    }
-                  }
-                }
-              }
-            }
-          }
+      // Participant links. Each module owns one URL parameter and returns true
+      // when the link is its own; the first claim wins.
+      //
+      // This used to be a twelve-level nested if, one level per paradigm, and
+      // grew a level every time a paradigm was added. A list is the same logic
+      // and cannot be mis-nested. A module that throws must not take the page
+      // down with it, so each call is guarded - before, one bad decode would
+      // have killed every check after it AND the fallbacks below.
+      var PARTICIPANT_LINK_MODULES = [
+        'Stroop', 'Semantic', 'EvaluativeConditioning', 'AMP', 'NumberPriming',
+        'Subliminal', 'Affective', 'Social', 'NegativePriming', 'MaskedLexical',
+        'SyntacticPriming', 'RepetitionPriming',
+        'GoalPriming', 'MoralPriming', 'MoneyPriming', 'AdvertisingPriming'
+      ];
+
+      var claimed = false;
+      for (var i = 0; i < PARTICIPANT_LINK_MODULES.length; i++) {
+        var name = PARTICIPANT_LINK_MODULES[i];
+        var mod = window[name];
+        if (!mod || typeof mod.checkUrlConfig !== 'function') {
+          console.warn('index.html: ' + name + ' has no checkUrlConfig - skipping.');
+          continue;
         }
+        try {
+          if (mod.checkUrlConfig()) { claimed = true; break; }
+        } catch (e) {
+          console.error('index.html: ' + name + '.checkUrlConfig() threw', e);
+        }
+      }
+
+      // Not a participant link. Try the article's ?open= deep link, then the
+      // generic ?config= payload.
+      if (!claimed && !checkOpenParam()) {
+        checkUrlConfig();
       }
     });
   </script>

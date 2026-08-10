@@ -97,6 +97,29 @@ window.GoalPriming = {
       template: 'goal-priming',
       accent: '#f59e0b',
       defaultExperimentId: 'goal_priming',
+      startFn: 'GoalPriming.start()',
+      closeFn: 'GoalPriming.close()',
+      howToPlay: [
+        'You will see <b>five scrambled words</b>. Click <b>four</b> of them, in the right order, to make a short sentence that makes sense. The fifth word is left over on purpose.',
+        'After a few sentences you will get <b>anagrams</b> &ndash; jumbled letters to unscramble. Type the word and press Enter, or press Skip if nothing comes.',
+        'At some point a message appears saying <b>you may stop</b>. You really may &ndash; nothing is lost by stopping. Carry on only if you feel like it.',
+        'Then the whole thing runs once more with different words.'
+      ],
+      keyLegend: 'Nothing to memorise, and there is no time pressure on the sentences.',
+      example: '<div style="display:flex;gap:26px;flex-wrap:wrap;justify-content:center;text-align:center;">' +
+        '<div>' +
+          '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The sentence part</div>' +
+          '<div style="font-size:1.05rem;color:#e5e7eb;letter-spacing:.5px;">' +
+            '<span style="opacity:.35;">quickly</span> &nbsp; they &nbsp; a &nbsp; house &nbsp; built</div>' +
+          '<div style="color:#4ade80;font-size:.9rem;margin-top:8px;">&rarr; &ldquo;they built a house&rdquo;</div>' +
+          '<div style="color:#9aa6b2;font-size:.8rem;margin-top:4px;">one word left over</div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The anagram part</div>' +
+          '<div style="font-size:1.5rem;font-weight:700;color:#f59e0b;letter-spacing:8px;">N D G A E R</div>' +
+          '<div style="color:#4ade80;font-size:.9rem;margin-top:8px;">&rarr; type GARDEN</div>' +
+        '</div>' +
+      '</div>',
       abcd: {
         A: 'Achievement words embedded in a scrambled-sentence task.',
         B: 'Performance on an unrelated anagram task.',
@@ -161,14 +184,8 @@ window.GoalPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="goal-setup">' +
-          '<h2 style="color:#f59e0b;">Sentences and Anagrams</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">First you will make short sentences out of scrambled words.<br>' +
-            'Then you will unscramble some anagrams. You may stop the anagrams whenever you want.</p>' +
-          '<div id="goal-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="GoalPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="GoalPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="goal-setup"></div>' +
         '<div id="goal-block-intro" style="display:none;"></div>' +
         '<div id="goal-prime" style="display:none;"></div>' +
         '<div id="goal-anagram" style="display:none;">' +
@@ -214,6 +231,7 @@ window.GoalPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('goal-overlay').style.display = 'block';
+    PTK.paintSetup('goal-setup', this, this.spec());
     this.show('setup');
     var p = document.getElementById('goal-params');
     if (p) {

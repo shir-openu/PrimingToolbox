@@ -84,6 +84,28 @@ window.MoralPriming = {
       template: 'moral-priming',
       accent: '#bb7be6',
       defaultExperimentId: 'moral_priming',
+      startFn: 'MoralPriming.start()',
+      closeFn: 'MoralPriming.close()',
+      howToPlay: [
+        'You will be asked to <b>write a short list from memory</b> into a text box &ndash; one item per line. Write as many as come to mind; there is no target number and nobody marks it.',
+        'Then you will read a few <b>everyday situations</b>, one at a time.',
+        'For each one, move the <b>slider</b> to show what you would actually do. There is no right answer and nothing is scored as correct.',
+        'Then it runs once more, with a different list and different situations.'
+      ],
+      keyLegend: 'Everything is typed or dragged &ndash; no timing, no keyboard shortcuts.',
+      example: '<div style="max-width:460px;margin:0 auto;text-align:left;">' +
+        '<div style="color:#9aa6b2;font-size:.85rem;margin-bottom:8px;">A situation might read:</div>' +
+        '<div style="color:#e5e7eb;font-size:1rem;line-height:1.6;margin-bottom:12px;">' +
+          '&ldquo;You are given 100 tokens to split between yourself and a stranger. How many do you give away?&rdquo;</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;">' +
+          '<span style="color:#64748b;font-size:.8rem;">0</span>' +
+          '<div style="flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.12);position:relative;">' +
+            '<div style="position:absolute;left:38%;top:-5px;width:16px;height:16px;border-radius:50%;background:#bb7be6;"></div>' +
+          '</div>' +
+          '<span style="color:#64748b;font-size:.8rem;">100</span>' +
+        '</div>' +
+        '<div style="color:#4ade80;font-size:.88rem;margin-top:10px;">Drag anywhere you like, then press Next.</div>' +
+      '</div>',
       abcd: {
         A: 'Recalling and listing moral rules.',
         B: 'Decisions in ethically relevant situations.',
@@ -148,14 +170,8 @@ window.MoralPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:700px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="moral-setup">' +
-          '<h2 style="color:#bb7be6;">Recall and Decide</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">First you will write down a short list from memory.<br>' +
-            'Then you will answer a few situations on a slider.</p>' +
-          '<div id="moral-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="MoralPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="MoralPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="moral-setup"></div>' +
         '<div id="moral-recall" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="moral-recall-block"></div>' +
           '<p id="moral-recall-prompt" style="color:#e5e7eb;line-height:1.7;max-width:520px;margin:18px auto;"></p>' +
@@ -208,6 +224,7 @@ window.MoralPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('moral-overlay').style.display = 'block';
+    PTK.paintSetup('moral-setup', this, this.spec());
     this.show('setup');
     var p = document.getElementById('moral-params');
     if (p) {

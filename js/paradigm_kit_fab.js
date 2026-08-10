@@ -883,6 +883,109 @@ window.PTK = (function () {
   };
 
   /* ===================================================================
+     Participant setup screen  (contract requirements 4 and 5)
+     =================================================================== */
+
+  /**
+   * Paint the setup screen a participant actually reads, in the house style the
+   * mature modules use (see #stroop-setup in index.html).
+   *
+   * Added 2026-08-10 after Shir opened ?open=goal and reported three things,
+   * all of which were true of every _fab paradigm:
+   *   1. it looked nothing like Stroop or Number Priming
+   *   2. it never explained ABCD, association, secondariness or modulation
+   *   3. as a subject you could not tell what you were being asked to do
+   *
+   * The mature screens carry a bordered "Instructions / How to Play" panel with
+   * a WORKED VISUAL EXAMPLE. That example is the part that makes the task
+   * obvious, and no _fab module had one. Everything here is generated from the
+   * spec, so one implementation fixes all eight paradigms and any future one.
+   *
+   * @param {string} containerId  element to fill
+   * @param {Object} mod
+   * @param {Object} spec  needs: name, source, accent, howToPlay[], example (HTML),
+   *                       abcd{A,B,C,D}, characteristics{...}, startFn, closeFn
+   */
+  PTK.paintSetup = function (containerId, mod, spec) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    var accent = spec.accent || '#ff4db8';
+    var e = PTK.esc;
+
+    var steps = (spec.howToPlay || []).map(function (s, i) {
+      return '<li style="margin-bottom:10px;line-height:1.65;">' +
+        '<span style="color:' + e(accent) + ';font-weight:700;">' + (i + 1) + '.</span> ' + s + '</li>';
+    }).join('');
+
+    var chars = ['association', 'secondariness', 'modulation'].map(function (k) {
+      var v = (spec.characteristics || {})[k];
+      if (!v) return '';
+      var met = /^NOT MET/i.test(v);
+      return '<div style="margin-bottom:10px;line-height:1.7;color:#c4ccd6;font-size:.93rem;">' +
+        '<span style="color:' + (met ? '#f87171' : '#35d6d6') + ';font-weight:700;text-transform:capitalize;">' +
+        k + ':</span> ' + e(v) + '</div>';
+    }).join('');
+
+    var abcd = ['A', 'B', 'C', 'D'].map(function (k) {
+      var label = { A: 'Prime', B: 'Target', C: 'Baseline outcome', D: 'Measured outcome' }[k];
+      return '<div style="background:rgba(0,0,0,.30);border:1px solid rgba(255,255,255,.10);' +
+                    'border-radius:12px;padding:14px 16px;">' +
+        '<div style="color:' + e(accent) + ';font-weight:700;font-size:1.3rem;line-height:1;">' + k + '</div>' +
+        '<div style="color:#e5e7eb;font-size:.8rem;text-transform:uppercase;letter-spacing:.08em;margin:6px 0 8px;">' +
+          e(label) + '</div>' +
+        '<div style="color:#b6c0cc;font-size:.9rem;line-height:1.6;">' +
+          e((spec.abcd || {})[k] || '-') + '</div>' +
+      '</div>';
+    }).join('');
+
+    box.innerHTML =
+      '<h2 style="color:' + e(accent) + ';margin-bottom:4px;">' + e(spec.name) + '</h2>' +
+      '<p class="subtitle" style="color:#64748b;margin-bottom:22px;">' + e(spec.source || '') + '</p>' +
+
+      // ---- the box that makes the task obvious ----
+      '<div style="background:rgba(102,126,234,.15);border:2px solid rgba(102,126,234,.4);' +
+             'border-radius:15px;padding:24px;margin-bottom:22px;text-align:left;">' +
+        '<h3 style="color:' + e(accent) + ';margin-bottom:14px;font-size:1.1rem;">Instructions / How to Play:</h3>' +
+        '<ol style="color:#e5e7eb;font-size:1rem;margin:0 0 4px;padding-left:18px;list-style:none;">' + steps + '</ol>' +
+        (spec.example
+          ? '<div style="background:rgba(0,0,0,.3);border-radius:10px;padding:18px;margin-top:16px;">' +
+              '<p style="color:#9aa6b2;margin-bottom:12px;font-size:.9rem;">Example:</p>' +
+              spec.example +
+            '</div>'
+          : '') +
+        (spec.keyLegend
+          ? '<p style="color:#4ade80;margin-top:16px;font-size:.95rem;">' + spec.keyLegend + '</p>'
+          : '') +
+      '</div>' +
+
+      // ---- what is being measured ----
+      '<div style="background:rgba(17,24,39,.55);border:1px solid rgba(255,77,184,.28);border-radius:15px;' +
+             'padding:22px 24px;margin-bottom:22px;text-align:left;">' +
+        '<h3 style="color:' + e(accent) + ';margin-bottom:6px;font-size:1.05rem;">What is being measured: the ABCD framework</h3>' +
+        '<p style="color:#9aa6b2;font-size:.88rem;line-height:1.6;margin-bottom:16px;">' +
+          'Every priming experiment on this platform is described the same way, so designs from different ' +
+          'fields can be compared. <a href="article/abcd-framework.html" style="color:' + e(accent) +
+          ';">Read the framework</a>.</p>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">' + abcd + '</div>' +
+        '<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09);">' +
+          '<div style="color:#e5e7eb;font-size:.92rem;margin-bottom:10px;font-weight:600;">' +
+            'The three characteristics that make this priming</div>' + chars +
+          (spec.boundaryNote
+            ? '<div style="margin-top:12px;border-left:3px solid #e38b82;background:rgba(153,15,35,.14);' +
+                     'border-radius:0 10px 10px 0;padding:12px 14px;color:#d6c2c6;font-size:.9rem;line-height:1.65;">' +
+                e(spec.boundaryNote) + '</div>'
+            : '') +
+        '</div>' +
+      '</div>' +
+
+      '<div id="' + e(spec.key) + '-params" style="color:#64748b;font-size:.85rem;margin:0 auto 18px;' +
+             'max-width:560px;line-height:1.7;"></div>' +
+
+      '<button class="btn" onclick="' + e(spec.startFn) + '" style="margin-top:4px;">Start</button> ' +
+      '<button class="btn btn-secondary" onclick="' + e(spec.closeFn) + '">Cancel</button>';
+  };
+
+  /* ===================================================================
      Scrambled-sentence prime phase
      =================================================================== */
 

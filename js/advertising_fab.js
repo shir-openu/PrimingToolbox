@@ -82,6 +82,39 @@ window.AdvertisingPriming = {
       template: 'advertising-priming',
       accent: '#61a3ed',
       defaultExperimentId: 'advertising_priming',
+      startFn: 'AdvertisingPriming.start()',
+      closeFn: 'AdvertisingPriming.close()',
+      howToPlay: [
+        'You will see a series of short <b>scenes</b>, one at a time. Each shows a person somewhere ordinary.',
+        'For each scene, decide whether the person looks <b>Happy</b> or <b>Not happy</b>, and click that button. Go with your first impression &ndash; each scene moves on by itself after about a second.',
+        'After the scenes you will be asked to <b>pick a bottled water</b> from four brands. Choose whichever you would actually pick.',
+        'That repeats for a few rounds, and at the end you get one question about what you noticed.'
+      ],
+      keyLegend: 'The scenes are simple drawings, not photographs, and every brand name is invented.',
+      example: '<div style="display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:center;">' +
+        '<div style="width:220px;">' +
+          '<svg viewBox="0 0 320 180" width="100%" role="img" aria-label="Example scene">' +
+            '<rect width="320" height="180" rx="14" fill="#1e293b"/>' +
+            '<rect x="0" y="140" width="320" height="40" fill="#0f172a" opacity=".6"/>' +
+            '<circle cx="100" cy="66" r="34" fill="#f1d3b8"/>' +
+            '<circle cx="88" cy="58" r="4" fill="#0f172a"/><circle cx="112" cy="58" r="4" fill="#0f172a"/>' +
+            '<path d="M84 74 Q100 88 116 74" stroke="#0f172a" stroke-width="4" fill="none" stroke-linecap="round"/>' +
+            '<rect x="72" y="102" width="56" height="46" rx="12" fill="#334155"/>' +
+            '<g transform="translate(250,96)">' +
+              '<rect x="0" y="14" width="26" height="54" rx="6" fill="#61a3ed" opacity=".85"/>' +
+              '<rect x="9" y="2" width="8" height="14" fill="#61a3ed" opacity=".85"/>' +
+              '<rect x="0" y="32" width="26" height="16" fill="#0b1220" opacity=".75"/>' +
+            '</g>' +
+            '<text x="160" y="170" font-size="11" text-anchor="middle" fill="#64748b" ' +
+                  'font-family="Segoe UI, Arial, sans-serif">on a bench</text>' +
+          '</svg>' +
+        '</div>' +
+        '<div style="text-align:left;max-width:230px;">' +
+          '<div style="color:#4ade80;font-size:.95rem;margin-bottom:8px;">&rarr; you would click <b>Happy</b></div>' +
+          '<div style="color:#9aa6b2;font-size:.86rem;line-height:1.6;">That is the whole task. Judge the face, ' +
+            'nothing else. Anything else in the picture is just scenery.</div>' +
+        '</div>' +
+      '</div>',
       abcd: {
         A: 'A brand shown incidentally, off to one side, while you judge an expression.',
         B: 'Choosing one brand from four.',
@@ -170,17 +203,8 @@ window.AdvertisingPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:700px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="advertising-setup">' +
-          '<h2 style="color:#61a3ed;">Everyday Scenes</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">You will see a series of short scenes.<br>' +
-            'For each one, judge whether the person looks <b>happy</b> or <b>not happy</b>.</p>' +
-          '<p style="color:#64748b;font-size:.84rem;max-width:520px;margin:14px auto;line-height:1.6;">' +
-            'The scenes are drawn schematically rather than photographed, because this demonstration holds no ' +
-            'licence for photographs of people. Brand names are invented.</p>' +
-          '<div id="advertising-params" style="color:#64748b;font-size:.85rem;margin:14px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="AdvertisingPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="AdvertisingPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="advertising-setup"></div>' +
         '<div id="advertising-photo" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="advertising-progress"></div>' +
           PTK.progressHtml('advertising-progress-fill') +
@@ -225,6 +249,7 @@ window.AdvertisingPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('advertising-overlay').style.display = 'block';
+    PTK.paintSetup('advertising-setup', this, this.spec());
     this.show('setup');
     var p = document.getElementById('advertising-params');
     if (p) {

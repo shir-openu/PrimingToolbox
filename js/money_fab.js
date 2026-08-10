@@ -91,6 +91,28 @@ window.MoneyPriming = {
       template: 'money-priming',
       accent: '#4ade80',
       defaultExperimentId: 'money_priming',
+      startFn: 'MoneyPriming.start()',
+      closeFn: 'MoneyPriming.close()',
+      howToPlay: [
+        'You will see <b>five scrambled words</b>. Click <b>four</b> of them, in the right order, to make a short sentence that makes sense. One word is left over on purpose.',
+        'After a few sentences you get a <b>word puzzle</b>: jumbled letters to unscramble. Type your answer and press Enter.',
+        'A <b>hint button</b> appears after a while. Use it whenever you want, or press <b>Move on</b> instead &ndash; both are perfectly fine.',
+        'You will then be asked one question about how you would prefer to work, and the whole thing runs once more.'
+      ],
+      keyLegend: 'Fair warning, so it is not a trick: the puzzle has no solution. What is being recorded is how long you choose to stay with it, not whether you solve it.',
+      example: '<div style="display:flex;gap:26px;flex-wrap:wrap;justify-content:center;text-align:center;">' +
+        '<div>' +
+          '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The sentence part</div>' +
+          '<div style="font-size:1.05rem;color:#e5e7eb;letter-spacing:.5px;">' +
+            '<span style="opacity:.35;">stone</span> &nbsp; we &nbsp; the &nbsp; song &nbsp; heard</div>' +
+          '<div style="color:#4ade80;font-size:.9rem;margin-top:8px;">&rarr; &ldquo;we heard the song&rdquo;</div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">The puzzle part</div>' +
+          '<div style="font-size:1.5rem;font-weight:700;color:#4ade80;letter-spacing:8px;">Q X Z J V K</div>' +
+          '<div style="color:#9aa6b2;font-size:.88rem;margin-top:8px;">stay with it, or ask for a hint</div>' +
+        '</div>' +
+      '</div>',
       abcd: {
         A: 'Money-related words embedded in a scrambled-sentence task.',
         B: 'Help-seeking and the preference for working alone on a later task.',
@@ -157,14 +179,8 @@ window.MoneyPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="money-setup">' +
-          '<h2 style="color:#4ade80;">Sentences and Puzzles</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">First you will make short sentences out of scrambled words.<br>' +
-            'Then there is a word puzzle. A hint is available if you want one.</p>' +
-          '<div id="money-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="MoneyPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="MoneyPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="money-setup"></div>' +
         '<div id="money-block-intro" style="display:none;"></div>' +
         '<div id="money-prime" style="display:none;"></div>' +
         '<div id="money-puzzle" style="display:none;">' +
@@ -214,6 +230,7 @@ window.MoneyPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('money-overlay').style.display = 'block';
+    PTK.paintSetup('money-setup', this, this.spec());
     this.show('setup');
     var p = document.getElementById('money-params');
     if (p) {

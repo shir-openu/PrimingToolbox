@@ -626,11 +626,16 @@ window.EvaluativeConditioning = {
     if (this.state.phase === 'test') {
       const ratingContainer = document.getElementById('rating-scale-container');
       if (ratingContainer && ratingContainer.classList.contains('active')) {
-        const key = e.key;
-        if (['1', '2', '3', '4', '5', '6', '7'].includes(key)) {
+        // FIXED 2026-08-10. This was hard-coded to ['1'..'7'] while
+        // params.ratingScale is configurable. Set the scale to 9 and the
+        // buttons rendered 1-9 but the keyboard silently ignored 8 and 9 -
+        // the same class of bug as stroop.js scoring against the wrong key.
+        const max = parseInt(this.params.ratingScale, 10) || 7;
+        const n = parseInt(e.key, 10);
+        if (!isNaN(n) && n >= 1 && n <= max) {
           e.preventDefault();
           const trial = this.state.testTrials[this.state.currentTrial];
-          this.recordTestResponse(trial, parseInt(key));
+          this.recordTestResponse(trial, n);
         }
       }
     }

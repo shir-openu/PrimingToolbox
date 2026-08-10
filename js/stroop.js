@@ -192,13 +192,21 @@ window.Stroop = {
       const hex = colorData.hex;
       const label = colorId.toUpperCase();
 
+      // Same reason as the stimulus above: key, label and hex are all
+      // config-derived and reachable from a participant link.
       const keyHint = document.createElement('div');
       keyHint.className = 'key-hint';
       keyHint.style.cursor = 'pointer';
-      keyHint.innerHTML = `
-        <span class="key">${key}</span>
-        <span class="label" style="color: ${hex};">${label}</span>
-      `;
+      const keySpan = document.createElement('span');
+      keySpan.className = 'key';
+      keySpan.textContent = key;
+      const labelSpan = document.createElement('span');
+      labelSpan.className = 'label';
+      labelSpan.style.color = hex;
+      labelSpan.textContent = label;
+      keyHint.appendChild(keySpan);
+      keyHint.appendChild(document.createTextNode(' '));
+      keyHint.appendChild(labelSpan);
 
       keyHint.addEventListener('click', () => {
         if (document.getElementById('stroop-trial').classList.contains('active')) {
@@ -308,7 +316,19 @@ window.Stroop = {
       const color = this.data.colors[trial.inkColor].hex;
       const dir = (trial.language === 'he' || trial.language === 'ar') ? 'rtl' : 'ltr';
 
-      stimulus.innerHTML = `<span style="color: ${color}; direction: ${dir}">${word}</span>`;
+      // FIXED 2026-08-10. This was a template literal written into innerHTML.
+      // Both `word` and `color` come from this.data, which checkUrlConfig
+      // overwrites WHOLESALE from the ?exp= participant link - so a crafted
+      // link could inject arbitrary HTML and script into a page that holds the
+      // Supabase key. Built with DOM APIs instead: textContent never parses
+      // HTML, and assigning to style.color silently drops an invalid value
+      // rather than letting it escape the attribute.
+      const span = document.createElement('span');
+      span.style.color = color;
+      span.style.direction = dir;
+      span.textContent = word;
+      stimulus.textContent = '';
+      stimulus.appendChild(span);
       this.state.stimulusOnset = performance.now();
       this.state.awaitingResponse = true;
     }, 500);

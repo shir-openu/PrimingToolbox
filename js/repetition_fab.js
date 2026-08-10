@@ -92,6 +92,21 @@ window.RepetitionPriming = {
       template: 'repetition-priming',
       accent: '#34d399',
       defaultExperimentId: 'repetition_priming',
+      startFn: 'RepetitionPriming.start()',
+      closeFn: 'RepetitionPriming.close()',
+      howToPlay: [
+        'First, words appear one at a time. For each, rate <b>how pleasant it feels</b> on a 1&ndash;5 scale. There is no right answer.',
+        '<b>Do not try to memorise anything.</b> That matters &ndash; the rating is a cover task, and the experiment only works if you are not deliberately learning the list.',
+        'Then you will see <b>word fragments</b> with letters missing.',
+        'Type the <b>first complete word that comes to mind</b>. If nothing comes, press &ldquo;I do not know&rdquo; and move on &ndash; that is a perfectly normal answer.'
+      ],
+      keyLegend: 'Some fragments come from words you rated earlier and some from words you have never seen. You are not meant to be able to tell which is which.',
+      example: '<div style="text-align:center;">' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:8px;">A fragment looks like this:</div>' +
+        '<div style="font-size:2rem;font-weight:700;letter-spacing:6px;color:#34d399;">E _ E _ H A N T</div>' +
+        '<div style="color:#4ade80;font-size:.92rem;margin-top:10px;">&rarr; type ELEPHANT</div>' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-top:6px;">the underscores are the missing letters</div>' +
+      '</div>',
       abcd: {
         A: 'The word shown and rated during the study phase.',
         B: 'Completing a word fragment.',
@@ -151,14 +166,8 @@ window.RepetitionPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="repetition-setup">' +
-          '<h2 style="color:#34d399;">Word Fragments</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">First you will rate some words for how pleasant they feel.<br>' +
-            'After that there is a short word puzzle. Please do not try to memorise anything.</p>' +
-          '<div id="repetition-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="RepetitionPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="RepetitionPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="repetition-setup"></div>' +
 
         '<div id="repetition-study" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="repetition-study-progress"></div>' +
@@ -208,6 +217,8 @@ window.RepetitionPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('repetition-overlay').style.display = 'block';
+    // paintSetup first: it creates the #repetition-params element filled below.
+    PTK.paintSetup('repetition-setup', this, this.spec());
     ['setup', 'study', 'bridge', 'test', 'results'].forEach(function (s) {
       var n = document.getElementById('repetition-' + s);
       if (n) n.style.display = (s === 'setup') ? 'block' : 'none';

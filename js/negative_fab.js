@@ -60,6 +60,38 @@ window.NegativePriming = {
       template: 'negative-priming',
       accent: '#22d3ee',
       defaultExperimentId: 'negative_priming',
+      startFn: 'NegativePriming.start()',
+      closeFn: 'NegativePriming.close()',
+      howToPlay: [
+        'Two letters appear <b>on top of each other</b>: one <b style="color:#4ade80;">green</b>, one <b style="color:#f87171;">red</b>.',
+        'Press the key of the <b style="color:#4ade80;">GREEN</b> letter as fast as you can. <b>Ignore the red one completely</b> &ndash; it is there to get in your way.',
+        'Displays come in <b>pairs</b>. Sometimes the letter you just ignored becomes the green one you have to name. That is the point of the experiment.',
+        'A few practice pairs run first and are not recorded.'
+      ],
+      keyLegend: 'Expect to feel slower on some displays than others. That slowing is the result being measured &ndash; it is not you doing badly.',
+      example: '<div style="display:flex;gap:34px;flex-wrap:wrap;justify-content:center;align-items:center;text-align:center;">' +
+        '<div>' +
+          '<div style="position:relative;width:110px;height:110px;margin:0 auto;">' +
+            '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+                 'font-size:4.2rem;font-weight:700;color:#f87171;opacity:.85;">C</div>' +
+            '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+                 'font-size:4.2rem;font-weight:700;color:#4ade80;">B</div>' +
+          '</div>' +
+          '<div style="color:#4ade80;font-size:.92rem;margin-top:8px;">press <b>B</b></div>' +
+          '<div style="color:#9aa6b2;font-size:.8rem;">green = B, ignore the red C</div>' +
+        '</div>' +
+        '<div style="color:#64748b;font-size:1.6rem;">&rarr;</div>' +
+        '<div>' +
+          '<div style="position:relative;width:110px;height:110px;margin:0 auto;">' +
+            '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+                 'font-size:4.2rem;font-weight:700;color:#f87171;opacity:.85;">F</div>' +
+            '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
+                 'font-size:4.2rem;font-weight:700;color:#4ade80;">C</div>' +
+          '</div>' +
+          '<div style="color:#4ade80;font-size:.92rem;margin-top:8px;">press <b>C</b></div>' +
+          '<div style="color:#fbbf24;font-size:.8rem;">the C you just ignored &ndash; this one feels harder</div>' +
+        '</div>' +
+      '</div>',
       abcd: {
         A: 'The red distractor that had to be ignored on the prime display.',
         B: 'Naming the green letter on the probe display.',
@@ -114,15 +146,8 @@ window.NegativePriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="negative-setup">' +
-          '<h2 style="color:#22d3ee;">Negative Priming</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">Two letters appear on top of each other: one <b style="color:#4ade80;">green</b>, one <b style="color:#f87171;">red</b>.<br>' +
-            'Press the key of the <b style="color:#4ade80;">GREEN</b> letter as fast as you can, and ignore the red one entirely.</p>' +
-          '<p id="negative-keylegend" style="color:#9aa6b2;"></p>' +
-          '<div id="negative-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="NegativePriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="NegativePriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="negative-setup"></div>' +
         '<div id="negative-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="negative-progress">Pair 1</div>' +
           PTK.progressHtml('negative-progress-fill') +
@@ -167,6 +192,8 @@ window.NegativePriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('negative-overlay').style.display = 'block';
+    // paintSetup first: it creates the #negative-params element paintLegend fills.
+    PTK.paintSetup('negative-setup', this, this.spec());
     document.getElementById('negative-setup').style.display = 'block';
     document.getElementById('negative-trial').style.display = 'none';
     document.getElementById('negative-results').style.display = 'none';

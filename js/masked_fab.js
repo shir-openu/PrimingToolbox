@@ -82,6 +82,34 @@ window.MaskedLexical = {
       template: 'masked-lexical',
       accent: '#a78bfa',
       defaultExperimentId: 'masked_lexical_decision',
+      startFn: 'MaskedLexical.start()',
+      closeFn: 'MaskedLexical.close()',
+      howToPlay: [
+        'A row of <b>#</b> symbols flashes on the screen.',
+        'Then a letter string appears in <b>CAPITALS</b>.',
+        'Decide as fast as you can whether that CAPITAL string is a <b>real English word</b>, and press the matching key.',
+        'A few practice trials run first and are not recorded.'
+      ],
+      keyLegend: 'Between the # symbols and the capitals there is a third word, shown for about 50 ms. You are not expected to see it &ndash; most people cannot, and that is exactly the point.',
+      example: '<div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:center;text-align:center;">' +
+        '<div><div style="font-size:1.8rem;font-weight:700;letter-spacing:4px;color:#64748b;">#####</div>' +
+          '<div style="color:#9aa6b2;font-size:.78rem;margin-top:6px;">mask</div></div>' +
+        '<div style="color:#64748b;">&rarr;</div>' +
+        '<div><div style="font-size:1.8rem;font-weight:700;letter-spacing:4px;color:#cbd5e1;opacity:.5;">table</div>' +
+          '<div style="color:#9aa6b2;font-size:.78rem;margin-top:6px;">~50 ms, unseen</div></div>' +
+        '<div style="color:#64748b;">&rarr;</div>' +
+        // The keys come from the live configuration, never a literal - an
+        // experimenter can change them in the builder and this must follow.
+        '<div><div style="font-size:1.8rem;font-weight:700;letter-spacing:4px;color:#ffffff;">' +
+            (self.data.words[0] || 'TABLE') + '</div>' +
+          '<div style="color:#4ade80;font-size:.85rem;margin-top:6px;">a real word &rarr; press ' +
+            self.responseKeys.word + '</div></div>' +
+        '<div style="width:100%;height:1px;"></div>' +
+        '<div><div style="font-size:1.8rem;font-weight:700;letter-spacing:4px;color:#ffffff;">' +
+            (self.data.nonwordList[0] || 'MABLO') + '</div>' +
+          '<div style="color:#f87171;font-size:.85rem;margin-top:6px;">not a word &rarr; press ' +
+            self.responseKeys.nonword + '</div></div>' +
+      '</div>',
       abcd: {
         A: 'The masked prime, shown for ~50 ms between a forward mask and the target.',
         B: 'Deciding whether the CAPITAL string is a real English word.',
@@ -144,15 +172,8 @@ window.MaskedLexical = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="masked-setup">' +
-          '<h2 style="color:#a78bfa;">Masked Lexical Decision</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">A row of # symbols flashes, then a letter string appears in <b>CAPITALS</b>.<br>' +
-            'Decide as fast as you can whether the CAPITAL string is a real English word.</p>' +
-          '<p id="masked-keylegend" style="color:#9aa6b2;"></p>' +
-          '<div id="masked-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="MaskedLexical.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="MaskedLexical.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="masked-setup"></div>' +
         '<div id="masked-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="masked-progress">Trial 1</div>' +
           PTK.progressHtml('masked-progress-fill') +
@@ -202,6 +223,8 @@ window.MaskedLexical = {
     this.ensureOverlay();
     this.init();
     document.getElementById('masked-overlay').style.display = 'block';
+    // paintSetup first: it creates the #masked-params element paintLegend fills.
+    PTK.paintSetup('masked-setup', this, this.spec());
     document.getElementById('masked-setup').style.display = 'block';
     document.getElementById('masked-trial').style.display = 'none';
     document.getElementById('masked-results').style.display = 'none';

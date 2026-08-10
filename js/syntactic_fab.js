@@ -118,6 +118,29 @@ window.SyntacticPriming = {
       template: 'syntactic-priming',
       accent: '#fbbf24',
       defaultExperimentId: 'syntactic_priming',
+      startFn: 'SyntacticPriming.start()',
+      closeFn: 'SyntacticPriming.close()',
+      howToPlay: [
+        'You will read <b>one sentence</b> on screen. Just read it, then press the button to say you have.',
+        'Next you will see a few words describing a <b>new, unrelated event</b>.',
+        'Two ways of saying that event are offered. <b>Both are correct English.</b> Click whichever feels more natural to you.',
+        'There is <b>no right answer</b> and nothing is scored as correct. A couple of practice items run first.'
+      ],
+      keyLegend: 'Everything is clicked, and you can take as long as you like.',
+      example: '<div style="max-width:520px;margin:0 auto;text-align:left;">' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:6px;">You read:</div>' +
+        '<div style="color:#e5e7eb;font-size:1.02rem;margin-bottom:14px;">' +
+          '&ldquo;The waiter handed a menu to the customer.&rdquo;</div>' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:6px;">Then describe:  the farmer &ndash; sold &ndash; the neighbour &ndash; a tractor</div>' +
+        '<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">' +
+          '<div style="border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:10px 13px;color:#e5e7eb;font-size:.95rem;">' +
+            'The farmer sold the neighbour a tractor.</div>' +
+          '<div style="border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:10px 13px;color:#e5e7eb;font-size:.95rem;">' +
+            'The farmer sold a tractor to the neighbour.</div>' +
+        '</div>' +
+        '<div style="color:#4ade80;font-size:.88rem;margin-top:10px;">Pick either. Most people lean toward the ' +
+          'shape they just read &ndash; that leaning is the effect.</div>' +
+      '</div>',
       abcd: {
         A: 'The syntactic structure of the sentence just read.',
         B: 'Describing a new, unrelated event.',
@@ -187,15 +210,8 @@ window.SyntacticPriming = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="syntactic-setup">' +
-          '<h2 style="color:#fbbf24;">Sentence Structure</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">You will read a sentence, then describe a new event.<br>' +
-            'Two ways of saying it will be offered - both are correct English. ' +
-            'Just pick the one that feels more natural to you. There is no right answer.</p>' +
-          '<div id="syntactic-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
-          '<button class="btn" onclick="SyntacticPriming.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="SyntacticPriming.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="syntactic-setup"></div>' +
         '<div id="syntactic-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="syntactic-progress">Item 1</div>' +
           PTK.progressHtml('syntactic-progress-fill') +
@@ -229,6 +245,8 @@ window.SyntacticPriming = {
     this.ensureOverlay();
     this.init();
     document.getElementById('syntactic-overlay').style.display = 'block';
+    // paintSetup first: it creates the #syntactic-params element filled below.
+    PTK.paintSetup('syntactic-setup', this, this.spec());
     document.getElementById('syntactic-setup').style.display = 'block';
     document.getElementById('syntactic-trial').style.display = 'none';
     document.getElementById('syntactic-results').style.display = 'none';

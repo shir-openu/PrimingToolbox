@@ -426,15 +426,31 @@ PTA.Engine = {
    * @returns {string} HTML string for stimulus display
    */
   renderStimulus: function(stimulus, type) {
+    // FIXED 2026-08-10. Every branch interpolated the stimulus raw. This is the
+    // SHARED engine that runs generic ?config= participant links, so `stimulus`
+    // is decoded straight from a URL an attacker can hand someone - the same
+    // hole fixed in stroop.js (e217762) and the three modules in 946148f, but
+    // on the path every generic link takes.
+    //
+    // Escaped rather than rebuilt with DOM APIs because this function returns
+    // an HTML STRING and its callers assign it to innerHTML; changing the
+    // contract would mean touching every call site. Escaping closes the hole
+    // without that risk. Local helper, not PTK.esc, because engine_fab.js is
+    // loaded before paradigm_kit_fab.js.
+    var esc = function (s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     switch (type) {
       case 'text':
-        return `<span>${stimulus}</span>`;
+        return `<span>${esc(stimulus)}</span>`;
       case 'image':
-        return `<img src="${stimulus}" alt="stimulus" style="max-width: 100%; max-height: 300px;">`;
+        return `<img src="${esc(stimulus)}" alt="stimulus" style="max-width: 100%; max-height: 300px;">`;
       case 'color':
-        return `<span style="color: ${stimulus};">&#9632;</span>`; // Color square
+        return `<span style="color: ${esc(stimulus)};">&#9632;</span>`; // Color square
       default:
-        return `<span>${stimulus}</span>`;
+        return `<span>${esc(stimulus)}</span>`;
     }
   },
 

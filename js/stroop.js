@@ -315,7 +315,17 @@ window.Stroop = {
 
     const rt = performance.now() - this.state.stimulusOnset;
     const trial = this.state.trials[this.state.currentTrial];
-    const correctKey = trial.inkColor[0];
+
+    // FIXED 2026-08-10. This was `trial.inkColor[0]` - the first LETTER of the
+    // colour id - rather than the key that colour is actually configured with.
+    // With the built-in colours the two happen to coincide ('red' -> 'r'), which
+    // is why it went unnoticed; but any Stroop built in the Template Builder or
+    // arriving on a participant link with custom keys was scored against the
+    // wrong key, so accuracy and every RT split derived from it were wrong.
+    const colorData = this.data.colors[trial.inkColor];
+    const correctKey = (colorData && colorData.keys && colorData.keys.length)
+      ? String(colorData.keys[0]).toLowerCase()
+      : String(trial.inkColor).charAt(0).toLowerCase();
     const correct = key.toLowerCase() === correctKey;
 
     this.state.results.push({
@@ -349,9 +359,16 @@ window.Stroop = {
     const trial = document.getElementById('stroop-trial');
 
     if (overlay && overlay.classList.contains('active') && trial && trial.classList.contains('active')) {
-      const validKeys = ['r', 'g', 'b', 'y'];
+      // FIXED 2026-08-10. This was hard-coded to ['r','g','b','y'], so a Stroop
+      // with custom colours or custom keys could not be answered by keyboard at
+      // all - the participant could only click. The list now follows the live
+      // configuration, which is the same set the on-screen legend is drawn from.
+      const validKeys = Object.keys(this.data.colors).map(function (id) {
+        const c = this.data.colors[id];
+        return (c && c.keys && c.keys.length) ? String(c.keys[0]).toLowerCase() : String(id).charAt(0).toLowerCase();
+      }, this);
       const key = e.key.toLowerCase();
-      if (validKeys.includes(key)) {
+      if (validKeys.indexOf(key) !== -1) {
         e.preventDefault();
         this.handleResponse(key);
       }

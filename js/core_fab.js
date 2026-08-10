@@ -337,6 +337,42 @@ PTA.saveToSupabase = function(trialData, tableName) {
     });
 };
 
+/**
+ * Test whether Supabase is actually reachable and the results table readable.
+ *
+ * Added 2026-08-10. js/stroop.js:762 and js/semantic.js have always called
+ * PTA.testSupabase, but no such function existed anywhere in the repo. The call
+ * sites guard with `if (window.PTA && PTA.testSupabase)`, so the guard simply
+ * fell through to the success branch and the builder reported
+ * "Connected - Data will be saved automatically" unconditionally, whether or not
+ * anything could be saved. That is the same class of silent data loss the
+ * Stroop save bug caused, one layer up: the experimenter is told their data is
+ * safe with no evidence that it is.
+ *
+ * @async
+ * @returns {Promise<boolean>} true only when a real query succeeded
+ */
+PTA.testSupabase = async function() {
+  if (!PTA.supabase) {
+    console.error('PTA: Supabase not initialized - connection test failed');
+    return false;
+  }
+  try {
+    const { error } = await PTA.supabase
+      .from('experiment_results')
+      .select('id')
+      .limit(1);
+    if (error) {
+      console.error('PTA: connection test failed', error);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('PTA: connection test threw', e);
+    return false;
+  }
+};
+
 /* =====================================================
    Export Functions
    ===================================================== */

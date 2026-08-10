@@ -5,37 +5,55 @@
  *
  * Forster & Davis (1984). Each trial runs
  *     forward mask (#######)  ->  prime (lowercase, ~50 ms)  ->  target (UPPERCASE)
- * and the participant decides whether the TARGET is a real word or not. At a
- * 50 ms prime duration preceded by a mask, participants typically cannot report
- * the prime, yet repetition primes still speed the decision.
+ * and the participant decides whether the TARGET is a real word. At a 50 ms
+ * prime preceded by a mask, participants typically cannot report the prime, yet
+ * repetition primes still speed the decision.
  *
- * Priming (ABCD): A = the masked prime, B = the lexical decision, C = unrelated
- * prime latency, D = repetition prime latency. Effect = C - D, positive means
- * facilitation.
+ * ABCD: A = the masked prime, B = the lexical decision, C = unrelated-prime
+ * latency, D = repetition-prime latency. Effect = C - D; positive is facilitation.
  *
- * Conditions: repetition (prime === target), unrelated. Non-word targets are
- * present so the decision is real, but only WORD targets enter the effect.
+ * Non-word targets are present so the decision is genuine, but only WORD targets
+ * enter the effect.
  *
- * Self-contained (injects its own overlay). Saves through PTA.saveToSupabase
- * using only existing experiment_results columns.
+ * ---------------------------------------------------------------------------
+ * FIXED 2026-08-10 - ITEM WAS CONFOUNDED WITH CONDITION
+ * ---------------------------------------------------------------------------
+ * The previous buildTrials assigned the condition from the word's position in
+ * the list: `words.forEach((w, i) => { if (i % 2 === 0) repetition else unrelated })`.
+ * So TABLE was the repetition item for every participant who ever ran the task,
+ * and HORSE was always unrelated. The repetition-vs-unrelated contrast was
+ * therefore also a contrast between two fixed sets of words, and any difference
+ * between them in frequency, length or orthographic neighbourhood went straight
+ * into the "priming effect". With one participant there is no way to separate
+ * the two afterwards.
+ *
+ * The assignment is now shuffled per run, and alternates across passes when
+ * more than one pass is requested, so each word serves in both conditions.
+ *
+ * Previous version (never published to GitHub; local branch v2-four-paradigms):
+ *     git show d313317:js/masked_fab.js
  *
  * @module MaskedLexical
+ * @version 2.0
+ * @requires PTA (js/core_fab.js), PTK (js/paradigm_kit_fab.js)
  */
 window.MaskedLexical = {
 
   data: {
     words: ['TABLE', 'HORSE', 'RIVER', 'CHAIR', 'BREAD', 'CLOUD',
             'STONE', 'LIGHT', 'MUSIC', 'PLANT', 'HOUSE', 'DREAM'],
-    // Pronounceable non-words, hand-checked: each is orthographically legal
-    // English and matched in length to the word list above.
+    // Pronounceable non-words: each is orthographically legal English and
+    // length-matched to the word list above.
     nonwordList: ['MABLO', 'GORSA', 'NIVEL', 'PHAIL', 'SREAK', 'TROUF',
-                  'DRONA', 'WIGHK', 'MUNIC', 'PLONT', 'HOUSK', 'DRAEM'],
-    maskChar: '#'
+                  'DRONA', 'WIGHK', 'MUNIC', 'PLONT', 'HOUSK', 'DRAEM']
   },
+
+  maskChar: '#',
+  responseKeys: { word: 'J', nonword: 'F' },
 
   state: {
     trials: [], currentTrial: 0, phase: 'setup',
-    onset: 0, results: [], awaiting: false, openedFromBuilder: false
+    onset: 0, results: [], awaiting: false, openedFromBuilder: false, isPractice: false
   },
 
   timing: {
@@ -49,40 +67,78 @@ window.MaskedLexical = {
   userExperimentId: '',
   isParticipantMode: false,
   repetitions: 1,
+  practiceTrials: 4,
   _initDone: false,
   _participantId: '',
   _keyHandler: null,
-  _timers: [],
+
+  spec: function () {
+    var self = this;
+    return {
+      key: 'masked',
+      name: 'Masked Lexical Decision',
+      source: 'Forster & Davis (1984)',
+      urlParam: 'masked',
+      template: 'masked-lexical',
+      accent: '#a78bfa',
+      defaultExperimentId: 'masked_lexical_decision',
+      abcd: {
+        A: 'The masked prime, shown for ~50 ms between a forward mask and the target.',
+        B: 'Deciding whether the CAPITAL string is a real English word.',
+        C: 'Decision latency after an unrelated prime.',
+        D: 'Decision latency after a repetition prime.'
+      },
+      characteristics: {
+        association: 'A repetition prime is maximally associated with its target; an unrelated prime is not.',
+        secondariness: 'The prime is never reported and is irrelevant to the word / non-word decision.',
+        modulation: 'Repetition primes shorten the decision latency relative to unrelated primes.'
+      },
+      instructions: 'A row of # flashes, then a letter string in capitals. Decide whether it is a real English word.',
+      stimulusGroups: [
+        { key: 'words', label: 'Word targets', type: 'words', min: 4,
+          help: 'Real English words, uppercase. Each one appears once per pass, half with a repetition prime and half with an unrelated prime - which half is decided at random on every run.' },
+        { key: 'nonwordList', label: 'Non-word targets', type: 'words', min: 4,
+          help: 'Pronounceable non-words, uppercase. They make the decision genuine and are excluded from the effect.' }
+      ],
+      timingFields: [
+        { key: 'mask_ms', label: 'Forward mask', min: 100, max: 2000, step: 50 },
+        { key: 'prime_ms', label: 'Prime', min: 10, max: 500, step: 5,
+          help: 'The parameter that matters. Above roughly 60 ms primes start to become reportable and the effect is no longer strictly masked.' },
+        { key: 'target_ms', label: 'Response window', min: 500, max: 10000, step: 100 },
+        { key: 'iti_ms', label: 'Gap between trials', min: 100, max: 5000, step: 100 }
+      ],
+      practice: { def: 4 },
+      repetitions: { prop: 'repetitions', def: 1, min: 1, max: 5,
+                     label: 'Passes through the item set',
+                     help: 'Each pass shows every word and every non-word once. More passes give a steadier estimate but a longer session.' },
+      toConfig: function (mod) { return mod.toConfig(); },
+      applyConfig: function (mod, config) {
+        if (config.responseKeys) mod.responseKeys = config.responseKeys;
+        if (config.maskChar) mod.maskChar = config.maskChar;
+      },
+      asm: function (mod) {
+        return {
+          instructions: 'Decide whether the CAPITAL string is a real English word.',
+          primes: mod.data.words.map(function (w) { return w.toLowerCase(); }),
+          targets: mod.data.words.concat(mod.data.nonwordList),
+          conditions: ['repetition', 'unrelated'],
+          baseline: 'unrelated',
+          response: { word: mod.responseKeys.word, 'non-word': mod.responseKeys.nonword }
+        };
+      }
+    };
+  },
 
   init: function () {
     if (this._initDone) return;
     this._initDone = true;
+    PTK.timers(this);
     console.log('Masked Lexical Decision module initialized');
-  },
-
-  /**
-   * Every timer this module starts is tracked, and every timer is cancelled
-   * when the trial it belongs to ends.
-   *
-   * Without this, the response-window timeout of trial N stayed pending after
-   * an early response and fired in the middle of trial N+1, writing a false
-   * "too slow" row stamped with N+1's number but N's target. At the default
-   * 2000 ms window and an 800 ms ITI that happened on most trials.
-   */
-  _after: function (fn, ms) {
-    const id = setTimeout(fn, ms);
-    this._timers.push(id);
-    return id;
-  },
-
-  _clearTimers: function () {
-    this._timers.forEach(clearTimeout);
-    this._timers = [];
   },
 
   ensureOverlay: function () {
     if (document.getElementById('masked-overlay')) return;
-    const el = document.createElement('div');
+    var el = document.createElement('div');
     el.id = 'masked-overlay';
     el.className = 'experiment-overlay';
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
@@ -90,29 +146,56 @@ window.MaskedLexical = {
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
         '<div id="masked-setup">' +
           '<h2 style="color:#a78bfa;">Masked Lexical Decision</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">A row of ' + '#' + ' symbols flashes, then a letter string appears in <b>CAPITALS</b>.<br>' +
+          '<p style="color:#9aa6b2;line-height:1.7;">A row of # symbols flashes, then a letter string appears in <b>CAPITALS</b>.<br>' +
             'Decide as fast as you can whether the CAPITAL string is a real English word.</p>' +
-          '<p style="color:#9aa6b2;"><b>J</b> = real word &nbsp;&nbsp;&nbsp; <b>F</b> = not a word</p>' +
+          '<p id="masked-keylegend" style="color:#9aa6b2;"></p>' +
+          '<div id="masked-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
           '<button class="btn" onclick="MaskedLexical.start()" style="margin-top:14px;">Start</button> ' +
           '<button class="btn btn-secondary" onclick="MaskedLexical.close()">Cancel</button>' +
         '</div>' +
         '<div id="masked-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="masked-progress">Trial 1</div>' +
+          PTK.progressHtml('masked-progress-fill') +
           '<div id="masked-display" style="height:190px;display:flex;align-items:center;justify-content:center;' +
                'font-size:3.4rem;font-weight:700;letter-spacing:4px;margin:22px 0;"></div>' +
-          '<div style="color:#64748b;font-size:.85rem;">J = word &nbsp; | &nbsp; F = non-word</div>' +
+          '<div id="masked-keyhint" style="color:#64748b;font-size:.85rem;"></div>' +
         '</div>' +
         '<div id="masked-results" style="display:none;">' +
           '<h2 style="color:#a78bfa;">Complete</h2>' +
           '<div id="masked-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
-          '<p style="color:#9aa6b2;font-size:.82rem;max-width:560px;margin:10px auto;">Prime duration is ' +
-            '<span id="masked-prime-note"></span> ms. Above roughly 60 ms primes start to become reportable, and the effect is no longer strictly masked.</p>' +
-          '<button class="btn" onclick="MaskedLexical.exportCSV()">Download CSV</button> ' +
-          '<button class="btn" onclick="MaskedLexical.restart()">Try Again</button> ' +
-          '<button class="btn btn-secondary" onclick="MaskedLexical.close()">Close</button>' +
+          '<div id="masked-interpretation"></div>' +
+          '<div style="margin-top:20px;">' +
+            '<button class="btn" onclick="MaskedLexical.exportCSV()">Download CSV</button> ' +
+            '<button class="btn" onclick="MaskedLexical.exportXLSX()">Download Excel</button> ' +
+            '<button class="btn" onclick="MaskedLexical.restart()">Try Again</button> ' +
+            '<button class="btn btn-secondary" onclick="MaskedLexical.close()">Close</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(el);
+  },
+
+  /** Requirement 4: the legend follows the live configuration, never hardcoded text. */
+  paintLegend: function () {
+    var k = this.responseKeys;
+    var legend = document.getElementById('masked-keylegend');
+    if (legend) {
+      legend.innerHTML = '<b>' + PTK.esc(k.word) + '</b> = real word &nbsp;&nbsp;&nbsp; <b>' +
+                         PTK.esc(k.nonword) + '</b> = not a word';
+    }
+    var hint = document.getElementById('masked-keyhint');
+    if (hint) {
+      hint.textContent = k.word + ' = word   |   ' + k.nonword + ' = non-word';
+    }
+    var params = document.getElementById('masked-params');
+    if (params) {
+      var n = (this.data.words.length + this.data.nonwordList.length) * this.repetitions;
+      params.textContent =
+        n + ' scored trials' + (this.practiceTrials ? ', after ' + this.practiceTrials + ' practice trials' : '') +
+        '. Mask ' + this.timing.mask_ms + ' ms, prime ' + this.timing.prime_ms +
+        ' ms, response window ' + this.timing.target_ms + ' ms.' +
+        (this.timing.prime_ms > 60 ? ' Note: above about 60 ms the prime becomes reportable and the effect is no longer strictly masked.' : '');
+    }
   },
 
   open: function () {
@@ -122,6 +205,7 @@ window.MaskedLexical = {
     document.getElementById('masked-setup').style.display = 'block';
     document.getElementById('masked-trial').style.display = 'none';
     document.getElementById('masked-results').style.display = 'none';
+    this.paintLegend();
     this.state.phase = 'setup';
   },
 
@@ -129,52 +213,76 @@ window.MaskedLexical = {
     this.detachKeys();
     this._clearTimers();
     this.state.awaiting = false;
-    const ov = document.getElementById('masked-overlay');
+    var ov = document.getElementById('masked-overlay');
     if (ov) ov.style.display = 'none';
     this.state.phase = 'setup';
     if (this.state.openedFromBuilder) { this.state.openedFromBuilder = false; this.openBuilder(); }
     else if (this.isParticipantMode) { this.showThankYou(); }
   },
 
-  buildTrials: function () {
-    const trials = [];
-    const words = this.data.words;
-    const nonwords = this.data.nonwordList;
+  /**
+   * Condition assignment is shuffled per run - see the header. Each pass takes
+   * a fresh shuffle and flips which half gets the repetition prime, so across
+   * passes every word serves in both conditions.
+   */
+  buildTrials: function (isPractice, howMany) {
+    var trials = [];
+    var words = this.data.words;
+    var nonwords = this.data.nonwordList;
+    var passes = isPractice ? 1 : this.repetitions;
 
-    for (let r = 0; r < this.repetitions; r++) {
-      words.forEach((w, i) => {
-        // half of the word targets get a repetition prime, half an unrelated one
-        if (i % 2 === 0) {
+    for (var r = 0; r < passes; r++) {
+      var order = PTA.shuffleArray(words.slice());
+      var half = Math.floor(order.length / 2);
+      order.forEach(function (w, i) {
+        var isRepetition = (r % 2 === 0) ? (i < half) : (i >= half);
+        if (isRepetition) {
           trials.push({ prime: w.toLowerCase(), target: w, lexical: 'word', condition: 'repetition' });
         } else {
-          const others = words.filter(x => x !== w);
-          const p = others[Math.floor(Math.random() * others.length)];
+          var others = words.filter(function (x) { return x !== w; });
+          var p = others[Math.floor(Math.random() * others.length)];
           trials.push({ prime: p.toLowerCase(), target: w, lexical: 'word', condition: 'unrelated' });
         }
       });
-      // non-word targets: needed so the decision is genuine, excluded from the effect
-      nonwords.forEach(nw => {
-        const p = words[Math.floor(Math.random() * words.length)];
+      nonwords.forEach(function (nw) {
+        var p = words[Math.floor(Math.random() * words.length)];
         trials.push({ prime: p.toLowerCase(), target: nw, lexical: 'nonword', condition: 'filler' });
       });
     }
-    return PTA.shuffleArray(trials);
+    trials = PTA.shuffleArray(trials);
+    return (isPractice && howMany) ? trials.slice(0, howMany) : trials;
   },
 
   start: function () {
-    this.state.trials = this.buildTrials();
-    this.state.currentTrial = 0;
     this.state.results = [];
+    this.state.currentTrial = 0;
     document.getElementById('masked-setup').style.display = 'none';
     document.getElementById('masked-results').style.display = 'none';
     document.getElementById('masked-trial').style.display = 'block';
+    this.paintLegend();
     this.attachKeys();
+
+    if (this.practiceTrials > 0) {
+      this.state.isPractice = true;
+      this.state.trials = this.buildTrials(true, this.practiceTrials);
+    } else {
+      this.state.isPractice = false;
+      this.state.trials = this.buildTrials(false);
+    }
+    this.runTrial();
+  },
+
+  beginScored: function () {
+    this.state.isPractice = false;
+    this.state.trials = this.buildTrials(false);
+    this.state.currentTrial = 0;
     this.runTrial();
   },
 
   attachKeys: function () {
     if (this._keyHandler) return;
-    this._keyHandler = (e) => this.onKey(e);
+    var self = this;
+    this._keyHandler = function (e) { self.onKey(e); };
     document.addEventListener('keydown', this._keyHandler);
   },
 
@@ -185,84 +293,114 @@ window.MaskedLexical = {
   },
 
   runTrial: function () {
-    this._clearTimers();                       // nothing from the last trial survives
-    const index = this.state.currentTrial;
-    const t = this.state.trials[index];
-    if (!t) { this.showResults(); return; }
-    const box = document.getElementById('masked-display');
+    this._clearTimers();
+    var self = this;
+    var index = this.state.currentTrial;
+    var t = this.state.trials[index];
+    var box = document.getElementById('masked-display');
+
+    if (!t) {
+      if (this.state.isPractice) {
+        this.state.awaiting = false;
+        box.style.fontSize = '1.05rem';
+        box.style.letterSpacing = 'normal';
+        box.style.color = '#9aa6b2';
+        box.innerHTML = 'Practice finished.<br>Press <b>' + PTK.esc(this.responseKeys.word) +
+                        '</b> to begin the real trials.';
+        var go = function (e) {
+          if ((e.key || '').toUpperCase() !== self.responseKeys.word.toUpperCase()) return;
+          document.removeEventListener('keydown', go);
+          box.style.fontSize = '3.4rem';
+          box.style.letterSpacing = '4px';
+          self.beginScored();
+        };
+        document.addEventListener('keydown', go);
+        return;
+      }
+      this.showResults();
+      return;
+    }
+
+    var label = this.state.isPractice ? 'Practice ' : '';
     document.getElementById('masked-progress').textContent =
-      'Trial ' + (index + 1) + ' of ' + this.state.trials.length;
+      label + 'trial ' + (index + 1) + ' of ' + this.state.trials.length;
+    PTK.setProgress('masked-progress-fill', index, this.state.trials.length);
     this.state.awaiting = false;
 
     // 1. forward mask
     box.style.color = '#64748b';
-    box.textContent = this.data.maskChar.repeat(Math.max(t.target.length, 5));
+    box.textContent = this.maskChar.repeat(Math.max(t.target.length, 5));
 
-    this._after(() => {
+    this._after(function () {
       // 2. masked prime
       box.style.color = '#cbd5e1';
       box.textContent = t.prime;
 
-      this._after(() => {
+      self._after(function () {
         // 3. target
         box.style.color = '#ffffff';
         box.textContent = t.target;
-        this.state.onset = performance.now();
-        this.state.awaiting = true;
+        self.state.onset = performance.now();
+        self.state.awaiting = true;
 
         // response window - belongs to THIS trial only
-        this._after(() => {
-          if (this.state.awaiting && this.state.currentTrial === index) {
-            this.state.awaiting = false;
-            this.record(t, index, null, this.timing.target_ms);
+        self._after(function () {
+          if (self.state.awaiting && self.state.currentTrial === index) {
+            self.state.awaiting = false;
+            self.record(t, index, null, null);
           }
-        }, this.timing.target_ms);
-      }, this.timing.prime_ms);
+        }, self.timing.target_ms);
+      }, self.timing.prime_ms);
     }, this.timing.mask_ms);
   },
 
   onKey: function (e) {
     if (!this.state.awaiting) return;
-    const key = (e.key || '').toUpperCase();
-    if (key !== 'J' && key !== 'F') return;
+    var key = (e.key || '').toUpperCase();
+    if (key !== this.responseKeys.word.toUpperCase() &&
+        key !== this.responseKeys.nonword.toUpperCase()) return;
     e.preventDefault();
     this.state.awaiting = false;
-    const index = this.state.currentTrial;
-    const t = this.state.trials[index];
+    var index = this.state.currentTrial;
+    var t = this.state.trials[index];
     if (!t) return;
     this.record(t, index, key, performance.now() - this.state.onset);
   },
 
-  /** index is the trial this row belongs to, so a row can never be stamped
-   *  with a different trial's number than the target it actually showed. */
+  /** index is the trial this row belongs to, so a row can never be stamped with
+   *  a different trial's number than the target it actually showed. */
   record: function (t, index, key, rt) {
     this._clearTimers();
-    const said = key === 'J' ? 'word' : (key === 'F' ? 'nonword' : 'none');
-    const correct = said === t.lexical;
-    const r = {
+    var isPractice = this.state.isPractice;
+    var said = key === null ? 'none'
+      : (key === this.responseKeys.word.toUpperCase() ? 'word' : 'nonword');
+    var correct = said === t.lexical;
+    var r = {
       trial: index + 1,
+      isPractice: isPractice,
       prime: t.prime, target: t.target,
       lexical: t.lexical, condition: t.condition,
       response: said, correct: correct, rt: rt, timedOut: key === null
     };
-    this.state.results.push(r);
-    this.saveTrial(r);
 
-    const box = document.getElementById('masked-display');
+    // Practice trials are shown, then discarded.
+    if (!isPractice) {
+      this.state.results.push(r);
+      this.saveTrial(r);
+    }
+
+    var box = document.getElementById('masked-display');
     box.style.color = key === null ? '#fbbf24' : (correct ? '#4ade80' : '#f87171');
     box.textContent = key === null ? 'too slow' : (correct ? 'ok' : 'x');
 
     this.state.currentTrial++;
-    this._after(() => this.runTrial(), this.timing.iti_ms);
+    var self = this;
+    this._after(function () { self.runTrial(); }, this.timing.iti_ms);
   },
 
   saveTrial: function (r) {
-    if (!this._participantId) this._participantId = PTA.generateParticipantId();
-    const trialData = {
-      experiment_id: 'masked_lexical_decision',
-      participant_id: this._participantId,
+    PTK.save(PTK.row(this, this.spec(), {
       trial_number: r.trial,
-      language: 'en',
       prime_type: r.condition,      // repetition / unrelated / filler
       target: r.target,
       ink_color: r.condition,       // repurposed, kept for older dashboards
@@ -270,12 +408,29 @@ window.MaskedLexical = {
       congruent: r.condition === 'repetition',
       response: r.response,
       correct: r.correct,
-      rt: Math.round(r.rt * 100) / 100,
-      soa: this.timing.prime_ms,
-      experimenter_email: this.experimenterEmail || null,
-      user_experiment_id: this.userExperimentId || null
+      rt: r.rt === null ? null : Math.round(r.rt * 100) / 100,
+      soa: this.timing.prime_ms
+    }));
+  },
+
+  analyse: function () {
+    var good = this.state.results.filter(function (r) {
+      return r.lexical === 'word' && r.correct && !r.timedOut;
+    });
+    var rep = good.filter(function (r) { return r.condition === 'repetition'; }).map(function (r) { return r.rt; });
+    var unr = good.filter(function (r) { return r.condition === 'unrelated'; }).map(function (r) { return r.rt; });
+    var mR = rep.length ? Math.round(PTA.mean(rep)) : null;
+    var mU = unr.length ? Math.round(PTA.mean(unr)) : null;
+    var total = this.state.results.length;
+    return {
+      n: total,
+      usable: good.length,
+      repetitionRT: mR,
+      unrelatedRT: mU,
+      effect: (mR !== null && mU !== null) ? (mU - mR) : null,
+      accuracy: total ? Math.round(100 * this.state.results.filter(function (r) { return r.correct; }).length / total) : 0,
+      timedOut: this.state.results.filter(function (r) { return r.timedOut; }).length
     };
-    if (window.PTA && PTA.saveToSupabase) PTA.saveToSupabase(trialData);
   },
 
   showResults: function () {
@@ -283,46 +438,53 @@ window.MaskedLexical = {
     this._clearTimers();
     document.getElementById('masked-trial').style.display = 'none';
     document.getElementById('masked-results').style.display = 'block';
-    const note = document.getElementById('masked-prime-note');
-    if (note) note.textContent = String(this.timing.prime_ms);
+    PTK.setProgress('masked-progress-fill', 1, 1);
 
-    const good = this.state.results.filter(r => r.lexical === 'word' && r.correct && !r.timedOut);
-    const rep = good.filter(r => r.condition === 'repetition').map(r => r.rt);
-    const unr = good.filter(r => r.condition === 'unrelated').map(r => r.rt);
-    const mR = rep.length ? Math.round(PTA.mean(rep)) : null;
-    const mU = unr.length ? Math.round(PTA.mean(unr)) : null;
-    const effect = (mR !== null && mU !== null) ? (mU - mR) : null;
-    const acc = this.state.results.length
-      ? Math.round(100 * this.state.results.filter(r => r.correct).length / this.state.results.length) : 0;
-
+    var a = this.analyse();
     document.getElementById('masked-results-body').innerHTML =
-      '<p>Trials: ' + this.state.results.length + ' &nbsp;|&nbsp; accuracy ' + acc + '%</p>' +
-      '<p>Word RT - repetition prime: ' + (mR !== null ? mR + ' ms' : '-') + '</p>' +
-      '<p>Word RT - unrelated prime: ' + (mU !== null ? mU + ' ms' : '-') + '</p>' +
-      '<p style="color:#a78bfa;font-weight:700;">Masked priming effect (D): ' +
-        (effect !== null ? effect + ' ms' + (effect > 0 ? ' (faster after a repetition prime)' : '') : '-') + '</p>';
+      '<p>Trials: ' + a.n + ' &nbsp;|&nbsp; accuracy ' + a.accuracy + '%' +
+        (a.timedOut ? ' &nbsp;|&nbsp; timed out: ' + a.timedOut : '') + '</p>' +
+      '<p>Word RT - repetition prime: ' + (a.repetitionRT !== null ? a.repetitionRT + ' ms' : '-') + '</p>' +
+      '<p>Word RT - unrelated prime: ' + (a.unrelatedRT !== null ? a.unrelatedRT + ' ms' : '-') + '</p>' +
+      '<p style="color:#a78bfa;font-weight:700;font-size:1.05rem;">Masked priming effect (C &minus; D): ' +
+        (a.effect !== null ? a.effect + ' ms' : '-') + '</p>';
+
+    document.getElementById('masked-interpretation').innerHTML = PTK.interpret({
+      effect: a.effect,
+      unit: 'ms',
+      effectName: 'masked priming effect',
+      expectedSign: 1,
+      accuracy: a.accuracy,
+      n: a.usable,
+      small: 12,
+      note: 'The prime ran for ' + this.timing.prime_ms + ' ms.' +
+            (this.timing.prime_ms > 60
+              ? ' That is above the usual masked range, so the prime may have been visible and this is not strictly a masked effect.'
+              : ' At this duration the prime is normally not reportable.')
+    });
   },
 
   restart: function () { this.open(); this.start(); },
 
-  exportCSV: function () {
-    if (!this.state.results.length) { alert('No results to export'); return; }
-    const headers = ['trial', 'prime', 'target', 'lexical', 'condition', 'response', 'correct', 'rt_ms', 'prime_ms'];
-    const rows = this.state.results.map(r =>
-      [r.trial, r.prime, r.target, r.lexical, r.condition, r.response, r.correct,
-       Math.round(r.rt), this.timing.prime_ms]);
-    const csv = [headers, ...rows].map(row => row.map(c => '"' + c + '"').join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const l = document.createElement('a');
-    l.href = URL.createObjectURL(blob);
-    l.download = 'masked_lexical_' + new Date().toISOString().slice(0, 10) + '.csv';
-    l.click();
+  csvParts: function () {
+    var pm = this.timing.prime_ms;
+    return {
+      headers: ['trial', 'prime', 'target', 'lexical', 'condition', 'response',
+                'correct', 'timed_out', 'rt_ms', 'prime_ms'],
+      rows: this.state.results.map(function (r) {
+        return [r.trial, r.prime, r.target, r.lexical, r.condition, r.response,
+                r.correct, r.timedOut, r.rt === null ? '' : Math.round(r.rt), pm];
+      })
+    };
   },
+
+  exportCSV: function () { var p = this.csvParts(); PTK.exportCSV(p.headers, p.rows, 'masked_lexical'); },
+  exportXLSX: function () { var p = this.csvParts(); PTK.exportXLSX(p.headers, p.rows, 'masked_lexical'); },
 
   showThankYou: function () {
     window.history.replaceState({}, document.title, window.location.pathname);
     this.isParticipantMode = false;
-    const m = document.createElement('div');
+    var m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:flex;justify-content:center;align-items:center;';
     m.innerHTML = '<div style="background:rgba(17,24,39,.97);border:1px solid rgba(74,222,128,.5);border-radius:20px;padding:44px;max-width:460px;text-align:center;color:#e5e7eb;">' +
       '<h2 style="color:#4ade80;">Thank You!</h2><p style="color:#c0c0c0;">Your responses were recorded. You may close this window.</p>' +
@@ -330,50 +492,32 @@ window.MaskedLexical = {
     document.body.appendChild(m);
   },
 
-  openBuilder: function () {
-    this.ensureOverlay();
-    const email = prompt('Your email (for data attribution):', this.experimenterEmail || '');
-    if (email === null) return;
-    const expId = prompt('Experiment ID (e.g. masked_pilot_1):', this.userExperimentId || '');
-    if (expId === null) return;
-    const pd = prompt('Prime duration in ms (classic masked range is 40-60):', String(this.timing.prime_ms));
-    if (pd === null) return;
-    this.experimenterEmail = email.trim();
-    this.userExperimentId = expId.trim();
-    const n = parseInt(pd, 10);
-    if (n >= 10 && n <= 500) this.timing.prime_ms = n;
-    const config = {
+  toConfig: function () {
+    return {
       template: 'masked-lexical',
       experimenterEmail: this.experimenterEmail,
       userExperimentId: this.userExperimentId,
       repetitions: this.repetitions,
-      timing: this.timing
+      practiceTrials: this.practiceTrials,
+      responseKeys: this.responseKeys,
+      maskChar: this.maskChar,
+      timing: this.timing,
+      stimuli: { words: this.data.words, nonwordList: this.data.nonwordList }
     };
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-    const link = window.location.href.split('?')[0] + '?masked=' + encoded;
-    window.prompt('Participant link (copy and send):', link);
   },
 
+  openBuilder: function () {
+    this.ensureOverlay();
+    this.init();
+    PTK.openBuilder(this, this.spec());
+  },
+
+  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+
   checkUrlConfig: function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const raw = urlParams.get('masked');
-    if (!raw) return false;
-    try {
-      const config = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      if (config.template !== 'masked-lexical') return false;
-      this.isParticipantMode = true;
-      this.experimenterEmail = config.experimenterEmail || '';
-      this.userExperimentId = config.userExperimentId || '';
-      this.repetitions = config.repetitions || this.repetitions;
-      if (config.timing) Object.assign(this.timing, config.timing);
-      const layout = document.querySelector('.layout');
-      if (layout) layout.style.display = 'none';
-      this.open();
-      return true;
-    } catch (e) {
-      console.error('MaskedLexical: bad participant config', e);
-      return false;
-    }
+    this.ensureOverlay();
+    this.init();
+    return PTK.checkUrlConfig(this, this.spec());
   }
 };
 

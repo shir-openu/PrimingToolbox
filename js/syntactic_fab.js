@@ -3,27 +3,47 @@
  * PrimingToolbox - Syntactic (Structural) Priming (V2 _fab)
  * =====================================================
  *
- * Bock (1986). The participant first reads a prime sentence built on one of two
+ * Bock (1986). The participant reads a prime sentence built on one of two
  * structures, then describes a new event by choosing between the same two
  * structures. People tend to reuse the structure they just read, even though
- * the two options mean the same thing and share no content words.
+ * both options mean the same thing and share no content words.
  *
- * Two alternations are included:
- *   dative   : double-object   "the girl gave the boy a book"
- *              prepositional   "the girl gave a book to the boy"
- *   voice    : active          "the dog chased the postman"
- *              passive         "the postman was chased by the dog"
+ * Two alternations:
+ *   dative : double-object   "the girl gave the boy a book"      (do)
+ *            prepositional   "the girl gave a book to the boy"   (po, marked)
+ *   voice  : active          "the dog chased the postman"        (active)
+ *            passive         "the postman was chased by the dog" (passive, marked)
  *
- * Priming (ABCD): A = the structure of the prime, B = the description task,
- * C = baseline structure choice, D = structure choice after the prime. The
- * dependent measure is a RATE, not a latency - this is the first paradigm in
- * the toolbox whose effect is a proportion, so the results panel reports both
- * the choice rate and the decision latency.
+ * ABCD: A = the structure of the prime, B = the description task,
+ *       C = baseline structure choice, D = structure choice after the prime.
  *
- * Self-contained (injects its own overlay). Saves through PTA.saveToSupabase
- * using only existing experiment_results columns.
+ * ---------------------------------------------------------------------------
+ * HOW THE EFFECT IS SCORED, AND WHY IT CHANGED (2026-08-10)
+ * ---------------------------------------------------------------------------
+ * The previous version reported "% structure reuse" and told the participant
+ * that "50% = no priming". That is wrong, and the framework paper says why:
+ * for Bock (1986), C is defined as "participants spontaneously use active or
+ * passive forms according to natural distribution (MOSTLY ACTIVE)". Against a
+ * baseline that is already heavily skewed toward active and double-object,
+ * 50% is not the null - a participant who simply always picks the active form
+ * scores 50% reuse while showing no priming whatsoever.
+ *
+ * This version reports the standard, baseline-free contrast instead:
+ *
+ *     effect = P(marked form | marked form was primed)
+ *            - P(marked form | unmarked form was primed)
+ *
+ * The natural bias appears identically in both terms and cancels, so what is
+ * left is the priming effect alone. Zero means no priming, whatever the
+ * participant's underlying preference. The raw preference is reported
+ * separately, because it is interesting rather than a confound.
+ *
+ * Previous version of this file (never published to GitHub; local branch
+ * v2-four-paradigms): git show d313317:js/syntactic_fab.js
  *
  * @module SyntacticPriming
+ * @version 2.0
+ * @requires PTA (js/core_fab.js), PTK (js/paradigm_kit_fab.js)
  */
 window.SyntacticPriming = {
 
@@ -65,27 +85,103 @@ window.SyntacticPriming = {
     ]
   },
 
+  // The less-frequent member of each alternation. The effect is measured on
+  // these, because they are the ones with room to move.
+  marked: { dative: 'po', voice: 'passive' },
+
   state: {
     trials: [], currentTrial: 0, phase: 'setup', stage: 'prime',
-    onset: 0, results: [], openedFromBuilder: false
+    onset: 0, results: [], openedFromBuilder: false, isPractice: false
   },
+
+  // Self-paced task, so the window is a safety net rather than a deadline:
+  // it exists so a participant who walks away is recorded rather than leaving
+  // the run open forever.
+  timing: { iti_ms: 300, response_window_ms: 120000 },
 
   experimenterEmail: '',
   userExperimentId: '',
   isParticipantMode: false,
   repetitions: 1,
+  practiceTrials: 2,
   _initDone: false,
   _participantId: '',
+
+  /** The spec PTK builds the Template Builder and the participant link from. */
+  spec: function () {
+    var self = this;
+    return {
+      key: 'syntactic',
+      name: 'Syntactic Priming',
+      source: 'Bock (1986); Pickering & Ferreira (2008)',
+      urlParam: 'syntactic',
+      template: 'syntactic-priming',
+      accent: '#fbbf24',
+      defaultExperimentId: 'syntactic_priming',
+      abcd: {
+        A: 'The syntactic structure of the sentence just read.',
+        B: 'Describing a new, unrelated event.',
+        C: 'Structure choice with no prime - the natural distribution, mostly active / double-object.',
+        D: 'Structure choice after the prime.'
+      },
+      characteristics: {
+        association: 'The prime structure activates stored grammatical representations.',
+        secondariness: 'The structure is not required to describe the target event; it is secondary to the message.',
+        modulation: 'The prime shifts the probability of selecting that structure.'
+      },
+      instructions: 'Read a sentence, then choose the more natural way to describe a new event. Both options are correct English.',
+      stimulusGroups: [{
+        key: 'items',
+        label: 'Prime sentences and target events',
+        type: 'rows',
+        min: 2,
+        fields: [
+          { key: 'set', label: 'dative | voice' },
+          { key: 'primeA', label: 'Prime, unmarked form' },
+          { key: 'primeB', label: 'Prime, marked form' },
+          { key: 'agent', label: 'Agent' },
+          { key: 'verb', label: 'Verb (past tense)' },
+          { key: 'other', label: 'Patient  /  recipient + theme' }
+        ],
+        help: 'For "voice" items put the patient in the last box. For "dative" items put recipient and theme separated by a comma, e.g. "the neighbour, a tractor".'
+      }],
+      timingFields: [
+        { key: 'iti_ms', label: 'Gap between items', min: 0, max: 3000, step: 50 },
+        { key: 'response_window_ms', label: 'Safety time-out', min: 5000, max: 600000, step: 5000,
+          help: 'Self-paced task. This only catches a participant who leaves mid-run.' }
+      ],
+      practice: { def: 2 },
+      repetitions: { prop: 'repetitions', def: 1, min: 1, max: 5,
+                     label: 'Passes through the item set',
+                     help: 'Each pass shows every item once, with the primed structure alternating so both are tested equally.' },
+      toConfig: function (mod) { return mod.toConfig(); },
+      applyConfig: function (mod, config) {
+        if (config.marked) mod.marked = config.marked;
+      },
+      asm: function (mod) {
+        var items = mod.data.items || [];
+        return {
+          instructions: 'Read a sentence, then describe a new event. Both offered wordings are correct English.',
+          primes: items.map(function (it) { return mod.primeText(it, mod.formsFor(it.set)[0]); }),
+          targets: items.map(function (it) { return mod.cueText(it); }),
+          conditions: ['primed-marked', 'primed-unmarked'],
+          baseline: 'primed-unmarked',
+          response: { 'unmarked structure': 'click', 'marked structure': 'click' }
+        };
+      }
+    };
+  },
 
   init: function () {
     if (this._initDone) return;
     this._initDone = true;
+    PTK.timers(this);
     console.log('Syntactic Priming module initialized');
   },
 
   ensureOverlay: function () {
     if (document.getElementById('syntactic-overlay')) return;
-    const el = document.createElement('div');
+    var el = document.createElement('div');
     el.id = 'syntactic-overlay';
     el.className = 'experiment-overlay';
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
@@ -96,11 +192,13 @@ window.SyntacticPriming = {
           '<p style="color:#9aa6b2;line-height:1.7;">You will read a sentence, then describe a new event.<br>' +
             'Two ways of saying it will be offered - both are correct English. ' +
             'Just pick the one that feels more natural to you. There is no right answer.</p>' +
+          '<div id="syntactic-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
           '<button class="btn" onclick="SyntacticPriming.start()" style="margin-top:14px;">Start</button> ' +
           '<button class="btn btn-secondary" onclick="SyntacticPriming.close()">Cancel</button>' +
         '</div>' +
         '<div id="syntactic-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="syntactic-progress">Item 1</div>' +
+          PTK.progressHtml('syntactic-progress-fill') +
           '<div id="syntactic-prime" style="display:none;">' +
             '<div style="color:#64748b;font-size:.8rem;letter-spacing:2px;margin-top:18px;">READ THIS SENTENCE</div>' +
             '<div id="syntactic-prime-text" style="font-size:1.45rem;margin:26px 0;color:#e5e7eb;line-height:1.6;"></div>' +
@@ -115,9 +213,13 @@ window.SyntacticPriming = {
         '<div id="syntactic-results" style="display:none;">' +
           '<h2 style="color:#fbbf24;">Complete</h2>' +
           '<div id="syntactic-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
-          '<button class="btn" onclick="SyntacticPriming.exportCSV()">Download CSV</button> ' +
-          '<button class="btn" onclick="SyntacticPriming.restart()">Try Again</button> ' +
-          '<button class="btn btn-secondary" onclick="SyntacticPriming.close()">Close</button>' +
+          '<div id="syntactic-interpretation"></div>' +
+          '<div style="margin-top:20px;">' +
+            '<button class="btn" onclick="SyntacticPriming.exportCSV()">Download CSV</button> ' +
+            '<button class="btn" onclick="SyntacticPriming.exportXLSX()">Download Excel</button> ' +
+            '<button class="btn" onclick="SyntacticPriming.restart()">Try Again</button> ' +
+            '<button class="btn btn-secondary" onclick="SyntacticPriming.close()">Close</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(el);
@@ -130,25 +232,44 @@ window.SyntacticPriming = {
     document.getElementById('syntactic-setup').style.display = 'block';
     document.getElementById('syntactic-trial').style.display = 'none';
     document.getElementById('syntactic-results').style.display = 'none';
+    // Requirement 4: the setup screen states the live parameters, so an
+    // experimenter can see that what they configured is what will run.
+    var n = this.data.items.length * this.repetitions;
+    document.getElementById('syntactic-params').textContent =
+      n + ' scored items (' + this.data.items.length + ' sentences x ' + this.repetitions + ' pass' +
+      (this.repetitions === 1 ? '' : 'es') + ')' +
+      (this.practiceTrials ? ', after ' + this.practiceTrials + ' practice items' : '') +
+      '. Gap between items ' + this.timing.iti_ms + ' ms.';
     this.state.phase = 'setup';
   },
 
   close: function () {
-    const ov = document.getElementById('syntactic-overlay');
+    this._clearTimers();
+    var ov = document.getElementById('syntactic-overlay');
     if (ov) ov.style.display = 'none';
     this.state.phase = 'setup';
     if (this.state.openedFromBuilder) { this.state.openedFromBuilder = false; this.openBuilder(); }
     else if (this.isParticipantMode) { this.showThankYou(); }
   },
 
-  /** The two structure labels for an item set, in a fixed order. */
+  /** [unmarked, marked] for an alternation. */
   formsFor: function (set) {
     return set === 'dative' ? ['do', 'po'] : ['active', 'passive'];
   },
 
-  /** Build the two candidate descriptions of the target event. */
+  primeText: function (item, form) {
+    return (item.prime && item.prime[form]) || '';
+  },
+
+  cueText: function (item) {
+    var t = item.target || {};
+    return item.set === 'dative'
+      ? [t.agent, t.verb, t.recipient, t.theme].join('  -  ')
+      : [t.agent, t.verb, t.patient].join('  -  ');
+  },
+
   optionsFor: function (item) {
-    const t = item.target;
+    var t = item.target;
     if (item.set === 'dative') {
       return {
         do: this.cap(t.agent) + ' ' + t.verb + ' ' + t.recipient + ' ' + t.theme + '.',
@@ -161,161 +282,276 @@ window.SyntacticPriming = {
     };
   },
 
-  cap: function (s) { return s.charAt(0).toUpperCase() + s.slice(1); },
+  cap: function (s) { return String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1); },
 
-  buildTrials: function () {
-    const trials = [];
-    for (let r = 0; r < this.repetitions; r++) {
-      this.data.items.forEach((item, i) => {
-        const forms = this.formsFor(item.set);
-        // alternate which structure primes, so both are tested equally often
-        const primeForm = forms[(i + r) % 2];
-        trials.push({ item: item, primeForm: primeForm });
+  buildTrials: function (isPractice, howMany) {
+    var self = this;
+    var trials = [];
+    var passes = isPractice ? 1 : this.repetitions;
+    for (var r = 0; r < passes; r++) {
+      this.data.items.forEach(function (item, i) {
+        var forms = self.formsFor(item.set);
+        // Alternate which structure primes so both are tested equally often.
+        var primeForm = forms[(i + r) % 2];
+        trials.push({ item: item, primeForm: primeForm, isPractice: !!isPractice });
       });
     }
-    return PTA.shuffleArray(trials);
+    trials = PTA.shuffleArray(trials);
+    return (isPractice && howMany) ? trials.slice(0, howMany) : trials;
   },
 
   start: function () {
-    this.state.trials = this.buildTrials();
-    this.state.currentTrial = 0;
     this.state.results = [];
+    this.state.currentTrial = 0;
     document.getElementById('syntactic-setup').style.display = 'none';
     document.getElementById('syntactic-results').style.display = 'none';
     document.getElementById('syntactic-trial').style.display = 'block';
+
+    if (this.practiceTrials > 0) {
+      this.state.isPractice = true;
+      this.state.trials = this.buildTrials(true, this.practiceTrials);
+    } else {
+      this.state.isPractice = false;
+      this.state.trials = this.buildTrials(false);
+    }
+    this.runTrial();
+  },
+
+  beginScored: function () {
+    this.state.isPractice = false;
+    this.state.trials = this.buildTrials(false);
+    this.state.currentTrial = 0;
     this.runTrial();
   },
 
   runTrial: function () {
-    const tr = this.state.trials[this.state.currentTrial];
-    if (!tr) { this.showResults(); return; }
+    this._clearTimers();
+    var tr = this.state.trials[this.state.currentTrial];
+    if (!tr) {
+      if (this.state.isPractice) {
+        var self = this;
+        document.getElementById('syntactic-prime').style.display = 'none';
+        document.getElementById('syntactic-choice').style.display = 'none';
+        var cue = document.getElementById('syntactic-cue');
+        cue.textContent = '';
+        var box = document.getElementById('syntactic-options');
+        box.innerHTML = '<p style="color:#9aa6b2;line-height:1.8;">Practice finished. The real items start now - ' +
+                        'they are not scored any differently, just keep answering naturally.</p>';
+        var go = document.createElement('button');
+        go.className = 'btn';
+        go.textContent = 'Begin';
+        go.onclick = function () { self.beginScored(); };
+        box.appendChild(go);
+        document.getElementById('syntactic-choice').style.display = 'block';
+        return;
+      }
+      this.showResults();
+      return;
+    }
+
     this.state.stage = 'prime';
+    var label = this.state.isPractice ? 'Practice ' : '';
     document.getElementById('syntactic-progress').textContent =
-      'Item ' + (this.state.currentTrial + 1) + ' of ' + this.state.trials.length;
+      label + 'item ' + (this.state.currentTrial + 1) + ' of ' + this.state.trials.length;
+    PTK.setProgress('syntactic-progress-fill', this.state.currentTrial, this.state.trials.length);
     document.getElementById('syntactic-prime').style.display = 'block';
     document.getElementById('syntactic-choice').style.display = 'none';
-    document.getElementById('syntactic-prime-text').textContent = tr.item.prime[tr.primeForm];
+    document.getElementById('syntactic-prime-text').textContent =
+      this.primeText(tr.item, tr.primeForm);
   },
 
   primeDone: function () {
-    const tr = this.state.trials[this.state.currentTrial];
+    var self = this;
+    var tr = this.state.trials[this.state.currentTrial];
+    if (!tr) return;
     this.state.stage = 'choice';
     document.getElementById('syntactic-prime').style.display = 'none';
     document.getElementById('syntactic-choice').style.display = 'block';
+    document.getElementById('syntactic-cue').textContent = this.cueText(tr.item);
 
-    const t = tr.item.target;
-    document.getElementById('syntactic-cue').textContent =
-      tr.item.set === 'dative'
-        ? [t.agent, t.verb, t.recipient, t.theme].join('  -  ')
-        : [t.agent, t.verb, t.patient].join('  -  ');
-
-    const opts = this.optionsFor(tr.item);
-    const forms = PTA.shuffleArray(this.formsFor(tr.item.set).slice()); // order counterbalanced
-    const box = document.getElementById('syntactic-options');
+    var opts = this.optionsFor(tr.item);
+    var forms = PTA.shuffleArray(this.formsFor(tr.item.set).slice()); // order counterbalanced
+    var box = document.getElementById('syntactic-options');
     box.innerHTML = '';
-    forms.forEach(form => {
-      const b = document.createElement('button');
+    forms.forEach(function (form) {
+      var b = document.createElement('button');
       b.className = 'btn btn-secondary';
       b.textContent = opts[form];
-      b.style.cssText = 'padding:14px 18px;font-size:1.02rem;line-height:1.5;text-align:right;white-space:normal;';
-      b.onclick = () => this.choose(form, opts[form]);
+      // text-align:left - these are English sentences. The previous version
+      // right-aligned them, a leftover from a Hebrew layout.
+      b.style.cssText = 'padding:14px 18px;font-size:1.02rem;line-height:1.5;text-align:left;white-space:normal;';
+      b.onclick = function () { self.choose(form, opts[form]); };
       box.appendChild(b);
     });
     this.state.onset = performance.now();
+
+    // Safety net, scoped to this item and cancelled the moment it is answered.
+    var myTrial = this.state.currentTrial;
+    this._after(function () {
+      if (self.state.stage === 'choice' && self.state.currentTrial === myTrial) {
+        self.choose(null, null, true);
+      }
+    }, this.timing.response_window_ms);
   },
 
-  choose: function (form, text) {
+  choose: function (form, text, timedOut) {
     // A second click - a double tap, or Enter on a focused button - used to
-    // land here after currentTrial had already advanced, throwing on
-    // tr.primeForm and, on a slower machine, writing the item twice.
+    // land here after currentTrial had already advanced.
     if (this.state.stage !== 'choice') return;
-    const tr = this.state.trials[this.state.currentTrial];
+    var tr = this.state.trials[this.state.currentTrial];
     if (!tr) return;
     this.state.stage = 'locked';
-    const box = document.getElementById('syntactic-options');
-    if (box) Array.from(box.querySelectorAll('button')).forEach(b => { b.disabled = true; });
-    const rt = performance.now() - this.state.onset;
-    const matched = form === tr.primeForm;
-    const r = {
+    this._clearTimers();
+
+    var box = document.getElementById('syntactic-options');
+    if (box) Array.prototype.forEach.call(box.querySelectorAll('button'), function (b) { b.disabled = true; });
+
+    var forms = this.formsFor(tr.item.set);
+    var markedForm = this.marked[tr.item.set];
+    var r = {
       trial: this.state.currentTrial + 1,
+      isPractice: !!tr.isPractice,
       set: tr.item.set,
       primeForm: tr.primeForm,
-      chosenForm: form,
-      chosen: text,
-      matched: matched,
-      rt: rt
+      primedMarked: tr.primeForm === markedForm,
+      chosenForm: timedOut ? null : form,
+      chose: timedOut ? '' : text,
+      choseMarked: timedOut ? null : (form === markedForm),
+      matched: timedOut ? null : (form === tr.primeForm),
+      timedOut: !!timedOut,
+      rt: timedOut ? null : (performance.now() - this.state.onset)
     };
-    this.state.results.push(r);
-    this.saveTrial(r);
+
+    // Practice items are shown, then discarded.
+    if (!tr.isPractice) {
+      this.state.results.push(r);
+      this.saveTrial(r);
+    }
+
     this.state.currentTrial++;
-    setTimeout(() => this.runTrial(), 300);
+    var self = this;
+    this._after(function () { self.runTrial(); }, this.timing.iti_ms);
   },
 
   saveTrial: function (r) {
-    if (!this._participantId) this._participantId = PTA.generateParticipantId();
-    const trialData = {
-      experiment_id: 'syntactic_priming',
-      participant_id: this._participantId,
+    PTK.save(PTK.row(this, this.spec(), {
       trial_number: r.trial,
-      language: 'en',
-      prime_type: r.primeForm,     // do / po / active / passive
-      target: r.set,               // dative / voice
-      ink_color: r.set,            // repurposed, kept for older dashboards
-      word_meaning: r.chosenForm,  // repurposed: the structure actually chosen
-      congruent: r.matched,        // did the choice reuse the primed structure
-      response: r.chosen,
-      correct: r.matched,          // no right answer; stored so rate queries work
-      rt: Math.round(r.rt * 100) / 100,
-      experimenter_email: this.experimenterEmail || null,
-      user_experiment_id: this.userExperimentId || null
+      prime_type: r.primeForm,          // do / po / active / passive
+      target: r.set,                    // dative / voice
+      ink_color: r.set,                 // repurposed, kept for older dashboards
+      word_meaning: r.chosenForm,       // repurposed: the structure chosen
+      congruent: r.primedMarked,        // was the marked structure the prime
+      response: r.chose,
+      correct: r.choseMarked,           // no right answer; stored so rate queries work
+      rt: r.rt === null ? null : Math.round(r.rt * 100) / 100
+    }));
+  },
+
+  /**
+   * The baseline-free contrast. See the file header for why "% reuse vs 50%"
+   * was wrong.
+   * @returns {Object} rates per alternation plus the overall effect
+   */
+  analyse: function () {
+    var self = this;
+    var answered = this.state.results.filter(function (r) { return !r.timedOut && r.chosenForm; });
+
+    function rate(rows) {
+      if (!rows.length) return null;
+      return 100 * rows.filter(function (r) { return r.choseMarked; }).length / rows.length;
+    }
+    function forSet(set) {
+      var rows = set ? answered.filter(function (r) { return r.set === set; }) : answered;
+      var afterMarked = rows.filter(function (r) { return r.primedMarked; });
+      var afterUnmarked = rows.filter(function (r) { return !r.primedMarked; });
+      var a = rate(afterMarked), u = rate(afterUnmarked);
+      return {
+        n: rows.length,
+        nAfterMarked: afterMarked.length,
+        nAfterUnmarked: afterUnmarked.length,
+        afterMarked: a === null ? null : Math.round(a),
+        afterUnmarked: u === null ? null : Math.round(u),
+        effect: (a === null || u === null) ? null : Math.round(a - u),
+        preference: rate(rows) === null ? null : Math.round(rate(rows))
+      };
+    }
+    return {
+      overall: forSet(null),
+      dative: forSet('dative'),
+      voice: forSet('voice'),
+      answered: answered.length,
+      timedOut: this.state.results.filter(function (r) { return r.timedOut; }).length
     };
-    if (window.PTA && PTA.saveToSupabase) PTA.saveToSupabase(trialData);
   },
 
   showResults: function () {
+    this._clearTimers();
     document.getElementById('syntactic-trial').style.display = 'none';
     document.getElementById('syntactic-results').style.display = 'block';
-    const all = this.state.results;
-    const rate = set => {
-      const s = set ? all.filter(r => r.set === set) : all;
-      if (!s.length) return null;
-      return Math.round(100 * s.filter(r => r.matched).length / s.length);
-    };
-    const overall = rate(null);
-    const dat = rate('dative');
-    const voi = rate('voice');
-    const mrt = all.length ? Math.round(PTA.mean(all.map(r => r.rt))) : null;
+    PTK.setProgress('syntactic-progress-fill', 1, 1);
+
+    var a = this.analyse();
+    var pct = function (v) { return v === null ? '-' : v + '%'; };
 
     document.getElementById('syntactic-results-body').innerHTML =
-      '<p>Items completed: ' + all.length + '</p>' +
-      '<p>Structure reused - dative items: ' + (dat !== null ? dat + '%' : '-') + '</p>' +
-      '<p>Structure reused - active/passive items: ' + (voi !== null ? voi + '%' : '-') + '</p>' +
-      '<p style="color:#fbbf24;font-weight:700;">Syntactic priming (D): ' +
-        (overall !== null ? overall + '% structure reuse' : '-') +
-        (overall !== null ? ' <span style="color:#9aa6b2;font-weight:400;">(50% = no priming)</span>' : '') + '</p>' +
-      '<p style="color:#9aa6b2;">Mean decision time: ' + (mrt !== null ? mrt + ' ms' : '-') + '</p>';
+      '<p>Items answered: ' + a.answered +
+        (a.timedOut ? ' &nbsp;|&nbsp; timed out: ' + a.timedOut : '') + '</p>' +
+      '<p style="color:#9aa6b2;font-size:.92rem;">Chose the less common structure after it was primed: ' +
+        pct(a.overall.afterMarked) + '</p>' +
+      '<p style="color:#9aa6b2;font-size:.92rem;">Chose it after the OTHER structure was primed: ' +
+        pct(a.overall.afterUnmarked) + '</p>' +
+      '<p style="color:#fbbf24;font-weight:700;font-size:1.05rem;margin-top:10px;">' +
+        'Syntactic priming effect (D &minus; C): ' +
+        (a.overall.effect === null ? '-' : a.overall.effect + ' percentage points') + '</p>' +
+      '<p style="color:#64748b;font-size:.86rem;">Dative items: ' +
+        (a.dative.effect === null ? '-' : a.dative.effect + ' pp') +
+        ' &nbsp;|&nbsp; active/passive items: ' +
+        (a.voice.effect === null ? '-' : a.voice.effect + ' pp') + '</p>' +
+      '<p style="color:#64748b;font-size:.86rem;">Your overall preference for the less common structure, ' +
+        'ignoring the prime: ' + pct(a.overall.preference) + '. This is the natural bias the effect above ' +
+        'is measured against, and it cancels out of it.</p>';
+
+    document.getElementById('syntactic-interpretation').innerHTML = PTK.interpret({
+      effect: a.overall.effect,
+      unit: 'percentage points',
+      effectName: 'syntactic priming effect',
+      expectedSign: 1,
+      n: a.answered,
+      small: 8,
+      note: 'Zero means the prime made no difference to which structure you picked. ' +
+            'Because the effect is a difference between two prime conditions, your own preference ' +
+            'for one structure over the other cannot inflate or deflate it.'
+    });
   },
 
   restart: function () { this.open(); this.start(); },
 
+  csvParts: function () {
+    return {
+      headers: ['item', 'alternation', 'primed_structure', 'primed_marked_form',
+                'chosen_structure', 'chose_marked_form', 'reused_primed_structure',
+                'chosen_sentence', 'timed_out', 'decision_ms'],
+      rows: this.state.results.map(function (r) {
+        return [r.trial, r.set, r.primeForm, r.primedMarked, r.chosenForm, r.choseMarked,
+                r.matched, r.chose, r.timedOut, r.rt === null ? '' : Math.round(r.rt)];
+      })
+    };
+  },
+
   exportCSV: function () {
-    if (!this.state.results.length) { alert('No results to export'); return; }
-    const headers = ['item', 'alternation', 'primed_structure', 'chosen_structure',
-                     'reused_primed_structure', 'chosen_sentence', 'decision_ms'];
-    const rows = this.state.results.map(r =>
-      [r.trial, r.set, r.primeForm, r.chosenForm, r.matched, r.chosen, Math.round(r.rt)]);
-    const csv = [headers, ...rows].map(row => row.map(c => '"' + c + '"').join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const l = document.createElement('a');
-    l.href = URL.createObjectURL(blob);
-    l.download = 'syntactic_priming_' + new Date().toISOString().slice(0, 10) + '.csv';
-    l.click();
+    var p = this.csvParts();
+    PTK.exportCSV(p.headers, p.rows, 'syntactic_priming');
+  },
+
+  exportXLSX: function () {
+    var p = this.csvParts();
+    PTK.exportXLSX(p.headers, p.rows, 'syntactic_priming');
   },
 
   showThankYou: function () {
     window.history.replaceState({}, document.title, window.location.pathname);
     this.isParticipantMode = false;
-    const m = document.createElement('div');
+    var m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:flex;justify-content:center;align-items:center;';
     m.innerHTML = '<div style="background:rgba(17,24,39,.97);border:1px solid rgba(74,222,128,.5);border-radius:20px;padding:44px;max-width:460px;text-align:center;color:#e5e7eb;">' +
       '<h2 style="color:#4ade80;">Thank You!</h2><p style="color:#c0c0c0;">Your responses were recorded. You may close this window.</p>' +
@@ -323,48 +559,100 @@ window.SyntacticPriming = {
     document.body.appendChild(m);
   },
 
-  openBuilder: function () {
-    this.ensureOverlay();
-    const email = prompt('Your email (for data attribution):', this.experimenterEmail || '');
-    if (email === null) return;
-    const expId = prompt('Experiment ID (e.g. syntactic_pilot_1):', this.userExperimentId || '');
-    if (expId === null) return;
-    const reps = prompt('Passes through the item set (1-5):', String(this.repetitions));
-    if (reps === null) return;
-    this.experimenterEmail = email.trim();
-    this.userExperimentId = expId.trim();
-    const n = parseInt(reps, 10);
-    this.repetitions = (n >= 1 && n <= 5) ? n : this.repetitions;
-    const config = {
+  /** Stimuli travel with the link, so builder edits actually reach participants. */
+  toConfig: function () {
+    return {
       template: 'syntactic-priming',
       experimenterEmail: this.experimenterEmail,
       userExperimentId: this.userExperimentId,
-      repetitions: this.repetitions
+      repetitions: this.repetitions,
+      practiceTrials: this.practiceTrials,
+      marked: this.marked,
+      timing: this.timing,
+      stimuli: { items: this.data.items }
     };
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-    const link = window.location.href.split('?')[0] + '?syntactic=' + encoded;
-    window.prompt('Participant link (copy and send):', link);
+  },
+
+  openBuilder: function () {
+    this.ensureOverlay();
+    this.init();
+    PTK.openBuilder(this, this.builderSpec());
+  },
+
+  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+
+  /**
+   * The builder edits a flattened view of data.items, because the nested
+   * prime/target shape is unusable in a table. Converted back on apply.
+   */
+  builderSpec: function () {
+    var self = this;
+    var s = this.spec();
+
+    s.stimulusGroups = [{
+      key: '_flatItems',
+      label: 'Prime sentences and target events',
+      type: 'rows',
+      min: 2,
+      fields: s.stimulusGroups[0].fields,
+      help: s.stimulusGroups[0].help
+    }];
+
+    // Present a flat copy for editing.
+    this.data._flatItems = this.data.items.map(function (it) {
+      var forms = self.formsFor(it.set);
+      var t = it.target || {};
+      return {
+        set: it.set,
+        primeA: it.prime[forms[0]] || '',
+        primeB: it.prime[forms[1]] || '',
+        agent: t.agent || '',
+        verb: t.verb || '',
+        other: it.set === 'dative' ? [t.recipient, t.theme].join(', ') : (t.patient || '')
+      };
+    });
+
+    // PTK calls this at the end of every apply, so preview, link generation
+    // and the A/S/M check all see the rebuilt items rather than the stale ones.
+    s.afterApply = function (mod) { mod.absorbFlatItems(); };
+    return s;
+  },
+
+  /** Fold the builder's flat table back into the nested item shape. */
+  absorbFlatItems: function () {
+    var flat = this.data._flatItems;
+    if (!flat || !flat.length) return;
+    var self = this;
+    var rebuilt = [];
+    flat.forEach(function (f) {
+      var set = (String(f.set || '').trim().toLowerCase() === 'dative') ? 'dative' : 'voice';
+      var forms = self.formsFor(set);
+      var prime = {};
+      prime[forms[0]] = String(f.primeA || '').trim();
+      prime[forms[1]] = String(f.primeB || '').trim();
+      if (!prime[forms[0]] || !prime[forms[1]]) return;
+
+      var target = { agent: String(f.agent || '').trim(), verb: String(f.verb || '').trim() };
+      var other = String(f.other || '').trim();
+      if (set === 'dative') {
+        var bits = other.split(',');
+        target.recipient = (bits[0] || '').trim();
+        target.theme = (bits[1] || '').trim();
+        if (!target.recipient || !target.theme) return;
+      } else {
+        target.patient = other;
+        if (!target.patient) return;
+      }
+      if (!target.agent || !target.verb) return;
+      rebuilt.push({ set: set, prime: prime, target: target });
+    });
+    if (rebuilt.length >= 2) this.data.items = rebuilt;
   },
 
   checkUrlConfig: function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const raw = urlParams.get('syntactic');
-    if (!raw) return false;
-    try {
-      const config = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      if (config.template !== 'syntactic-priming') return false;
-      this.isParticipantMode = true;
-      this.experimenterEmail = config.experimenterEmail || '';
-      this.userExperimentId = config.userExperimentId || '';
-      this.repetitions = config.repetitions || this.repetitions;
-      const layout = document.querySelector('.layout');
-      if (layout) layout.style.display = 'none';
-      this.open();
-      return true;
-    } catch (e) {
-      console.error('SyntacticPriming: bad participant config', e);
-      return false;
-    }
+    this.ensureOverlay();
+    this.init();
+    return PTK.checkUrlConfig(this, this.spec());
   }
 };
 

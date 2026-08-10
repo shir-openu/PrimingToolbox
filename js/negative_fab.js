@@ -9,31 +9,33 @@
  * the prime becomes the target - and responses are reliably SLOWER than on
  * control probes, because the ignored item was actively suppressed.
  *
- * Priming (ABCD): A = the suppressed distractor, B = the selective-attention
- * task, C = control-probe latency, D = ignored-repetition latency. The effect
- * is the D - C difference, and unlike most priming it is expected to be
- * POSITIVE (interference, not facilitation).
+ * ABCD: A = the suppressed distractor, B = the selective-attention task,
+ * C = control-probe latency, D = ignored-repetition latency. The effect is
+ * D - C, and unlike most priming it is expected to be POSITIVE: interference,
+ * not facilitation. The results screen and the generated interpretation both
+ * treat a positive number as the predicted direction.
  *
- * Self-contained (injects its own overlay). Saves through PTA.saveToSupabase
- * using only existing experiment_results columns.
+ * Previous version (never published to GitHub; local branch v2-four-paradigms):
+ *     git show d313317:js/negative_fab.js
  *
  * @module NegativePriming
+ * @version 2.0
+ * @requires PTA (js/core_fab.js), PTK (js/paradigm_kit_fab.js)
  */
 window.NegativePriming = {
 
   data: {
-    // Four visually distinct letters, all easy to type.
-    letters: ['B', 'C', 'F', 'H'],
-    keyHint: 'Press the key of the GREEN letter'
+    // Visually distinct letters, all easy to type. At least four are needed:
+    // a control probe must share no letter with its prime, which costs two.
+    letters: ['B', 'C', 'F', 'H']
   },
 
   state: {
     pairs: [], currentPair: 0, phase: 'setup',
     stage: 'prime',          // 'prime' | 'probe'
-    onset: 0, results: [], awaiting: false, openedFromBuilder: false
+    onset: 0, results: [], awaiting: false, openedFromBuilder: false, isPractice: false
   },
 
-  // timing, overridable by a participant link
   timing: {
     fixation_ms: 500,
     display_ms: 2000,        // display stays until response, capped here
@@ -44,34 +46,69 @@ window.NegativePriming = {
   userExperimentId: '',
   isParticipantMode: false,
   repetitions: 4,            // pairs per condition
+  practiceTrials: 2,         // practice PAIRS
   _initDone: false,
   _participantId: '',
   _keyHandler: null,
-  _timers: [],
+
+  spec: function () {
+    return {
+      key: 'negative',
+      name: 'Negative Priming',
+      source: 'Tipper (1985)',
+      urlParam: 'negative',
+      template: 'negative-priming',
+      accent: '#22d3ee',
+      defaultExperimentId: 'negative_priming',
+      abcd: {
+        A: 'The red distractor that had to be ignored on the prime display.',
+        B: 'Naming the green letter on the probe display.',
+        C: 'Probe latency when the probe shares no letter with the prime (control).',
+        D: 'Probe latency when the ignored letter is now the one to name.'
+      },
+      characteristics: {
+        association: 'On ignored-repetition probes the target is identical to the item just suppressed; on control probes there is no relation.',
+        secondariness: 'The red letter is explicitly to be ignored and is never required for the response.',
+        modulation: 'Having suppressed the letter makes naming it slower a moment later - the effect is a cost, not a benefit.'
+      },
+      instructions: 'Name the green letter as fast as you can and ignore the red one.',
+      stimulusGroups: [
+        { key: 'letters', label: 'Letters', type: 'words', min: 4,
+          help: 'At least four are required: a control probe must share no letter with its prime, which uses up two of them. Single characters work best - they are also the response keys.' }
+      ],
+      timingFields: [
+        { key: 'fixation_ms', label: 'Fixation', min: 0, max: 3000, step: 50 },
+        { key: 'display_ms', label: 'Response window', min: 500, max: 10000, step: 100 },
+        { key: 'iti_ms', label: 'Gap between displays', min: 100, max: 5000, step: 50 }
+      ],
+      practice: { def: 2 },
+      repetitions: { prop: 'repetitions', def: 4, min: 1, max: 10,
+                     label: 'Pairs per condition',
+                     help: 'Each unit builds one ignored-repetition pair and one control pair per letter, so the two conditions stay balanced.' },
+      toConfig: function (mod) { return mod.toConfig(); },
+      asm: function (mod) {
+        return {
+          instructions: 'Name the GREEN letter and ignore the red one.',
+          primes: mod.data.letters.slice(),
+          targets: mod.data.letters.slice(),
+          conditions: ['ignored-repetition', 'control'],
+          baseline: 'control',
+          response: mod.data.letters.reduce(function (acc, l) { acc['letter ' + l] = l; return acc; }, {})
+        };
+      }
+    };
+  },
 
   init: function () {
     if (this._initDone) return;
     this._initDone = true;
+    PTK.timers(this);
     console.log('Negative Priming module initialized');
-  },
-
-  /** Same discipline as the other timed paradigms: every timer belongs to one
-   *  display and is cancelled when that display ends, so nothing from a
-   *  finished trial can fire into the next one. */
-  _after: function (fn, ms) {
-    const id = setTimeout(fn, ms);
-    this._timers.push(id);
-    return id;
-  },
-
-  _clearTimers: function () {
-    this._timers.forEach(clearTimeout);
-    this._timers = [];
   },
 
   ensureOverlay: function () {
     if (document.getElementById('negative-overlay')) return;
-    const el = document.createElement('div');
+    var el = document.createElement('div');
     el.id = 'negative-overlay';
     el.className = 'experiment-overlay';
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
@@ -81,26 +118,49 @@ window.NegativePriming = {
           '<h2 style="color:#22d3ee;">Negative Priming</h2>' +
           '<p style="color:#9aa6b2;line-height:1.7;">Two letters appear on top of each other: one <b style="color:#4ade80;">green</b>, one <b style="color:#f87171;">red</b>.<br>' +
             'Press the key of the <b style="color:#4ade80;">GREEN</b> letter as fast as you can, and ignore the red one entirely.</p>' +
-          '<p style="color:#9aa6b2;">Keys in use: <b>B &nbsp; C &nbsp; F &nbsp; H</b></p>' +
+          '<p id="negative-keylegend" style="color:#9aa6b2;"></p>' +
+          '<div id="negative-params" style="color:#64748b;font-size:.85rem;margin:16px auto;max-width:520px;line-height:1.7;"></div>' +
           '<button class="btn" onclick="NegativePriming.start()" style="margin-top:14px;">Start</button> ' +
           '<button class="btn btn-secondary" onclick="NegativePriming.close()">Cancel</button>' +
         '</div>' +
         '<div id="negative-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="negative-progress">Pair 1</div>' +
+          PTK.progressHtml('negative-progress-fill') +
           '<div id="negative-stage" style="color:#64748b;font-size:.8rem;letter-spacing:2px;margin-top:6px;"></div>' +
           '<div id="negative-display" style="position:relative;height:190px;display:flex;align-items:center;justify-content:center;margin:22px 0;"></div>' +
-          '<div style="color:#64748b;font-size:.85rem;">' + 'Press B, C, F or H' + '</div>' +
+          '<div id="negative-keyhint" style="color:#64748b;font-size:.85rem;"></div>' +
         '</div>' +
         '<div id="negative-results" style="display:none;">' +
           '<h2 style="color:#22d3ee;">Complete</h2>' +
           '<div id="negative-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
-          '<p style="color:#9aa6b2;font-size:.82rem;max-width:560px;margin:10px auto;">A POSITIVE effect is the expected result here: suppressing the distractor makes it harder to name a moment later.</p>' +
-          '<button class="btn" onclick="NegativePriming.exportCSV()">Download CSV</button> ' +
-          '<button class="btn" onclick="NegativePriming.restart()">Try Again</button> ' +
-          '<button class="btn btn-secondary" onclick="NegativePriming.close()">Close</button>' +
+          '<div id="negative-interpretation"></div>' +
+          '<div style="margin-top:20px;">' +
+            '<button class="btn" onclick="NegativePriming.exportCSV()">Download CSV</button> ' +
+            '<button class="btn" onclick="NegativePriming.exportXLSX()">Download Excel</button> ' +
+            '<button class="btn" onclick="NegativePriming.restart()">Try Again</button> ' +
+            '<button class="btn btn-secondary" onclick="NegativePriming.close()">Close</button>' +
+          '</div>' +
         '</div>' +
       '</div>';
     document.body.appendChild(el);
+  },
+
+  /** Requirement 4: the legend follows the live letter set. */
+  paintLegend: function () {
+    var keys = this.data.letters.join('   ');
+    var legend = document.getElementById('negative-keylegend');
+    if (legend) legend.innerHTML = 'Keys in use: <b>' + PTK.esc(keys) + '</b>';
+    var hint = document.getElementById('negative-keyhint');
+    if (hint) hint.textContent = 'Press ' + this.data.letters.join(', ');
+    var params = document.getElementById('negative-params');
+    if (params) {
+      var pairs = this.data.letters.length * this.repetitions * 2;
+      params.textContent =
+        'About ' + pairs + ' scored pairs (' + (pairs * 2) + ' displays)' +
+        (this.practiceTrials ? ', after ' + this.practiceTrials + ' practice pairs' : '') +
+        '. Fixation ' + this.timing.fixation_ms + ' ms, response window ' +
+        this.timing.display_ms + ' ms.';
+    }
   },
 
   open: function () {
@@ -110,6 +170,7 @@ window.NegativePriming = {
     document.getElementById('negative-setup').style.display = 'block';
     document.getElementById('negative-trial').style.display = 'none';
     document.getElementById('negative-results').style.display = 'none';
+    this.paintLegend();
     this.state.phase = 'setup';
   },
 
@@ -117,7 +178,7 @@ window.NegativePriming = {
     this.detachKeys();
     this._clearTimers();
     this.state.awaiting = false;
-    const ov = document.getElementById('negative-overlay');
+    var ov = document.getElementById('negative-overlay');
     if (ov) ov.style.display = 'none';
     this.state.phase = 'setup';
     if (this.state.openedFromBuilder) { this.state.openedFromBuilder = false; this.openBuilder(); }
@@ -128,27 +189,37 @@ window.NegativePriming = {
    * A pair is prime(target,distractor) + probe(target,distractor).
    *   ignored-repetition : probe target === prime distractor
    *   control            : no letter is shared between prime and probe
+   *
+   * Control pairs need two letters that appear in neither role of the prime, so
+   * fewer than four letters yields ignored-repetition pairs only and no
+   * baseline at all. The builder enforces a minimum of four; this guards the
+   * case of a hand-edited participant link.
    */
-  buildPairs: function () {
-    const L = this.data.letters;
-    const pairs = [];
-    for (let r = 0; r < this.repetitions; r++) {
-      L.forEach(primeTarget => {
-        const rest = L.filter(x => x !== primeTarget);
-        const primeDist = rest[Math.floor(Math.random() * rest.length)];
+  buildPairs: function (isPractice, howMany) {
+    var L = this.data.letters;
+    var pairs = [];
+    var passes = isPractice ? 1 : this.repetitions;
+
+    for (var r = 0; r < passes; r++) {
+      L.forEach(function (primeTarget) {
+        var rest = L.filter(function (x) { return x !== primeTarget; });
+        if (!rest.length) return;
+        var primeDist = rest[Math.floor(Math.random() * rest.length)];
 
         // ignored repetition: the ignored letter is now the one to name
-        const irRest = L.filter(x => x !== primeDist);
-        pairs.push({
-          condition: 'ignored-repetition',
-          prime: { target: primeTarget, distractor: primeDist },
-          probe: { target: primeDist, distractor: irRest[Math.floor(Math.random() * irRest.length)] }
-        });
+        var irRest = L.filter(function (x) { return x !== primeDist; });
+        if (irRest.length) {
+          pairs.push({
+            condition: 'ignored-repetition',
+            prime: { target: primeTarget, distractor: primeDist },
+            probe: { target: primeDist, distractor: irRest[Math.floor(Math.random() * irRest.length)] }
+          });
+        }
 
         // control: probe shares nothing with the prime
-        const free = L.filter(x => x !== primeTarget && x !== primeDist);
+        var free = L.filter(function (x) { return x !== primeTarget && x !== primeDist; });
         if (free.length >= 2) {
-          const shuffled = PTA.shuffleArray(free.slice());
+          var shuffled = PTA.shuffleArray(free.slice());
           pairs.push({
             condition: 'control',
             prime: { target: primeTarget, distractor: primeDist },
@@ -157,24 +228,42 @@ window.NegativePriming = {
         }
       });
     }
-    return PTA.shuffleArray(pairs);
+    pairs = PTA.shuffleArray(pairs);
+    return (isPractice && howMany) ? pairs.slice(0, howMany) : pairs;
   },
 
   start: function () {
-    this.state.pairs = this.buildPairs();
+    this.state.results = [];
     this.state.currentPair = 0;
     this.state.stage = 'prime';
-    this.state.results = [];
     document.getElementById('negative-setup').style.display = 'none';
     document.getElementById('negative-results').style.display = 'none';
     document.getElementById('negative-trial').style.display = 'block';
+    this.paintLegend();
     this.attachKeys();
+
+    if (this.practiceTrials > 0) {
+      this.state.isPractice = true;
+      this.state.pairs = this.buildPairs(true, this.practiceTrials);
+    } else {
+      this.state.isPractice = false;
+      this.state.pairs = this.buildPairs(false);
+    }
+    this.runStage();
+  },
+
+  beginScored: function () {
+    this.state.isPractice = false;
+    this.state.pairs = this.buildPairs(false);
+    this.state.currentPair = 0;
+    this.state.stage = 'prime';
     this.runStage();
   },
 
   attachKeys: function () {
     if (this._keyHandler) return;
-    this._keyHandler = (e) => this.onKey(e);
+    var self = this;
+    this._keyHandler = function (e) { self.onKey(e); };
     document.addEventListener('keydown', this._keyHandler);
   },
 
@@ -186,51 +275,72 @@ window.NegativePriming = {
 
   runStage: function () {
     this._clearTimers();
-    const pair = this.state.pairs[this.state.currentPair];
-    if (!pair) { this.showResults(); return; }
-    const disp = pair[this.state.stage];
-    const myPair = this.state.currentPair;
-    const myStage = this.state.stage;
+    var self = this;
+    var box = document.getElementById('negative-display');
+    var pair = this.state.pairs[this.state.currentPair];
 
+    if (!pair) {
+      if (this.state.isPractice) {
+        this.state.awaiting = false;
+        document.getElementById('negative-stage').textContent = '';
+        box.innerHTML = '<div style="color:#9aa6b2;font-size:1.05rem;line-height:1.7;">' +
+          'Practice finished.<br>Press any of the response keys to begin the real displays.</div>';
+        var go = function (e) {
+          if (self.data.letters.indexOf((e.key || '').toUpperCase()) === -1) return;
+          document.removeEventListener('keydown', go);
+          self.beginScored();
+        };
+        document.addEventListener('keydown', go);
+        return;
+      }
+      this.showResults();
+      return;
+    }
+
+    var disp = pair[this.state.stage];
+    var myPair = this.state.currentPair;
+    var myStage = this.state.stage;
+
+    var label = this.state.isPractice ? 'Practice ' : '';
     document.getElementById('negative-progress').textContent =
-      'Pair ' + (this.state.currentPair + 1) + ' of ' + this.state.pairs.length;
+      label + 'pair ' + (this.state.currentPair + 1) + ' of ' + this.state.pairs.length;
+    PTK.setProgress('negative-progress-fill', this.state.currentPair, this.state.pairs.length);
     document.getElementById('negative-stage').textContent =
       this.state.stage === 'prime' ? 'PRIME' : 'PROBE';
 
-    const box = document.getElementById('negative-display');
     box.innerHTML = '<div style="font-size:2.4rem;color:#64748b;">+</div>';
     this.state.awaiting = false;
 
-    this._after(() => {
+    this._after(function () {
       // the two letters are overlaid, which is what forces selection by colour
       box.innerHTML =
         '<div style="position:relative;width:150px;height:150px;">' +
           '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-               'font-size:6rem;font-weight:700;color:#f87171;opacity:.85;">' + disp.distractor + '</div>' +
+               'font-size:6rem;font-weight:700;color:#f87171;opacity:.85;">' + PTK.esc(disp.distractor) + '</div>' +
           '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;' +
-               'font-size:6rem;font-weight:700;color:#4ade80;">' + disp.target + '</div>' +
+               'font-size:6rem;font-weight:700;color:#4ade80;">' + PTK.esc(disp.target) + '</div>' +
         '</div>';
-      this.state.onset = performance.now();
-      this.state.awaiting = true;
+      self.state.onset = performance.now();
+      self.state.awaiting = true;
 
       // response window, scoped to this display only
-      this._after(() => {
-        if (this.state.awaiting &&
-            this.state.currentPair === myPair && this.state.stage === myStage) {
-          this.state.awaiting = false;
-          this.commit(disp, null, this.timing.display_ms, true);
+      self._after(function () {
+        if (self.state.awaiting &&
+            self.state.currentPair === myPair && self.state.stage === myStage) {
+          self.state.awaiting = false;
+          self.commit(disp, null, null, true);
         }
-      }, this.timing.display_ms);
+      }, self.timing.display_ms);
     }, this.timing.fixation_ms);
   },
 
   onKey: function (e) {
     if (!this.state.awaiting) return;
-    const key = (e.key || '').toUpperCase();
+    var key = (e.key || '').toUpperCase();
     if (this.data.letters.indexOf(key) === -1) return;
     e.preventDefault();
     this.state.awaiting = false;
-    const pair = this.state.pairs[this.state.currentPair];
+    var pair = this.state.pairs[this.state.currentPair];
     if (!pair) return;
     this.commit(pair[this.state.stage], key, performance.now() - this.state.onset, false);
   },
@@ -239,13 +349,16 @@ window.NegativePriming = {
    *  answered or the response window ran out. */
   commit: function (disp, key, rt, timedOut) {
     this._clearTimers();
-    const pair = this.state.pairs[this.state.currentPair];
+    var self = this;
+    var pair = this.state.pairs[this.state.currentPair];
     if (!pair) return;
-    const correct = !timedOut && key === disp.target;
+    var isPractice = this.state.isPractice;
+    var correct = !timedOut && key === disp.target;
 
     // Only PROBE latencies carry the effect; prime rows are kept for completeness.
-    const row = {
+    var row = {
       pair: this.state.currentPair + 1,
+      isPractice: isPractice,
       stage: this.state.stage,
       condition: pair.condition,
       target: disp.target,
@@ -255,42 +368,60 @@ window.NegativePriming = {
       rt: rt,
       timedOut: !!timedOut
     };
-    this.state.results.push(row);
-    this.saveTrial(row);
+
+    if (!isPractice) {
+      this.state.results.push(row);
+      this.saveTrial(row);
+    }
 
     document.getElementById('negative-display').innerHTML =
       '<div style="font-size:2rem;color:' +
         (timedOut ? '#fbbf24' : (correct ? '#4ade80' : '#f87171')) + ';">' +
         (timedOut ? 'too slow' : (correct ? 'ok' : 'wrong key')) + '</div>';
 
-    this._after(() => {
-      if (this.state.stage === 'prime') {
-        this.state.stage = 'probe';
+    this._after(function () {
+      if (self.state.stage === 'prime') {
+        self.state.stage = 'probe';
       } else {
-        this.state.stage = 'prime';
-        this.state.currentPair++;
+        self.state.stage = 'prime';
+        self.state.currentPair++;
       }
-      this.runStage();
+      self.runStage();
     }, this.timing.iti_ms);
   },
 
   saveTrial: function (r) {
-    if (!this._participantId) this._participantId = PTA.generateParticipantId();
-    const trialData = {
-      experiment_id: 'negative_priming',
-      participant_id: this._participantId,
+    PTK.save(PTK.row(this, this.spec(), {
       trial_number: this.state.results.length,
-      language: 'en',
       ink_color: r.condition,        // repurposed: ignored-repetition / control
       word_meaning: r.stage,         // repurposed: prime / probe
+      prime_type: r.condition,
+      target: r.target,
       congruent: r.condition === 'ignored-repetition',
       response: r.response,
       correct: r.correct,
-      rt: Math.round(r.rt * 100) / 100,
-      experimenter_email: this.experimenterEmail || null,
-      user_experiment_id: this.userExperimentId || null
+      rt: r.rt === null ? null : Math.round(r.rt * 100) / 100
+    }));
+  },
+
+  analyse: function () {
+    var probes = this.state.results.filter(function (r) {
+      return r.stage === 'probe' && r.correct && !r.timedOut;
+    });
+    var ir = probes.filter(function (r) { return r.condition === 'ignored-repetition'; }).map(function (r) { return r.rt; });
+    var ct = probes.filter(function (r) { return r.condition === 'control'; }).map(function (r) { return r.rt; });
+    var mIR = ir.length ? Math.round(PTA.mean(ir)) : null;
+    var mCT = ct.length ? Math.round(PTA.mean(ct)) : null;
+    var total = this.state.results.length;
+    return {
+      n: total,
+      usable: probes.length,
+      ignoredRepetitionRT: mIR,
+      controlRT: mCT,
+      effect: (mIR !== null && mCT !== null) ? (mIR - mCT) : null,
+      accuracy: total ? Math.round(100 * this.state.results.filter(function (r) { return r.correct; }).length / total) : 0,
+      noControl: ct.length === 0
     };
-    if (window.PTA && PTA.saveToSupabase) PTA.saveToSupabase(trialData);
   },
 
   showResults: function () {
@@ -298,44 +429,52 @@ window.NegativePriming = {
     this._clearTimers();
     document.getElementById('negative-trial').style.display = 'none';
     document.getElementById('negative-results').style.display = 'block';
+    PTK.setProgress('negative-progress-fill', 1, 1);
 
-    const probes = this.state.results.filter(r => r.stage === 'probe' && r.correct && !r.timedOut);
-    const ir = probes.filter(r => r.condition === 'ignored-repetition').map(r => r.rt);
-    const ct = probes.filter(r => r.condition === 'control').map(r => r.rt);
-    const mIR = ir.length ? Math.round(PTA.mean(ir)) : null;
-    const mCT = ct.length ? Math.round(PTA.mean(ct)) : null;
-    const effect = (mIR !== null && mCT !== null) ? (mIR - mCT) : null;
-    const acc = this.state.results.length
-      ? Math.round(100 * this.state.results.filter(r => r.correct).length / this.state.results.length) : 0;
-
+    var a = this.analyse();
     document.getElementById('negative-results-body').innerHTML =
-      '<p>Displays completed: ' + this.state.results.length + ' &nbsp;|&nbsp; accuracy ' + acc + '%</p>' +
-      '<p>Probe RT - ignored repetition: ' + (mIR !== null ? mIR + ' ms' : '-') + '</p>' +
-      '<p>Probe RT - control: ' + (mCT !== null ? mCT + ' ms' : '-') + '</p>' +
-      '<p style="color:#22d3ee;font-weight:700;">Negative priming effect (D): ' +
-        (effect !== null ? effect + ' ms' +
-          (effect > 0 ? ' (slower after ignoring - the expected direction)' : ' (no suppression cost)') : '-') + '</p>';
+      '<p>Displays completed: ' + a.n + ' &nbsp;|&nbsp; accuracy ' + a.accuracy + '%</p>' +
+      '<p>Probe RT - ignored repetition: ' + (a.ignoredRepetitionRT !== null ? a.ignoredRepetitionRT + ' ms' : '-') + '</p>' +
+      '<p>Probe RT - control: ' + (a.controlRT !== null ? a.controlRT + ' ms' : '-') + '</p>' +
+      '<p style="color:#22d3ee;font-weight:700;font-size:1.05rem;">Negative priming effect (D &minus; C): ' +
+        (a.effect !== null ? a.effect + ' ms' : '-') + '</p>';
+
+    document.getElementById('negative-interpretation').innerHTML = PTK.interpret({
+      effect: a.effect,
+      unit: 'ms',
+      effectName: 'negative priming effect',
+      // Positive IS the prediction here: suppressing the letter makes naming it
+      // slower. A positive number is the result, not a problem.
+      expectedSign: 1,
+      accuracy: a.accuracy,
+      n: a.usable,
+      small: 12,
+      note: a.noControl
+        ? 'No control probes were generated, so there is no baseline to compare against. That happens when fewer than four letters are configured.'
+        : 'A POSITIVE number is the expected result here: having just suppressed a letter makes it harder to name a moment later. This is the one paradigm in the toolbox where the effect is a cost rather than a benefit.'
+    });
   },
 
   restart: function () { this.open(); this.start(); },
 
-  exportCSV: function () {
-    if (!this.state.results.length) { alert('No results to export'); return; }
-    const headers = ['pair', 'stage', 'condition', 'target', 'distractor', 'response', 'correct', 'rt_ms'];
-    const rows = this.state.results.map(r =>
-      [r.pair, r.stage, r.condition, r.target, r.distractor, r.response, r.correct, Math.round(r.rt)]);
-    const csv = [headers, ...rows].map(row => row.map(c => '"' + c + '"').join(',')).join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-    const l = document.createElement('a');
-    l.href = URL.createObjectURL(blob);
-    l.download = 'negative_priming_' + new Date().toISOString().slice(0, 10) + '.csv';
-    l.click();
+  csvParts: function () {
+    return {
+      headers: ['pair', 'stage', 'condition', 'target', 'distractor', 'response',
+                'correct', 'timed_out', 'rt_ms'],
+      rows: this.state.results.map(function (r) {
+        return [r.pair, r.stage, r.condition, r.target, r.distractor, r.response,
+                r.correct, r.timedOut, r.rt === null ? '' : Math.round(r.rt)];
+      })
+    };
   },
+
+  exportCSV: function () { var p = this.csvParts(); PTK.exportCSV(p.headers, p.rows, 'negative_priming'); },
+  exportXLSX: function () { var p = this.csvParts(); PTK.exportXLSX(p.headers, p.rows, 'negative_priming'); },
 
   showThankYou: function () {
     window.history.replaceState({}, document.title, window.location.pathname);
     this.isParticipantMode = false;
-    const m = document.createElement('div');
+    var m = document.createElement('div');
     m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:3000;display:flex;justify-content:center;align-items:center;';
     m.innerHTML = '<div style="background:rgba(17,24,39,.97);border:1px solid rgba(74,222,128,.5);border-radius:20px;padding:44px;max-width:460px;text-align:center;color:#e5e7eb;">' +
       '<h2 style="color:#4ade80;">Thank You!</h2><p style="color:#c0c0c0;">Your responses were recorded. You may close this window.</p>' +
@@ -343,50 +482,30 @@ window.NegativePriming = {
     document.body.appendChild(m);
   },
 
-  openBuilder: function () {
-    this.ensureOverlay();
-    const email = prompt('Your email (for data attribution):', this.experimenterEmail || '');
-    if (email === null) return;
-    const expId = prompt('Experiment ID (e.g. negative_pilot_1):', this.userExperimentId || '');
-    if (expId === null) return;
-    const reps = prompt('Pairs per condition (1-10):', String(this.repetitions));
-    if (reps === null) return;
-    this.experimenterEmail = email.trim();
-    this.userExperimentId = expId.trim();
-    const n = parseInt(reps, 10);
-    this.repetitions = (n >= 1 && n <= 10) ? n : this.repetitions;
-    const config = {
+  toConfig: function () {
+    return {
       template: 'negative-priming',
       experimenterEmail: this.experimenterEmail,
       userExperimentId: this.userExperimentId,
       repetitions: this.repetitions,
-      timing: this.timing
+      practiceTrials: this.practiceTrials,
+      timing: this.timing,
+      stimuli: { letters: this.data.letters }
     };
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-    const link = window.location.href.split('?')[0] + '?negative=' + encoded;
-    window.prompt('Participant link (copy and send):', link);
   },
 
+  openBuilder: function () {
+    this.ensureOverlay();
+    this.init();
+    PTK.openBuilder(this, this.spec());
+  },
+
+  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+
   checkUrlConfig: function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const raw = urlParams.get('negative');
-    if (!raw) return false;
-    try {
-      const config = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      if (config.template !== 'negative-priming') return false;
-      this.isParticipantMode = true;
-      this.experimenterEmail = config.experimenterEmail || '';
-      this.userExperimentId = config.userExperimentId || '';
-      this.repetitions = config.repetitions || this.repetitions;
-      if (config.timing) Object.assign(this.timing, config.timing);
-      const layout = document.querySelector('.layout');
-      if (layout) layout.style.display = 'none';
-      this.open();
-      return true;
-    } catch (e) {
-      console.error('NegativePriming: bad participant config', e);
-      return false;
-    }
+    this.ensureOverlay();
+    this.init();
+    return PTK.checkUrlConfig(this, this.spec());
   }
 };
 

@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<!--
+  PrimingToolbox - the ABCD framework article page.
+  New file, 2026-08-10. Reached from the "The ABCD Framework" card on index.html.
+
+  Figures: article/img/*_dark.png are the manuscript figures with their INK
+  RECOLOURED for a dark background (near-black -> light slate, #007878 -> #35d6d6,
+  #c018a8 -> #ff4db8). Every pixel keeps its position and alpha, so no data point
+  moved. The untouched originals sit beside them as *_original.png.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The ABCD Framework - PrimingToolbox</title>
+  <meta name="description" content="A meta-disciplinary definition of priming: association, secondariness and modulation, operationalised through an ABCD notation.">
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .art-wrap { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 0 26px 90px; }
+
+    .art-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px; flex-wrap: wrap; padding: 22px 0 8px;
+    }
+    .art-home {
+      color: #9aa6b2; text-decoration: none; font-size: .92rem;
+      border: 1px solid rgba(255,255,255,.14); border-radius: 9px; padding: 8px 15px;
+      transition: all .25s ease; background: rgba(17,24,39,.5); backdrop-filter: blur(8px);
+    }
+    .art-home:hover { color: #fff; border-color: rgba(255,77,184,.5); }
+    .art-brand { color: #64748b; font-size: .85rem; letter-spacing: .06em; text-transform: uppercase; }
+
+    .art-head { padding: 34px 0 10px; }
+    .art-head h1 { font-size: 2.5rem; line-height: 1.18; color: #ffffff; font-weight: 700; }
+    .art-head .art-sub { color: #ff4db8; font-size: 1.12rem; margin-top: 12px; letter-spacing: .01em; }
+
+    .art-layout { display: grid; grid-template-columns: 218px 1fr; gap: 46px; align-items: start; margin-top: 34px; }
+    @media (max-width: 900px) { .art-layout { grid-template-columns: 1fr; gap: 24px; } }
+
+    .art-toc { position: sticky; top: 22px; }
+    .art-toc h4 { color: #64748b; font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 12px; }
+    .art-toc a {
+      display: block; color: #9aa6b2; text-decoration: none; font-size: .88rem;
+      padding: 5px 0 5px 12px; border-left: 2px solid rgba(255,255,255,.1); transition: all .2s ease;
+    }
+    .art-toc a:hover { color: #ff4db8; border-left-color: #ff4db8; }
+    .art-toc a.sub { padding-left: 24px; font-size: .82rem; color: #7b8794; }
+    @media (max-width: 900px) { .art-toc { display: none; } }
+
+    .art h2 {
+      color: #ffffff; font-size: 1.62rem; margin: 52px 0 16px; padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,77,184,.25); scroll-margin-top: 24px;
+    }
+    .art h3 { color: #ff4db8; font-size: 1.16rem; margin: 34px 0 12px; scroll-margin-top: 24px; }
+    .art h4 { color: #e5e7eb; font-size: 1rem; margin: 26px 0 10px; }
+    .art p { color: #c4ccd6; line-height: 1.85; margin-bottom: 17px; font-size: 1.02rem; }
+    .art .abstract { color: #b6c0cc; font-size: 1.05rem; line-height: 1.9; }
+
+    .art-card {
+      background: rgba(17,24,39,.5); border: 1px solid rgba(255,77,184,.3);
+      border-radius: 16px; padding: 26px 28px; backdrop-filter: blur(8px); margin: 26px 0;
+    }
+    .art-card > h4:first-child { margin-top: 0; }
+
+    /* the three characteristics */
+    .charlist { list-style: none; margin: 6px 0 0; }
+    .charlist li { color: #c4ccd6; line-height: 1.8; margin-bottom: 14px; padding-left: 18px; border-left: 2px solid rgba(22,153,153,.6); }
+    .charlist b { color: #35d6d6; }
+
+    /* ABCD notation grid */
+    .abcd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 14px; margin: 18px 0 4px; }
+    .abcd-item { background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.09); border-radius: 12px; padding: 15px 17px; }
+    .abcd-item .k { color: #ff4db8; font-weight: 700; font-size: 1.25rem; display: block; margin-bottom: 5px; }
+    .abcd-item .v { color: #b6c0cc; font-size: .93rem; line-height: 1.62; }
+
+    /* figures - the "square" background she asked for: dark card, never white */
+    .art-figure {
+      background: rgba(17,24,39,.5); border: 1px solid rgba(255,77,184,.3); border-radius: 18px;
+      padding: 26px 26px 20px; backdrop-filter: blur(8px); margin: 32px 0;
+    }
+    .art-figure img { display: block; width: 100%; height: auto; }
+    .art-figure figcaption { color: #9aa6b2; font-size: .87rem; line-height: 1.75; margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.09); }
+    .art-figure figcaption b { color: #e5e7eb; }
+
+    /* cross-disciplinary case cards */
+    .case { background: rgba(17,24,39,.5); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; padding: 24px 26px; margin: 20px 0; backdrop-filter: blur(8px); transition: border-color .3s ease; }
+    .case:hover { border-color: rgba(255,77,184,.4); }
+    .case .case-top { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+    .case h3 { margin: 0; }
+    .case .tag { color: #35d6d6; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; border: 1px solid rgba(22,153,153,.45); border-radius: 20px; padding: 4px 11px; white-space: nowrap; }
+    .case .src { color: #64748b; font-size: .85rem; margin-bottom: 14px; }
+    .case .three { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.08); }
+    .case .three div { color: #b6c0cc; font-size: .93rem; line-height: 1.72; margin-bottom: 7px; }
+    .case .three span { color: #35d6d6; font-weight: 600; }
+
+    .runbtn {
+      display: inline-block; margin-top: 16px; padding: 9px 19px; border-radius: 9px;
+      background: rgba(255,77,184,.14); border: 1px solid rgba(255,77,184,.5);
+      color: #ff9bd6; text-decoration: none; font-size: .89rem; font-weight: 600; transition: all .25s ease;
+    }
+    .runbtn:hover { background: rgba(255,77,184,.28); color: #ffffff; }
+    .notyet { display: inline-block; margin-top: 16px; color: #64748b; font-size: .86rem; font-style: italic; }
+
+    .verdict { border-left: 3px solid #990f23; background: rgba(153,15,35,.12); border-radius: 0 12px 12px 0; padding: 18px 22px; margin: 24px 0; }
+    .verdict b { color: #ff8fa3; }
+    .verdict p { margin-bottom: 0; color: #d6c2c6; }
+
+    .refs { columns: 2; column-gap: 44px; margin-top: 10px; }
+    @media (max-width: 820px) { .refs { columns: 1; } }
+    .refs p { color: #8f9aa6; font-size: .85rem; line-height: 1.62; margin-bottom: 13px; break-inside: avoid; }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Background -->
+  <div class="animated-background">
+    <div class="wave-container">
+      <svg class="wave wave-teal" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,160 C320,220 420,100 720,160 C1020,220 1120,100 1440,160 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-pink" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,200 C280,260 380,140 680,200 C980,260 1080,140 1440,200 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-wine" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,240 C240,300 340,180 640,240 C940,300 1040,180 1440,240 L1440,320 L0,320 Z"></path>
+      </svg>
+    </div>
+    <div class="particles">
+      <div class="particle particle-teal" style="left: 10%; top: 20%;"></div>
+      <div class="particle particle-pink" style="left: 30%; top: 60%;"></div>
+      <div class="particle particle-wine" style="left: 50%; top: 30%;"></div>
+      <div class="particle particle-teal" style="left: 70%; top: 70%;"></div>
+      <div class="particle particle-pink" style="left: 90%; top: 40%;"></div>
+      <div class="particle particle-wine" style="left: 20%; top: 80%;"></div>
+    </div>
+  </div>
+
+  <div class="art-wrap">
+
+    <div class="art-bar">
+      <a class="art-home" href="../index.html">&larr; PrimingToolbox</a>
+      <span class="art-brand">The ABCD Framework</span>
+    </div>
+
+    <div class="art-head">
+      <h1>A meta-disciplinary definition of priming</h1>
+      <div class="art-sub">Association &middot; Secondariness &middot; Modulation, operationalised through an ABCD notation</div>
+    </div>
+
+    <div class="art-layout">
+
+      <nav class="art-toc">
+        <h4>Contents</h4>
+        <a href="#abstract">Abstract</a>
+        <a href="#s1">1. Introduction</a>
+        <a href="#s2">2. The definition</a>
+        <a href="#s3">3. Case studies</a>
+        <a class="sub" href="#s31">3.1 Semantic</a>
+        <a class="sub" href="#s32">3.2 Affective</a>
+        <a class="sub" href="#s33">3.3 Social</a>
+        <a href="#s4">4. The exception</a>
+        <a href="#s5">5. Cross-disciplinary</a>
+        <a href="#s6">6. Discussion</a>
+        <a href="#limits">Limitations</a>
+        <a href="#refs">References</a>
+      </nav>
+
+      <main class="art">
+
+        <h2 id="abstract">Abstract</h2>
+        <p class="abstract">
+          Priming is a cross-disciplinary phenomenon that refers to the modulation of ongoing processing or
+          behavior by associated information that is not explicitly relevant to the current goal or context.
+          We propose a meta-disciplinary definition and show how it unifies semantic, affective, social,
+          perceptual and cross-modal instances of priming. The core definition is minimal and includes three
+          jointly sufficient characteristics: association, secondariness, and modulation. For assessing the
+          definition, we employ an operational ABCD notation that refers to prime, target, baseline outcome,
+          and measured outcome. Re-examining findings from lexical, affective, and social priming paradigms,
+          we demonstrate the applicability of the framework. As a counter example, analysis of repetition
+          priming clarifies boundary conditions under which the secondariness characteristic fails, and the
+          observed phenomenon cannot be labeled as priming. Analyzing cases from disciplines beyond cognitive
+          psychology, we find that the definition applies to instances of priming studied in social psychology,
+          political science, linguistics, motivational psychology, moral psychology, economics, consumer
+          behavior, and marketing. By providing a precise common language and diagnostic criteria, the
+          framework provides a methodological scaffold that may reduce terminological drift, improve
+          comparability and interpretations in multiple disciplines, and guide future experimental design.
+        </p>
+
+        <h2 id="s1">1. An introduction to priming and semantic priming</h2>
+        <p>
+          The term priming was first introduced conceptually by Lashley (1951), who argued that &ldquo;any theory
+          of grammatical form which ascribes it to direct associative linkage of the words of the sentence
+          overlooks the essential structure of speech&rdquo; (p. 116), proposing instead that behavioral
+          organization depends on &ldquo;generalized schemata of action which determine the sequence of specific
+          acts&rdquo; (p. 122) through &ldquo;preliminary facilitation of patterns of action&rdquo; (p. 128).
+          Lashley coined the term to describe how &ldquo;prior to the internal or overt enunciation of the
+          sentence, an aggregate of word units is partially activated or readied&rdquo; (p. 119), with these
+          elements remaining in &ldquo;a state of partial excitation, held in check by the requirements of
+          grammatical structure&rdquo; (p. 119) rather than being directly expressed. Crucially, he emphasized
+          that &ldquo;the order is imposed by some other agent&rdquo; (p. 116), arguing that syntax is a
+          generalized pattern superimposed on specific acts rather than emerging from direct associative chains.
+        </p>
+        <p>
+          While Lashley provided the theoretical foundation for priming as pre-activation of indirect processing
+          mechanisms, the first clear experimental demonstrations of automatic interference were provided even
+          earlier by Stroop (1935), who showed that the meaning of an irrelevant word automatically slows color
+          naming. Stroop interpreted the effect as associative inhibition, anticipating later conceptions of
+          priming as competition between task-relevant and task-irrelevant activations. The first modern
+          experimental demonstrations explicitly labeled as priming appeared only decades later, when Storms
+          (1958) and Segal and Cofer (1960) showed that initial word presentations increased the likelihood of
+          generating those words later. Meyer and Schvaneveldt (1971) subsequently formalized the semantic
+          priming paradigm using lexical decision, translating Lashley&rsquo;s theoretical insights into
+          quantifiable reaction-time (RT) effects that became foundational for modern priming research.
+        </p>
+        <p>
+          To establish a common ground for a formal definition of the concept of priming, we begin with the
+          semantic priming task of Meyer and Schvaneveldt (1971). In a typical semantic priming experiment,
+          participants see a series of letter strings on a screen (e.g., &ldquo;doctor&rdquo; or
+          &ldquo;doctro&rdquo;), one string at a time, and must rapidly decide whether each string, referred to
+          as a &ldquo;target&rdquo;, constitutes a real word or not. Crucially, before the target appears,
+          another string is briefly presented, referred to as the &ldquo;prime&rdquo;. The &ldquo;priming
+          effect&rdquo; is the following. When the prime is semantically related to the target (e.g.,
+          &ldquo;nurse&rdquo; appearing before &ldquo;doctor&rdquo;), the RT for correct identification of the
+          target as a word is significantly shorter than when the prime is a non-word string (Fig. 1C). On the
+          other hand, longer RTs are observed when the semantic content of the prime is not related to the
+          semantic content of the target (e.g., &ldquo;bread&rdquo; appearing before &ldquo;doctor&rdquo;).
+        </p>
+        <p>
+          In the semantic priming example, a &ldquo;congruent prime&rdquo; refers to a string that is
+          semantically related to the target, leading to a facilitative effect on processing (Meyer and
+          Schvaneveldt, 1971). In contrast, an &ldquo;incongruent prime&rdquo; refers to a prime that is
+          semantically unrelated to the target (e.g., &ldquo;bread&rdquo; and &ldquo;doctor&rdquo;), and a
+          &ldquo;neutral prime&rdquo; is a non-word string. The level of association between the prime and the
+          target serves as an independent variable, a fundamental aspect of the experimental design (Neely,
+          1977). The effect of indirect processing mechanisms on the choices of the participant depends on the
+          association between the prime and the target, and the resulting modulation is measured through a
+          second, dependent variable. In multiple priming paradigms in cognitive psychology, the dependent
+          variable is the reaction time or the accuracy of the choice of the participant (Hutchison, 2003).
+        </p>
+        <p>
+          The semantic priming example provides an accessible entry point into the phenomenon of priming, which
+          has been studied in multiple disciplines including cognitive psychology (Schvaneveldt and Meyer, 1969;
+          Neely, 1977; Schacter, 1987), social psychology (Bargh et al., 1996), political science (Mendelberg,
+          2001), linguistics (Marslen-Wilson, 1987; Zwitserlood, 1994), neuroscience (Henson, 2003; Grill-Spector
+          et al., 2006), and economics (Thaler and Sunstein, 2008). Building on the intuitive semantic priming
+          example, we now propose a formal definition that aims to encompass diverse manifestations of the
+          priming phenomenon as studied across the various disciplines.
+        </p>
+
+        <h2 id="s2">2. Proposed priming definition: three core characteristics</h2>
+        <p>
+          The proposed definition of priming is based on three core characteristics, which serve as a
+          &ldquo;research filter&rdquo;. Together, the three characteristics provide necessary (i.e., minimal)
+          and sufficient conditions for defining the priming phenomenon. The three characteristics of every
+          instance of the priming phenomenon are:
+        </p>
+        <ul class="charlist">
+          <li><b>Association:</b> Involves at least two experiences, prime A, and target B, that may exhibit
+            various levels or signs of association between one another (positive/zero/negative).</li>
+          <li><b>Secondariness:</b> The information provided by the prime A is not explicitly required for the
+            task or goal, and is not needed to establish the baseline outcome C.</li>
+          <li><b>Modulation:</b> The secondary, associated information carried by A induces the measured
+            outcome to be D.</li>
+        </ul>
+        <p style="margin-top:22px;">
+          In the above, we use the ABCD notation as follows. A, the prime, denotes the influencing information.
+          B, the target, denotes the input that is required to be processed. C denotes the expected outcome in
+          the absence of A. Finally, D denotes the measured outcome when A precedes (or co-occurs) with B. This
+          syntax provides a shorthand and a convenient way to design and analyze experiments, occurrences, and
+          other instances.
+        </p>
+
+        <div class="art-card">
+          <h4>Box 1. Mapping the three characteristics of priming to an ABCD notation</h4>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">The prime &mdash; the influencing information.</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">The target &mdash; the input that is required to be processed.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">The expected outcome in the absence of A.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">The measured outcome when A precedes or co-occurs with B.</span></div>
+          </div>
+          <ul class="charlist" style="margin-top:20px;">
+            <li><b>Association:</b> relation between A (prime) and B (target).</li>
+            <li><b>Secondariness:</b> A is not required for establishing C (the baseline measured outcome).</li>
+            <li><b>Modulation:</b> the presence of A alters the measured outcome to be D (as opposed to C).</li>
+          </ul>
+        </div>
+
+        <p>
+          A few remarks are in place. First, the association between A and B may be positive (congruent), null
+          (unrelated), or negative (incongruent). Accordingly, the first (association) and third (modulation)
+          characteristics, as well as their interaction, can be visualized graphically (Fig. 1A). Second, A and
+          B may be experienced simultaneously or sequentially and D may or may not be a measure of C. Third, the
+          A and B components give rise to qualitatively different processes: a primary experience, arising from
+          B and reflecting the current goal or ongoing experience, and a secondary experience, arising from A.
+          The primary experience (arising from B) is accessible to the subject and supports the primary
+          processing stream. The secondary experience (arising from A) is secondary to that primary stream.
+          Finally, the second characteristic (secondariness) may arise from the irrelevance of A to C.
+        </p>
+
+        <figure class="art-figure">
+          <img src="img/fig1_abcd_definition_dark.png"
+               alt="Five panels showing the proposed meta-disciplinary definition of priming: an idealised depiction, semantic priming by error rate and by reaction time, affective priming, and social priming.">
+          <figcaption>
+            <b>Figure 1. The proposed meta-disciplinary definition of priming.</b>
+            (A) An idealized, theoretical depiction of behavioral priming. In the absence of a priming effect,
+            the behavioral measure is expected to follow a horizontal line, since variation of the association
+            level between A and B along this dimension is irrelevant to D.
+            (B) Semantic priming. Lower error rates for determining whether the target string is a word
+            (&ldquo;doctor&rdquo;) or non-word (e.g., &ldquo;doctro&rdquo;) for semantically related pairs
+            (e.g., &ldquo;nurse-doctor&rdquo; pair) compared with semantically unrelated pairs (e.g.,
+            &ldquo;bread-doctor&rdquo;). Relatedness is secondary to the lexical decision regarding the target.
+            Based on n=24 participants (Meyer and Schvaneveldt, 1971).
+            (C) The same semantic priming effect as in B, measured by reaction time (RT) rather than error rate.
+            (D) Affective priming. RT for categorizing the emotional valence (positive or negative) of target
+            words (e.g., &ldquo;joy&rdquo; or &ldquo;pain&rdquo;) is modulated by affectively congruent pairs
+            (e.g., &ldquo;puppy-joy&rdquo;) versus affectively incongruent pairs (e.g., &ldquo;snake-joy&rdquo;).
+            Affective congruence is secondary to the task. Based on n=22 participants (Fazio et al., 1986).
+            (E) Social priming. Exposure to elderly-related primes (e.g., &ldquo;retired&rdquo;) reduces the
+            subsequent walking speed compared with non-elderly primes (e.g., &ldquo;book&rdquo;). The prime
+            content is irrelevant to walking speed. Based on n=34 participants (Bargh et al., 1996).
+          </figcaption>
+        </figure>
+
+        <h2 id="s3">3. Case studies conforming to the proposed priming definition</h2>
+        <p>
+          To demonstrate the robustness and broad applicability of our proposed three-characteristic definition,
+          we now examine several case studies from the field of cognitive psychology. First, we show that our
+          formal definition given in Section 2 indeed applies to the semantic priming effect discussed in
+          Section 1. Second, we explore two additional instances of priming, moving from semi-intuitive to less
+          intuitive but logically consistent cases, and demonstrate that the definition encompasses a wide range
+          of phenomena.
+        </p>
+
+        <h3 id="s31">3.1. Re-examining the classical case: semantic priming</h3>
+        <p>
+          The semantic priming effect (Meyer and Schvaneveldt, 1971) may serve as an initial test bed for
+          assessing our definition. To see this, consider that when a prime, for example &ldquo;nurse&rdquo;,
+          reduces the reaction time required for the recognition of a target, for instance &ldquo;doctor&rdquo;,
+          all three core characteristics are clearly evident:
+        </p>
+        <ul class="charlist">
+          <li><b>Association:</b> The very foundation of the effect rests on the pre-existing, strong semantic
+            association between the prime A and the target B, namely &ldquo;nurse&rdquo; and
+            &ldquo;doctor&rdquo;. The manipulation of this associative strength, namely a prime A related to the
+            target B in congruent cases, as opposed to A unrelated to B in incongruent cases, serves as the
+            independent variable (abscissa in Fig. 1).</li>
+          <li><b>Secondariness:</b> The identity of A, here the prime string (e.g., &ldquo;nurse&rdquo;) is not
+            required for establishing the outcome C, namely for the task of judging whether the target string B
+            (e.g., &ldquo;doctor&rdquo;) is a real word.</li>
+          <li><b>Modulation:</b> The presentation of a prime A may pre-activate related concepts. When the prime
+            A and the target B are associatively linked (Fig. 1BC, right hand), the pre-activated information
+            from A interacts with the processing of B. This causes an association-dependent change of D, the
+            error rate (Fig. 1B) or the RT (Fig. 1C).</li>
+        </ul>
+        <p style="margin-top:20px;">
+          The re-examination of the semantic priming phenomenon underscores how the proposed definition
+          (Section 2) accurately captures the essence of the widely studied priming phenomenon (Section 1).
+        </p>
+        <a class="runbtn" href="../index.html?open=semantic">Run semantic priming on the platform</a>
+
+        <h3 id="s32">3.2. A semi-intuitive example: affective priming</h3>
+        <p>
+          Moving beyond purely semantic relationships, affective priming demonstrates how emotional cues can
+          automatically influence subsequent processing. We focus on affective priming here to expand the
+          discussion to a semi-intuitive yet powerful illustration of the proposed definition (Box 1). A
+          foundational example comes from the study of Fazio et al. (1986), which explored how attitudes are
+          automatically activated.
+        </p>
+        <p>
+          In a typical affective priming paradigm, participants are briefly presented with a prime A, which is
+          an image that may have a positive valence (e.g., &ldquo;puppy&rdquo;) or a negative valence (e.g.,
+          &ldquo;snake&rdquo;). Immediately following the presentation of the prime, the participants are
+          presented with a target B, which is a word that names a specific affect (e.g., &ldquo;joy&rdquo; or
+          &ldquo;pain&rdquo;). The task of the participants is to categorize the emotional valence (positive or
+          negative) of the target B as quickly as possible. The behavioral measure is the RT required before
+          correctly categorizing the valence of the target.
+        </p>
+        <p>
+          When the prime and target are congruent (e.g., &ldquo;puppy-joy&rdquo; or &ldquo;snake-pain&rdquo;
+          pairs), the RT of the participants for correctly categorizing the valence is consistently shorter than
+          the RT preceding the categorization of a target preceded by an incongruent prime (e.g.,
+          &ldquo;puppy-pain&rdquo; or &ldquo;snake-joy&rdquo; pairs). Neutral primes (e.g.,
+          &ldquo;BBBB-joy&rdquo; or &ldquo;BBBB-snake&rdquo;) are associated with intermediate RTs. These
+          findings demonstrate that attitudes toward an object are automatically activated upon exposure,
+          influencing subsequent judgments and behavior.
+        </p>
+        <ul class="charlist">
+          <li><b>Association:</b> An inherent emotional association exists between the prime A (e.g.,
+            &ldquo;snake&rdquo; or &ldquo;puppy&rdquo;) and the valence of the target B (e.g.,
+            &ldquo;joy&rdquo;). The manipulation lies in the association, namely the incongruency or the
+            congruency, between the emotional valences of A and B (Fig. 1D, abscissa).</li>
+          <li><b>Secondariness:</b> The emotional content of A, the prime image (e.g., the
+            &ldquo;puppy&rdquo;) is not required for the specific task of categorizing the valence of B, the
+            target word.</li>
+          <li><b>Modulation:</b> The prime A may automatically and involuntarily activate an associated
+            affective state, possibly operating through automatic indirect processing mechanisms. When the
+            valence of the prime A is congruent with the valence of the target B (e.g., &ldquo;puppy-joy&rdquo;
+            pair), the pre-activated affective state facilitates processing, shortening RT (from C to
+            D<sub>congruent</sub>; Fig. 1D). Conversely, incongruent prime-target pairs (e.g.,
+            &ldquo;puppy-pain&rdquo;) create an opposite modulation, resulting in measurable RT lengthening
+            (D<sub>incongruent</sub>; Fig. 1D).</li>
+        </ul>
+        <p style="margin-top:20px;">
+          The affective priming paradigm of Fazio et al. (1986) shows how emotional primes influence the
+          evaluation of subsequent affective targets. It illustrates the three core characteristics of priming:
+          (i) the association between prime and target valences (e.g., &ldquo;puppy&ndash;joy&rdquo; vs.
+          &ldquo;snake&ndash;joy&rdquo;); (ii) the secondariness of the prime to the explicit task of
+          categorizing the valence of the target; and (iii) the modulation of performance, with RTs being
+          shorter for congruent pairs and longer for incongruent pairs (Fig. 1D). This example highlights how
+          the definition of priming extends beyond semantic associations (Section 3.1) to the affective domain.
+        </p>
+        <a class="runbtn" href="../index.html?open=affective">Run affective priming on the platform</a>
+
+        <h3 id="s33">3.3. A less intuitive example: social priming</h3>
+        <p>
+          To showcase the reach of the proposed definition into domains beyond &ldquo;standard&rdquo; cognitive
+          tasks, we consider social priming. Studies by Bargh and colleagues (Bargh et al., 1996, 1999) revealed
+          how subtle, often subliminal, environmental cues can influence complex social behaviors. In a classic
+          social priming study (Bargh et al., 1996), participants were exposed to words related to the stereotype
+          of &ldquo;elderly&rdquo; (e.g., &ldquo;Florida&rdquo;, &ldquo;bingo&rdquo;, &ldquo;grey&rdquo;, or
+          &ldquo;retired&rdquo;) or to neutral words (e.g., &ldquo;lamp&rdquo;, &ldquo;desk&rdquo;, or
+          &ldquo;book&rdquo;) while performing a scrambled-sentence task. In this task, participants were
+          required to form grammatically correct sentences from sets of presented words, where a given set
+          contained either the stereotype-related terms, or only neutral terms. Crucially, the participants were
+          not informed that some of the words might have been related to the &ldquo;elderly&rdquo; stereotype.
+          Afterwards, the walking speed down the hallway was unobtrusively measured to assess the priming
+          effect. The researchers found that subjects exposed to words congruent with the elderly stereotype
+          walked more slowly upon leaving the experiment room, compared with those exposed to neutral words.
+        </p>
+        <p>
+          Within the present framework (Box 1), A refers to the prime words, either stereotype-activating or
+          neutral (the latter serving as a control prime). B refers to the activated &ldquo;elderly&rdquo;
+          stereotype, which was never explicitly mentioned in the task. C denotes the typical walking speed
+          after being exposed to neutral primes, and D denotes the walking speed that follows exposure to
+          elderly-related primes, which are congruent with the stereotype. As shown below, both association and
+          modulation are present, and secondariness holds because prime content was not required &ndash; neither
+          for the sentence task, nor for the instruction to walk. Note that although the paradigm lacked an
+          incongruent condition (e.g., prime words associated with a &ldquo;youth&rdquo; stereotype), all three
+          characteristics are satisfied:
+        </p>
+        <ul class="charlist">
+          <li><b>Association:</b> An associative link exists between the prime words A (e.g.,
+            &ldquo;Florida&rdquo; or &ldquo;bingo&rdquo;) and the (unmentioned) target stereotype of
+            &ldquo;elderly&rdquo; B. In contrast, neutral prime words (e.g., &ldquo;lamp&rdquo; or
+            &ldquo;book&rdquo;) lack such an association with B. This distinction between stereotype-activating
+            and neutral primes defines the varying levels of initial association (Fig. 1E).</li>
+          <li><b>Secondariness:</b> The prime words A are not required for the scrambled-sentence task posed to
+            the participants.</li>
+          <li><b>Modulation:</b> The activated stereotype, namely the &ldquo;elderly&rdquo; target B, interacts
+            with the typical walking behavior of the participants. This results in a measurable modulation:
+            walking speed decreased after exposure to stereotype-related primes (D<sub>congruent</sub>),
+            compared with the baseline walking speed following neutral primes (C).</li>
+        </ul>
+        <p style="margin-top:20px;">
+          This situation demonstrates how exposure to irrelevant primes alters the ongoing experience of the
+          subjects. We note that in the experiment of Bargh and colleagues (1996) there were two types of prime
+          A: neutral and congruent (elderly-related) words, but in contrast to the previous examples (Sections
+          3.1, 3.2) there was no &ldquo;incongruent&rdquo; condition (compare Fig. 1A with Fig. 1E).
+          Furthermore, there was only one target B, namely the elderly stereotype. Thus, the two types of A were
+          either stereotype-activating or not. Nevertheless, the formal three-characteristic definition
+          (Section 2, Box 1) applies to the social priming example as well.
+        </p>
+        <a class="runbtn" href="../index.html?open=social">Run social priming on the platform</a>
+
+        <h2 id="s4">4. Exceptions: repetition priming and repetition suppression</h2>
+        <p>
+          In the priming paradigms discussed up to this point, the two stimuli A and B were distinct, allowing
+          to identify which element has primary relevance to the task (B) and which is secondary (A). However,
+          when the prime and target are identical, a distinction between A and B no longer exists, except for
+          their chronological ordering. Stated differently, repetition of the same stimulus conflates
+          task-relevant and task-irrelevant elements, obscuring whether an irrelevant influence can be isolated.
+        </p>
+        <p>
+          Repetition priming (RP; Schacter, 1987; Tulving and Schacter, 1990) is a phenomenon in which the exact
+          same stimulus is repeated. In an early study, Scarborough and colleagues (Scarborough et al., 1977)
+          required participants to perform a lexical discrimination task on four-letter strings, and to decide
+          whether the presented string is a word (e.g., &ldquo;fist&rdquo; or &ldquo;tree&rdquo;) or a non-word
+          (e.g., &ldquo;pode&rdquo; or &ldquo;mure&rdquo;). When two identical words were presented
+          sequentially, separated by a varying number of other trials, the researchers found that RTs decreased
+          from approximately 600 ms on the first presentation to 520 ms on the second presentation, representing
+          80 ms facilitation (Fig. 2B). However, when the second word was distinct from the first, RTs remained
+          at baseline (600 ms for both presentations). A similar result was observed for strings without a
+          semantic value, namely for sequentially-presented identical non-word strings, where the RT shortened
+          by about 100 ms, from 720 ms in the first presentation to 620 ms in the second. This phenomenon is
+          referred to as RP.
+        </p>
+        <p>
+          When prime and target are identical, the distinction between A and B no longer exists except for their
+          chronological ordering. This is not A followed by B, but rather B given twice (e.g.,
+          &ldquo;fist&rdquo; presented twice). The fact that the subject is instructed to respond to each
+          presentation separately makes the first stimulus (A) of primary importance for the response to that
+          first stimulus. Thus, although A is clearly of secondary relevance for the response to the second
+          stimulus (B), A has already been processed as having a primary relevance. Therefore, in RP, the
+          secondariness characteristic does not apply.
+        </p>
+        <p>
+          The behavioral improvement in &ldquo;congruent&rdquo; (i.e., identical) trials during RP paradigms is
+          accompanied by a phenomenon referred to as repetition suppression (RS), a reduction in neural activity
+          following repeated exposure to a stimulus (Desimone, 1996; McMahon and Olson, 2007). McMahon and Olson
+          (2007) conducted a visual discrimination task which replicated key features of the Scarborough task,
+          with two awake behaving monkeys. The subjects were shown a visual stimulus that was either symmetric
+          or not, and required to saccade in a direction that depended on the features of the presented stimulus
+          (Fig. 2A). The RT was approximately 324 ms, but when the same stimulus was repeated, the RT was
+          approximately 308 ms, representing a priming effect of about 16 ms faster. Simultaneously, the authors
+          recorded from 152 neurons in inferotemporal cortex and found that the same stimulus set produced RS.
+          Specifically, the mean firing rates (computed in an adjustable window that started 80 ms after
+          stimulus onset and ended with the saccade onset) decreasing by approximately 2 spikes/s. Control
+          trials, where different stimuli were presented in sequence, did not produce these effects. Importantly,
+          the magnitudes of the behavioral and neuronal suppression were not correlated across trials,
+          suggesting that while the two phenomena co-occur, RS does not cause RP.
+        </p>
+
+        <figure class="art-figure">
+          <img src="img/fig2_repetition_progression_dark.png"
+               alt="Three panels showing the progression from repetition suppression, through repetition priming, to associative priming.">
+          <figcaption>
+            <b>Figure 2. Progression of complexity: from repetition to associative priming.</b>
+            (A) Repetition suppression (RS). Neural responses decline across repeated presentations of identical
+            visual stimuli in inferotemporal cortex of rhesus monkeys during passive fixation, demonstrating a
+            ~50% reduction typical of RS (Miller et al., 1991). When different visual stimuli are presented in
+            sequence, firing rates remain similar (~35 spikes/s for both presentations). No behavioral task is
+            performed during stimulus viewing, precluding assessment of secondariness and behavioral modulation.
+            Thus, in RS, only association is met.
+            (B) Repetition priming (RP). Subjects are presented with a sequence of four-letter strings and are
+            required to determine whether each string is a word or a non-word (Scarborough et al., 1977). When
+            two different word stimuli (low association) are presented in sequence, RTs remain approximately
+            600 ms for both presentations. When the same word stimulus is repeated (maximal association),
+            behavioral facilitation of 80 ms occurs. RP exhibits association and modulation, but secondariness
+            does not hold since the first stimulus is primary for its own response and therefore not secondary
+            any longer. This creates a pre-activation of direct, as opposed to indirect, processing. Thus, in
+            RP, both association and modulation are met, but secondariness is not met.
+            (C) Other types of priming, e.g., semantic priming. All three characteristics are met: association,
+            secondariness, and modulation.
+          </figcaption>
+        </figure>
+
+        <p>
+          The relationship between the observed decrease in neural activity (during RS) and the behavioral
+          facilitation (during RP) constitutes a longstanding puzzle in the literature (Gotts et al., 2012).
+          While solving this puzzle requires further empirical investigation, our definition (Box 1) may help
+          clarifying whether either RP or RS should be classified as priming phenomena. For that, we evaluate RP
+          and RS using the priming definition:
+        </p>
+        <ul class="charlist">
+          <li><b>Association:</b> In congruent trials of both RP and RS, consecutive stimuli A and B are
+            identical. This yields a maximal associative link between A and B. Therefore, the association
+            characteristic is trivially satisfied in both cases.</li>
+          <li><b>Secondariness:</b> In RP, the &ldquo;prime&rdquo; and &ldquo;target&rdquo; are two identical
+            stimuli (e.g., &ldquo;fist&rdquo; presented twice). Because an action is carried out following the
+            first appearance, the prime A becomes primary (for the response to A), even though it is technically
+            secondary (for the response to B). Stated differently, in RP, the first appearance of the stimulus
+            creates a pre-activation of direct, instead of indirect processing pathways.</li>
+          <li><b>Modulation:</b> In RS, the absence of behavioral measures precludes any assessment of
+            modulation at the behavioral level, and therefore the modulation characteristic does not apply. In
+            RP, behavioral modulation is observed upon repeated exposure.</li>
+        </ul>
+
+        <div class="verdict">
+          <p>
+            <b>Neither RP nor RS qualify as instances of priming.</b> RS lacks a behavioral task, and hence the
+            C/D elements are absent. As a result, the secondariness and modulation characteristics do not apply.
+            This analysis clarifies RP and RS as conceptual boundary cases, demonstrating how the proposed
+            definition may serve as a diagnostic tool for distinguishing true priming phenomena from
+            superficially similar effects. The progression from RS, via RP, to semantic priming illustrates
+            increasing conformity with the meta-disciplinary definition of priming. RS (Fig. 2A) exhibits only
+            association; RP (Fig. 2B) adds modulation by introducing a behavioral task; and semantic priming
+            (Fig. 2C) achieves &ldquo;full priming status&rdquo; by adding secondariness through distinct prime
+            and target stimuli. Fig. 2C intentionally reproduces Figure 1C to illustrate the endpoint of the
+            RS &rarr; RP &rarr; semantic priming progression.
+          </p>
+        </div>
+        <a class="runbtn" href="../index.html?open=repetition">Run repetition priming &mdash; the counter-example</a>
+
+        <h2 id="s5">5. Cross-disciplinary priming</h2>
+        <p>
+          Apart from studies in cognitive psychology (Sections 3&ndash;4), work in multiple human-related
+          disciplines have independently used the term priming to describe behavioral phenomena that were never
+          formally unified under a single definition. We observe that, with the exceptions described in Section
+          4, every phenomenon labeled priming in the literature satisfies the same three characteristics
+          formally identified in our definition (Box 1). This includes studies in linguistics, motivation
+          science, moral psychology, economics, education, political communication, and everyday behavior. Here,
+          we briefly analyze seven cases that are explicitly named priming in the literature.
+        </p>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s51">5.1. Syntactic priming</h3><span class="tag">Psycholinguistics</span></div>
+          <div class="src">Bock (1986); Pickering and Ferreira (2008)</div>
+          <p>
+            In psycholinguistics, exposure to a syntactic structure increases the likelihood that speakers later
+            use the same structure. This phenomenon has come to be known as structural or &ldquo;syntactic
+            priming&rdquo;. For example, Bock (1986) asked participants to describe pictures immediately after
+            hearing sentences in either active or passive voice. Even though the prime sentence was unrelated to
+            the content of the picture, participants systematically reused the primed syntactic form. The design
+            captures the full priming structure: activation of syntactic associations, secondariness of the
+            prime relative to message content, and modulation of the structure-selection probability.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Hearing a prime sentence in either active or passive voice.</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Producing a description of an unrelated picture.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline: participants spontaneously use active/passive forms according to natural distribution (mostly active).</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">After priming: participants reproduce the syntactic structure of the prime (active &rarr; active; passive &rarr; passive) at a significantly higher rate.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> The prime structure activates stored grammatical representations.</div>
+            <div><span>Secondariness:</span> The structure is not required for producing the target sentence; it is secondary to semantic content.</div>
+            <div><span>Modulation:</span> The prime shifts the probability of selecting that structure.</div>
+          </div>
+          <a class="runbtn" href="../index.html?open=syntactic">Run this experiment</a>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s52">5.2. Goal priming</h3><span class="tag">Motivational psychology</span></div>
+          <div class="src">Bargh and Gollwitzer (1994); Shah and Kruglanski (2003)</div>
+          <p>
+            Motivational psychology has demonstrated that achievement-related cues (e.g., &ldquo;win&rdquo;,
+            &ldquo;compete&rdquo;, and &ldquo;succeed&rdquo;) can activate goals without explicit instructions.
+            These effects are discussed in the literature on &ldquo;goal priming&rdquo; and priming of goals. For
+            example, Bargh and Gollwitzer (1994) embedded achievement words within a scrambled-sentence task.
+            Participants later performed word-search puzzles. Despite no change to incentives or task rules,
+            exposure to achievement cues reliably increased persistence. Specifically, participants found more
+            words and continued working longer after being signaled to stop.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Exposure to achievement-related words embedded in a scrambled-sentence task (e.g., &ldquo;strive&rdquo;, &ldquo;win&rdquo;).</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Performance on an unrelated problem-solving task.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline: participants persist for a shorter time and show lower accuracy on the task.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">After priming: participants persist longer, attempt more solutions, and achieve higher accuracy.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Achievement cues activate goal-related representations.</div>
+            <div><span>Secondariness:</span> The cues do not modify incentives or task rules and are therefore secondary.</div>
+            <div><span>Modulation:</span> The cues alter persistence, accuracy, and performance.</div>
+          </div>
+          <a class="runbtn" href="../index.html?open=goal">Run this experiment</a>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s53">5.3. Moral priming</h3><span class="tag">Moral psychology</span></div>
+          <div class="src">Shao et al. (2008); Aquino et al. (2009)</div>
+          <p>
+            Studies in moral psychology show that exposure to moral concepts can modulate ethical decisions.
+            These effects are discussed under the label &ldquo;moral priming&rdquo; in work on moral identity
+            and behavior. For example, Aquino et al. (2009) implemented a moral manipulation by asking
+            participants to recall and list moral rules, drawing on the Ten Commandments, before making
+            decisions in ethically relevant tasks. The moral reminder was not part of the requirements of the
+            task, but nevertheless increased the accessibility of moral identity and shifted moral intentions
+            and behaviors.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Recalling and listing moral rules (e.g., Ten Commandments).</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Making decisions in ethically relevant tasks.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline: weaker activation of moral identity; lower levels of prosocial or ethical behavioral intentions.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">After priming: stronger activation of moral identity; increased prosocial or ethical choices.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Moral words activate moral identity schemas.</div>
+            <div><span>Secondariness:</span> Moral cues are irrelevant to the normative structure of the task.</div>
+            <div><span>Modulation:</span> Decision tendencies shift toward prosocial options.</div>
+          </div>
+          <a class="runbtn" href="../index.html?open=moral">Run this experiment</a>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s54">5.4. Money priming</h3><span class="tag">Economics</span></div>
+          <div class="src">Vohs et al. (2006); Caruso et al. (2017)</div>
+          <p>
+            A central and well-established example of &ldquo;money priming&rdquo; comes from the economics
+            literature. This line of work shows that subtle financial cues can shift economic and interpersonal
+            decisions even when the cues are irrelevant to the task at hand. Cues may consist of images of
+            currency, words related to income, or desk screensavers showing money. For example, Vohs et al.
+            (2006) demonstrated that participants subtly exposed to money-related cues consisting of
+            scrambled-sentence tasks containing financial terms or visual images of currency, behaved more
+            self-sufficiently in subsequent, unrelated tasks. Although the money cue played no role in the target
+            tasks, it reliably modulated behavior: participants preferred to work alone, maintained greater
+            interpersonal distance, sought less help, and offered less help to others.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Exposure to money-related cues (e.g., images of currency or scrambled sentences containing financial words).</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Economic and interpersonal behavior (help-seeking, helping, interpersonal distance, preference for solo vs. joint work).</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline behavior in the control condition: participants sought more help, offered more help, stood closer to others, and preferred joint work.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">Behavior after money priming: participants sought less help, offered less help, maintained greater interpersonal distance, and preferred to work alone.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Money-related cues activate schemas of independence, exchange, and self-sufficiency.</div>
+            <div><span>Secondariness:</span> The cues are irrelevant to the instructions, goals, or rules of the target task.</div>
+            <div><span>Modulation:</span> Economic and interpersonal decisions shift systematically following exposure to the cue.</div>
+          </div>
+          <a class="runbtn" href="../index.html?open=money">Run this experiment</a>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s55">5.5. Racial priming</h3><span class="tag">Political science</span></div>
+          <div class="src">Mendelberg (2001); Hurwitz and Peffley (1997)</div>
+          <p>
+            Political science has extensively documented &ldquo;racial priming&rdquo;, in which implicit racial
+            cues embedded in campaign messages shift evaluations of candidates. An example is given by analyzing
+            the &ldquo;Willie Horton&rdquo; advertisement (Mendelberg, 2001), which demonstrated that a
+            criminal-justice message paired with an implicit racial cue shifted public evaluation of potential
+            candidates. However, the shift occurred only when the cue remained implicit: once the racial strategy
+            became explicit, the effect vanished.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Implicit racial cue embedded in a political message (e.g., the Willie Horton imagery).</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Evaluation of a political candidate or policy.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline: evaluations reflect policy preferences without strong racial activation.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">After priming: evaluations shift in a racially patterned direction only when the cue is implicit (effect disappears when cue becomes explicit).</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Racial cues activate associations with threat or trustworthiness.</div>
+            <div><span>Secondariness:</span> Race is not part of the stated policy argument.</div>
+            <div><span>Modulation:</span> Opinion shifts occur reliably when cues are implicit.</div>
+          </div>
+          <span class="notyet">Not implemented on the platform &mdash; the paradigm requires broadcast video advertisements.</span>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s56">5.6. Naturalistic priming</h3><span class="tag">Consumer behavior</span></div>
+          <div class="src">Dijksterhuis (2016); Minton et al. (2017)</div>
+          <p>
+            Certain real-world behaviors have been described as &ldquo;priming in naturalistic settings&rdquo;,
+            where contextual background cues shift spontaneous choices. In consumer behavior and multisensory
+            design research, the term priming is used when contextual visual or auditory cues bias expectations
+            and judgments about products without altering the products themselves. Dijksterhuis (2016) reviews
+            experiments in which ambient visual or auditory cues are presented before tasting or choosing a
+            product. The cues, that include packaging color, contextual lighting, or background soundscapes, do
+            not change the physical properties of the product. Nevertheless, the cues systematically bias
+            perceived flavor intensity, quality, or preference.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Exposure to an ambient sensory cue before tasting (e.g., packaging color, contextual lighting, or background soundscape).</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">Tasting the product and forming a perceptual judgment of its flavor or quality.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">The baseline flavor rating or preference when the product is evaluated without any sensory cue.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">The altered flavor rating or preference following exposure to the sensory cue.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Ambient visual or auditory cues activate stored associations about product quality, category, or flavor expectations.</div>
+            <div><span>Secondariness:</span> These cues are not part of the product&rsquo;s physical composition and are irrelevant to its intrinsic qualities.</div>
+            <div><span>Modulation:</span> Choice probabilities and flavor judgments shift relative to baseline.</div>
+          </div>
+          <span class="notyet">Not implemented on the platform &mdash; the target task requires physically tasting a product.</span>
+        </div>
+
+        <div class="case">
+          <div class="case-top"><h3 id="s57">5.7. Advertising priming</h3><span class="tag">Marketing</span></div>
+          <div class="src">Ferraro et al. (2009); Lee and Labroo (2004)</div>
+          <p>
+            We conclude by discussing research on consumer behavior, which documented that incidental brand
+            exposure can influence product choice through priming mechanisms. For quantification, Ferraro et al.
+            (2009) examined how brief, incidental exposures to other consumers using a product of a certain brand
+            affected the own choices of the observers to brands. Participants viewed 20 photographs (2 s each) of
+            people engaged in everyday activities (e.g., sitting on a bench or having lunch), with
+            &ldquo;Dasani&rdquo; bottled water visible near the focal person in zero, four, or 12 of the photos.
+            The brand was not the focal point of the images, and participants were instructed to focus on facial
+            expressions. After viewing the photos, participants were required to select bottled water of one of
+            four brands. For participants unaware of the brand exposure, choice of the &ldquo;Dasani&rdquo; brand
+            increased from 17% in the zero-exposure condition, to 22% with four exposures, and to 40% with 12
+            exposures. The authors attributed this pattern to perceptual fluency, whereby repeated exposure
+            increases the ease of processing a brand. This interpretation was supported by findings that the
+            effect disappeared when participants could attribute experienced fluency to background music and that
+            excessive exposure led to saturation effects.
+          </p>
+          <div class="abcd-grid">
+            <div class="abcd-item"><span class="k">A</span><span class="v">Photographs showing people in everyday activities with a Dasani water bottle visible.</span></div>
+            <div class="abcd-item"><span class="k">B</span><span class="v">A brand logo from four simultaneously displayed bottled water brand options.</span></div>
+            <div class="abcd-item"><span class="k">C</span><span class="v">Baseline brand selection rate without prior exposure.</span></div>
+            <div class="abcd-item"><span class="k">D</span><span class="v">Measured brand selection rate after incidental exposure to the prime.</span></div>
+          </div>
+          <div class="three">
+            <div><span>Association:</span> Incidental brand exposure activates brand representations in memory through repeated perceptual processing.</div>
+            <div><span>Secondariness:</span> The brand information is secondary (irrelevant) to the explicit photo-viewing task of evaluating facial expressions in photographs.</div>
+            <div><span>Modulation:</span> Frequency of brand exposure shifts subsequent brand choice probabilities in the absence of conscious awareness.</div>
+          </div>
+          <a class="runbtn" href="../index.html?open=advertising">Run this experiment</a>
+        </div>
+
+        <p style="margin-top:26px;">
+          To summarize, the ABCD notation and the three-characteristic definition developed based on semantic
+          priming (Sections 1&ndash;2) readily applies to priming as studied in cognitive psychology (Section 3)
+          and to priming instances studied in multiple other disciplines (Section 5). In each and every case, the
+          ABCD notation holds and the three characteristics apply. This convergence suggests that these
+          components and characteristics guide the use of the term priming across disciplines.
+        </p>
+
+        <h2 id="s6">6. Discussion</h2>
+        <p>
+          We proposed a meta-disciplinary definition of priming based on three jointly sufficient
+          characteristics, association, secondariness, and modulation, operationalized through an ABCD notation.
+          In this framework, A (the prime) denotes influencing information, B (target) represents the input
+          requiring processing, C (baseline outcome) reflects performance without the prime, and D (measured
+          outcome) captures performance when A precedes or co-occurs with B. This formalization unifies diverse
+          instances of the priming phenomenon as studied within the field of cognitive psychology. In semantic
+          priming (Meyer and Schvaneveldt, 1971), the prime &ldquo;nurse&rdquo; (A) and target
+          &ldquo;doctor&rdquo; (B) exhibit strong semantic relation (association); A is unnecessary for the
+          lexical decision task (secondariness), yet facilitates reaction time (modulation). In affective priming
+          (Fazio et al., 1986), the emotional valence is shared between prime and target (association), with A
+          being irrelevant to valence categorization of B (secondariness), yet modulating response latency
+          (modulation). In social priming (Bargh et al., 1996), elderly-related words (A) and the elderly
+          stereotype (B) are linked (association), with A being unnecessary for the sentence task or walking
+          instruction (secondariness), yet producing changes of gait speed (modulation). Thus, the ABCD framework
+          provides a common analytical language transcending specific priming paradigms.
+        </p>
+
+        <h3>Comparison with existing definitions of priming</h3>
+        <p>
+          Our framework builds upon and extends influential prior conceptualizations of priming. The seminal
+          characterization of priming by Tulving and Schacter (1990) emphasized dissociations from episodic and
+          semantic memory, demonstrating that priming operates at a pre-semantic level, shows stochastic
+          independence from explicit memory, and remains intact in amnesia (Warrington and Weiskrantz, 1974;
+          Graf et al., 1984). Their evidence that access to primed information is highly specific, showing zero
+          correlation between successive tests with different cues directed at the same targets, supports our
+          modulation characteristic. Our ABCD notation provides operational criteria that complement their
+          theoretical framework and extend applicability across paradigms and modalities.
+        </p>
+        <p>
+          Two prominent frameworks contributed to our understanding of priming. Schacter (1987) characterized
+          priming as &ldquo;a nonconscious form of human memory, which is concerned with perceptual
+          identification of words and objects&rdquo;, providing a theoretical foundation for understanding
+          implicit memory. Dehaene et al. (1998) used neuroimaging to demonstrate that masked primes below
+          awareness threshold can activate semantic networks, revealing important neural mechanisms of
+          unconscious processing. These studies are instrumental in establishing priming as a distinct memory
+          phenomenon.
+        </p>
+        <p>
+          Our framework complements and extends these approaches in several ways. First, regarding
+          consciousness, while Schacter (1987) and Dehaene et al. (1998) emphasized nonconscious processing,
+          which indeed occurs in many paradigms, the foundational semantic priming study (Meyer and Schvaneveldt,
+          1971) employed fully visible, easily perceivable prime stimuli presented for 1000&ndash;2000 ms.
+          Similarly, affective priming (Fazio et al., 1986) used clearly visible prime images, and social priming
+          studies (Bargh et al., 1996) required participants to actively process prime words. In fact, the
+          conscious awareness of primes has been characteristic of priming research from the inception of the
+          paradigm (Neely, 1977; Hutchison, 2003). Our framework encompasses both conscious and unconscious
+          priming by recognizing that what distinguishes priming is not whether the prime is unconscious, but
+          rather that its influence operates through indirect processing mechanisms. In priming, participants are
+          not aware that the prime is modulating their performance on the target task, even when they are fully
+          aware of the prime itself (Jacoby, 1991; Bargh and Chartrand, 1999). The secondariness characteristic
+          captures this implicit influence more generally than by invoking un/consciousness.
+        </p>
+        <p>
+          Second, the prior focus on perceptual identification (Schacter, 1987) and on investigating semantic
+          word processing (Dehaene et al., 1998) is appropriate for specific research domains. In contrast, our
+          framework demonstrates that priming extends more broadly to affective judgments (Fazio et al., 1986),
+          and social behavior (Bargh et al., 1996; Mendelberg, 2001).
+        </p>
+        <p>
+          Third, our analysis of repetition priming as a boundary case offers additional precision beyond earlier
+          frameworks. When A and B are identical, A becomes primary for its own response, violating
+          secondariness, even though association (maximal) and modulation are present (Scarborough et al., 1977).
+          Thus, not every phenomenon referred to priming in the literature is indeed priming.
+        </p>
+
+        <h3>Contributions to cognitive research</h3>
+        <p>
+          The proposed definition offers several advantages. First, it provides diagnostic criteria for
+          distinguishing genuine priming from superficially similar phenomena. The three-characteristic framework
+          enables systematic comparison across paradigms by mapping studies onto ABCD notation, transforming
+          apparent failures to replicate into opportunities to identify boundary conditions. Second, the emphasis
+          on association as a continuous variable encourages investigation of parametric effects (Neely, 1977;
+          Collins and Loftus, 1975), moving beyond categorical contrasts to examine association-modulation
+          functions. Third, the framework clarifies the role of awareness: A need not be consciously processed
+          for its task relevance, but subjects may be aware of A itself, resolving debates about whether
+          awareness abolishes priming (Jacoby, 1991).
+        </p>
+
+        <h3>Contributions to other disciplines</h3>
+        <p>
+          Beyond cognitive psychology, the framework has implications for social psychology, which has faced
+          reproducibility challenges (Bargh and Chartrand, 1999). Our definition clearly applies (Section 5) to
+          priming as studied in fields other than cognitive psychology, including psycholinguistics (syntactic
+          priming; Bock, 1986), motivational psychology (goal priming; Bargh and Gollwitzer, 1994), and moral
+          psychology (moral priming; Aquino et al., 2009). Furthermore, the definition applies to priming as
+          studied in other disciplines, including economy (money priming; Vohs et al., 2006), political science
+          (racial priming; Mendelberg, 2001), and consumer behavior (naturalistic priming; Dijksterhuis, 2016;
+          and advertising priming; Ferraro et al., 2009).
+        </p>
+        <p>
+          The cross-disciplinary applicability of the proposed definition suggests that the framework can
+          directly improve priming research in other fields. In psycholinguistics, it clarifies which effects
+          count as genuine syntactic priming by requiring pre-existing structural associations and excluding
+          learning-during-task. In political science, it separates racial priming from mere persuasion by
+          demanding that the racial cue be formally irrelevant to the decision yet still influence it through
+          stored associations. In economics, it distinguishes true &ldquo;money priming&rdquo; from shifts in
+          explicit beliefs by requiring that the money cue be irrelevant to the economic choice while still
+          modulating behavior through associative conflict. Beyond sharpening operational definitions, the
+          proposed framework makes these domains accessible to mechanistic neuroscience research: once adequate
+          measurement tools are employed, the association vs. secondariness conflict architecture may be mapped
+          onto common neural mechanisms.
+        </p>
+
+        <h3>Implicit short-term memory and priming</h3>
+        <p>
+          Classical models distinguish between memory along multiple axes (Atkinson and Shiffrin, 1968; Baddeley
+          and Hitch, 1974; Squire, 1987; Kandel et al., 2021). One division is along the temporal axis,
+          differentiating between sensory memory (a fraction of a second), short term memory (seconds),
+          intermediate term memory (seconds to minutes), and long-term memory (hours to lifetime). Along the
+          functional axis, working memory refers to operations within a given task, whereas reference memory
+          refers to operations between trials (Olton et al., 1979). Long-term memory is functionally subdivided
+          into explicit (declarative, i.e., episodic and semantic) and implicit (non-declarative, i.e.,
+          procedural, associative, and non-associative) systems (Tulving, 1972; Cohen and Squire, 1980; Squire,
+          1987). Classically, priming has been included as a fourth subset of implicit long-term memory (Kandel
+          et al., 2021). Indeed, classical paradigms have studied priming over the long-term (persistence over
+          days or weeks; Jacoby and Dallas, 1981; Graf and Schacter, 1987), and long-term priming conforms to our
+          definition.
+        </p>
+        <p>
+          Our analysis suggests that short-term priming may reflect implicit short-term memory operations,
+          transient modulation of processing systems operating independently of conscious recollection. This
+          characterization predicts that implicit short-term memory should exhibit temporal dynamics distinct
+          from both working memory (which requires rehearsal; Baddeley and Hitch, 1974) and procedural learning
+          (which shows gradual acquisition; Cohen and Squire, 1980). Specifically, priming should show rapid
+          formation without rehearsal, decay functions different from working memory&rsquo;s susceptibility to
+          interference (Jonides et al., 2008), and faster time courses than procedural learning. The new
+          definition provides, for the first time, operational tools to systematically investigate this
+          long-neglected memory domain. Since short-term priming also conforms to our definition, the discussion
+          suggests that implicit short-term memory and long-term priming are both instances of priming, filling a
+          fundamental gap in our understanding memory architecture.
+        </p>
+
+        <h3>Neural correlates of priming</h3>
+        <p>
+          The ABCD notation enables development of new paradigms to search for neural correlates of implicit
+          short-term memory by systematically varying the temporal interval between A and B while measuring both
+          behavioral modulation (D versus C) and neural activity. Specific predictions emerge. First, neuronal
+          activity will reveal rapid changes in stimulus-evoked responses when B follows A. Second, neuronal
+          changes may correlate with behavioral facilitation but not with explicit memory for A. And third,
+          disruption of the neuronal activity patterns will impair priming behavior, while sparing working and
+          long-term memory.
+        </p>
+        <p>
+          Critically, the framework enables investigation of priming in animal models, particularly rodents,
+          which allow measurements impossible in human subjects. Recent work has demonstrated short-term auditory
+          priming in freely-moving mice (Sivroni et al., 2023), an approach enabled by the ABCD framework. During
+          the same time, high-resolution electrophysiological recordings were conducted. The combination of an
+          animal behavioral task with multiple single-neuron and local circuit measurements goes beyond the
+          resolution of human neuroimaging techniques such as fMRI or EEG. The combined approach may enable a
+          direct test of the abovementioned neural predictions, bridging behavioral phenomena and cellular
+          mechanisms of implicit short-term memory at a level of detail previously inaccessible.
+        </p>
+
+        <h2 id="limits">Limitations</h2>
+        <p>
+          While the three-characteristic framework provides conceptual clarity and diagnostic power, it also has
+          limitations. First, the ABCD notation requires clear identification of the prime and target components,
+          which may be ambiguous in highly naturalistic or reciprocal social interactions. Second, secondariness
+          can be difficult to determine when task relevance is graded rather than categorical. Third, the
+          framework is descriptive rather than mechanistic: it specifies what qualifies as priming, but not how
+          indirect processing is implemented neurally. Finally, applying the definition across disciplines
+          requires careful consideration of measurement noise and contextual confounds that differ between
+          fields.
+        </p>
+
+        <h3>Future directions</h3>
+        <p>
+          We focused on a conceptual characterization of priming defined by the three characteristics of
+          association, secondariness, and modulation, without committing to specific neural or computational
+          mechanisms. This provides a stable foundation for future mechanistic work. A natural next step is to
+          investigate the processes that may underlie priming phenomena: those that are shared across priming of
+          all kinds, and those specific to particular subclasses (e.g., semantic, affective, social, perceptual,
+          syntactic, goal, money, short-term, or long-term priming). The framework proposed here is designed to
+          support such efforts by offering a unified behavioral structure against which candidate mechanisms can
+          be evaluated, compared, and constrained.
+        </p>
+        <p>
+          Several specific directions merit investigation. First, neurophysiological studies could aim to
+          identify neural populations that track priming effects across different paradigms, potentially
+          revealing shared substrates. Second, computational models may attempt to formalize the relationship
+          between priming and other learning phenomena, clarifying whether priming reflects a distinct mechanism
+          or emerges from general associative principles. And third, developmental and comparative studies could
+          work towards establishing conditions under which priming capabilities emerge, and which aspects are
+          conserved, phylogenetically or culturally.
+        </p>
+        <p>
+          Across paradigms, a consistent temporal pattern emerges: conscious priming is typically stronger at
+          short delays, whereas unconscious priming often persists or strengthens at longer delays (Charlesworth
+          and Banaji, 2019; Graf and Schacter, 1987; Kouider and Dehaene, 2007; Kunst-Wilson and Zajonc, 1980;
+          Roediger and McDermott, 1993; Seamon et al., 1995; Smarandescu and Shimp, 2015). Specifically,
+          long-term robustness of implicit effects has been documented in political cues (Mendelberg, 2008),
+          mere-exposure preferences (Zajonc, 1968), and subliminal affective influences (Sweeny et al., 2009). At
+          immediate timescales, conscious priming shows equal or greater effects (Van den Bussche et al., 2009)
+          and no verified unconscious advantage. This divergence may reflect partly distinct mechanisms, where
+          rapid strategic facilitation lies at the basis for conscious processing, whereas slower consolidation
+          underlies automatic associations. However, shared mechanisms also likely may contribute. In particular,
+          neurons that encode conflict between automatic and controlled pathways (Botvinick et al., 2001) may
+          support both conscious and unconscious priming across timescales. Notably, the literature lacks a
+          formal construct for implicit short-term memory, despite its central role in short-lived priming
+          effects in humans and animals. Clarifying this construct and mapping its temporal boundaries represents
+          a key direction for future work.
+        </p>
+
+        <h3>Concluding remarks</h3>
+        <p>
+          The meta-disciplinary definition proposed here provides a unifying framework for understanding priming
+          across domains. By identifying three core characteristics and operationalizing them through an ABCD
+          notation, we offer conceptual clarity and a methodological tool. The framework builds upon and extends
+          prior contributions (including Schacter, 1987; Tulving and Schacter, 1990; Dehaene et al., 1998),
+          broadening the scope of priming to encompass both conscious and unconscious priming across domains
+          within and beyond cognitive psychology. The framework highlights implicit short-term memory, an
+          important but decades-long neglected component absent from memory architecture diagrams. Finally, the
+          framework provides operational tools for investigating the thread to common various instances of the
+          priming phenomenon systematically, spanning cellular, network, and behavioral mechanisms.
+        </p>
+
+        <h2 id="refs">References</h2>
+        <div class="refs">
+          <p>Aquino, K., Freeman, D., Reed, A., Lim, V. K. G., and Felps, W. (2009). Testing a social-cognitive model of moral behavior: The interactive influence of situations and moral identity centrality. <i>Journal of Personality and Social Psychology, 97</i>(1), 123&ndash;141.</p>
+          <p>Atkinson, R. C., and Shiffrin, R. M. (1968). Human memory: A proposed system and its control processes. In K. W. Spence and J. T. Spence (Eds.), <i>The psychology of learning and motivation</i> (Vol. 2, pp. 89&ndash;195). Academic Press.</p>
+          <p>Baddeley, A. D., and Hitch, G. (1974). Working memory. In G. A. Bower (Ed.), <i>The psychology of learning and motivation</i> (Vol. 8, pp. 47&ndash;89). Academic Press.</p>
+          <p>Bargh, J. A., and Gollwitzer, P. M. (1994). Environmental control of goal-directed action: Automatic and strategic contingencies between situations and behavior. <i>Nebraska Symposium on Motivation, 41</i>, 71&ndash;124.</p>
+          <p>Bargh, J. A., and Chartrand, T. L. (1999). The unbearable automaticity of being. <i>American Psychologist, 54</i>(7), 462&ndash;479.</p>
+          <p>Bargh, J. A., Chen, M., and Burrows, L. (1996). Automaticity of social behavior: Direct effects of trait construct and stereotype activation on action. <i>Journal of Personality and Social Psychology, 71</i>(2), 230&ndash;244.</p>
+          <p>Bock, J. K. (1986). Syntactic persistence in language production. <i>Cognitive Psychology, 18</i>(3), 355&ndash;387.</p>
+          <p>Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., and Cohen, J. D. (2001). Conflict monitoring and cognitive control. <i>Psychological Review, 108</i>(3), 624&ndash;652.</p>
+          <p>Caruso, E. M., Shapira, O., and Landy, J. F. (2017). Show me the money: A systematic exploration of manipulations, moderators, and mechanisms of priming effects. <i>Psychological Science, 28</i>(8), 1148&ndash;1159.</p>
+          <p>Charlesworth, T. E. S., and Banaji, M. R. (2019). Patterns of implicit and explicit attitudes: I. Long-term change and stability from 2007 to 2016. <i>Psychological Science, 30</i>(2), 174&ndash;192.</p>
+          <p>Cohen, N. J., and Squire, L. R. (1980). Preserved learning and retention of pattern-analyzing skill in amnesia: Dissociation of knowing how and knowing that. <i>Science, 210</i>(4466), 207&ndash;210.</p>
+          <p>Collins, A. M., and Loftus, E. F. (1975). A spreading-activation theory of semantic processing. <i>Psychological Review, 82</i>(6), 407&ndash;428.</p>
+          <p>Dehaene, S., Naccache, L., Le Clec&rsquo;H, L., Koechlin, E., Baciu, M., and D&rsquo;Escatha, J. (1998). Imaging unconscious semantic priming. <i>Nature, 395</i>(6698), 597&ndash;600.</p>
+          <p>Desimone, R. (1996). Neural mechanisms for visual memory and their role in attention. <i>Proceedings of the National Academy of Sciences, 93</i>(24), 13494&ndash;13499.</p>
+          <p>Dijksterhuis, G. (2016). Multisensory flavor priming. In B. Piqueras-Fiszman and C. Spence (Eds.), <i>Multisensory flavor perception</i> (pp. 133&ndash;153). Elsevier.</p>
+          <p>Fazio, R. H., Sanbonmatsu, D. M., Powell, M. C., and Kardes, F. R. (1986). On the automatic activation of attitudes. <i>Journal of Personality and Social Psychology, 50</i>(2), 229&ndash;238.</p>
+          <p>Ferraro, R., Bettman, J. R., and Chartrand, T. L. (2009). The power of strangers: The effect of incidental consumer brand encounters on brand choice. <i>Journal of Consumer Research, 35</i>(5), 729&ndash;741.</p>
+          <p>Gotts, S. J., Chow, C. C., and Martin, A. (2012). Repetition priming and repetition suppression: A case for a unified explanation. <i>Trends in Cognitive Sciences, 16</i>(12), 596&ndash;604.</p>
+          <p>Graf, P., Squire, L. R., and Mandler, G. (1984). The information that amnesic patients do not forget. <i>Journal of Experimental Psychology: Learning, Memory, and Cognition, 10</i>(1), 164&ndash;178.</p>
+          <p>Graf, P., and Schacter, D. L. (1987). Selective effects of interference on implicit and explicit memory for new associations. <i>Journal of Experimental Psychology: Learning, Memory, and Cognition, 13</i>(1), 45&ndash;53.</p>
+          <p>Grill-Spector, K., Henson, R., and Martin, A. (2006). Repetition and the brain: Neural models of stimulus-specific effects. <i>Trends in Cognitive Sciences, 10</i>(1), 14&ndash;23.</p>
+          <p>Hurwitz, J., and Peffley, M. (1997). Public opinion and the politics of racial resentment in the American case. <i>Journal of Politics, 59</i>(3), 804&ndash;826.</p>
+          <p>Hutchison, K. A. (2003). Attentional control of word recognition. <i>Journal of Experimental Psychology: Learning, Memory, and Cognition, 29</i>(4), 543&ndash;559.</p>
+          <p>Jacoby, L. L. (1991). A process dissociation framework: Separating automatic from intentional uses of memory. <i>Journal of Memory and Language, 30</i>(5), 513&ndash;540.</p>
+          <p>Jacoby, L. L., and Dallas, M. (1981). On the relationship between autobiographical memory and perceptual learning. <i>Journal of Experimental Psychology: General, 110</i>(3), 306&ndash;340.</p>
+          <p>Lashley, K. S. (1951). The problem of serial order in behavior. In L. A. Jeffress (Ed.), <i>Cerebral mechanisms in behavior</i> (pp. 112&ndash;136). Wiley.</p>
+          <p>Lee, A. Y., and Labroo, A. A. (2004). The effect of conceptual and perceptual fluency on brand evaluation. <i>Journal of Marketing Research, 41</i>(2), 151&ndash;165.</p>
+          <p>McMahon, D. B. T., and Olson, C. R. (2007). Repetition suppression in monkey inferotemporal cortex: Relation to behavioral priming. <i>Journal of Neurophysiology, 97</i>(5), 3532&ndash;3543.</p>
+          <p>Mendelberg, T. (2001). <i>The race card: Campaign strategy, implicit messages, and the norm of equality.</i> Princeton University Press.</p>
+          <p>Meyer, D. E., and Schvaneveldt, R. W. (1971). Facilitation in recognizing pairs of words: Evidence of a dependence between retrieval operations. <i>Journal of Experimental Psychology, 90</i>(2), 227&ndash;234.</p>
+          <p>Minton, E. A., Cornwell, T. B., and Kahle, L. R. (2017). A theoretical review of consumer priming: Prospective theory, retrospective theory, and the affective&ndash;behavioral&ndash;cognitive model. <i>Journal of Consumer Behaviour, 16</i>(4), 309&ndash;321.</p>
+          <p>Neely, J. H. (1977). Semantic priming and retrieval from lexical memory: Roles of inhibitionless spreading activation and limited-capacity attention. <i>Journal of Experimental Psychology: General, 106</i>(3), 226&ndash;254.</p>
+          <p>Pickering, M. J., and Ferreira, V. S. (2008). Structural priming: A critical review. <i>Psychological Bulletin, 134</i>(3), 427&ndash;459.</p>
+          <p>Scarborough, D. L., Cortese, C., and Scarborough, H. S. (1977). Frequency and repetition effects in lexical memory. <i>Journal of Experimental Psychology: Human Perception and Performance, 3</i>(1), 1&ndash;17.</p>
+          <p>Schacter, D. L. (1987). Implicit memory: History and current status. <i>Journal of Experimental Psychology: Learning, Memory, and Cognition, 13</i>(3), 501&ndash;518.</p>
+          <p>Shah, J. Y., and Kruglanski, A. W. (2003). When opportunity knocks: Bottom-up priming of goals by means and its effects on self-regulation. <i>Journal of Personality and Social Psychology, 84</i>(6), 1109&ndash;1122.</p>
+          <p>Shao, R., Aquino, K., and Freeman, D. (2008). Beyond moral reasoning: A review of moral identity research and its implications for business ethics. <i>Business Ethics Quarterly, 18</i>(4), 513&ndash;540.</p>
+          <p>Sivroni, S., et al. (2023). Short-term auditory priming in freely-moving mice.</p>
+          <p>Squire, L. R. (1987). <i>Memory and brain.</i> Oxford University Press.</p>
+          <p>Stroop, J. R. (1935). Studies of interference in serial verbal reactions. <i>Journal of Experimental Psychology, 18</i>(6), 643&ndash;662.</p>
+          <p>Tulving, E., and Schacter, D. L. (1990). Priming and human memory systems. <i>Science, 247</i>(4940), 301&ndash;306.</p>
+          <p>Vohs, K. D., Mead, N. L., and Goode, M. R. (2006). The psychological consequences of money. <i>Science, 314</i>(5802), 1154&ndash;1156.</p>
+          <p>Zajonc, R. B. (1968). Attitudinal effects of mere exposure. <i>Journal of Personality and Social Psychology, 9</i>(2, Pt.2), 1&ndash;27.</p>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+</body>
+</html>

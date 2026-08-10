@@ -48,6 +48,18 @@ PTA.supabase = null;
  * @returns {boolean} True if initialization successful, false otherwise
  */
 PTA.initSupabase = function() {
+  // Idempotent since 2026-08-10. index.html calls this twice (once in its own
+  // DOMContentLoaded handler and once further down), which built a SECOND
+  // client over the first. Supabase itself warned about it on every page load:
+  //   "Multiple GoTrueClient instances detected in the same browser context...
+  //    may produce undefined behavior when used concurrently under the same
+  //    storage key."
+  // Two clients sharing one auth storage key is a real hazard, not cosmetic.
+  // Guarding here rather than deleting a call site: it fixes every caller,
+  // including the standalone paradigm pages, and cannot change init ordering.
+  if (PTA.supabase) {
+    return true;
+  }
   if (typeof supabase !== 'undefined') {
     PTA.supabase = supabase.createClient(PTA.config.supabaseUrl, PTA.config.supabaseKey);
     console.log('PTA: Supabase initialized');

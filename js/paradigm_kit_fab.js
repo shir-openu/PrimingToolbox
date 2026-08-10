@@ -3,7 +3,11 @@
  * PrimingToolbox - Paradigm Kit (V2 _fab)
  * =====================================================
  *
- * NEW FILE, 2026-08-10. No previous version exists on GitHub.
+ * NEW FILE, 2026-08-10.
+ *
+ * PREVIOUS VERSION ON GITHUB (first published version, before the shared
+ * scrambled-sentence prime phase was added for goal / money / moral priming):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/57eef45/js/paradigm_kit_fab.js
  *
  * WHY THIS FILE EXISTS
  * --------------------
@@ -876,6 +880,90 @@ window.PTK = (function () {
       console.error(spec.name + ': bad participant config', e);
       return false;
     }
+  };
+
+  /* ===================================================================
+     Scrambled-sentence prime phase
+     =================================================================== */
+
+  /**
+   * The prime phase Bargh et al. (1996), Bargh & Gollwitzer (1994) and
+   * Vohs et al. (2006) all share: sets of five words from which the
+   * participant builds a grammatical four-word sentence. One word of a
+   * "prime" set carries the construct being activated; "neutral" sets carry
+   * none. The participant is never told the words matter, which is what makes
+   * the manipulation secondary to the task they think they are doing.
+   *
+   * Shared here because three separate paradigms in this toolbox need exactly
+   * this screen, and social_fab.js already had a fourth copy of it.
+   *
+   * @param {Object} o
+   * @param {Object}   o.mod        the calling module (for tracked timers)
+   * @param {string}   o.rootId     id of an empty container to render into
+   * @param {Array}    o.items      [{words:[5], embedded:'win'|null, condition:'prime'|'neutral'}]
+   * @param {number}   [o.pick=4]   how many words form the sentence
+   * @param {number}   [o.iti=350]
+   * @param {Function} o.onItem     (item, selectionArray, rtMs) => void
+   * @param {Function} o.onDone     () => void
+   */
+  PTK.scrambledPhase = function (o) {
+    var mod = o.mod;
+    var root = document.getElementById(o.rootId);
+    if (!root) return;
+    var pick = o.pick || 4;
+    var iti = o.iti === undefined ? 350 : o.iti;
+    var index = 0;
+    var selection = [];
+    var onset = 0;
+
+    root.innerHTML =
+      '<div style="color:#9aa6b2;font-size:.85rem;" id="' + o.rootId + '-progress"></div>' +
+      PTK.progressHtml(o.rootId + '-fill') +
+      '<div style="color:#64748b;font-size:.8rem;letter-spacing:2px;margin-top:16px;">' +
+        'MAKE A SENTENCE FROM FOUR OF THESE WORDS</div>' +
+      '<div id="' + o.rootId + '-built" style="min-height:44px;font-size:1.4rem;margin:22px 0;color:#4ade80;letter-spacing:1px;"></div>' +
+      '<div id="' + o.rootId + '-chips" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin:18px 0;"></div>' +
+      '<button class="btn btn-secondary" id="' + o.rootId + '-reset">Start this one again</button>';
+
+    function render() {
+      var item = o.items[index];
+      if (!item) { o.onDone(); return; }
+      selection = [];
+      onset = performance.now();
+      document.getElementById(o.rootId + '-progress').textContent =
+        'Sentence ' + (index + 1) + ' of ' + o.items.length;
+      PTK.setProgress(o.rootId + '-fill', index, o.items.length);
+      document.getElementById(o.rootId + '-built').textContent = '';
+
+      var chips = document.getElementById(o.rootId + '-chips');
+      chips.innerHTML = '';
+      PTA.shuffleArray(item.words).forEach(function (word) {
+        var b = document.createElement('button');
+        b.className = 'btn';
+        b.textContent = word;
+        b.style.cssText = 'background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);' +
+                          'color:#fff;padding:10px 18px;border-radius:10px;font-size:1.1rem;cursor:pointer;';
+        b.onclick = function () {
+          if (b.disabled) return;
+          b.disabled = true;
+          b.style.opacity = '0.35';
+          selection.push(word);
+          document.getElementById(o.rootId + '-built').textContent = selection.join(' ');
+          if (selection.length >= pick) {
+            var rt = performance.now() - onset;
+            o.onItem(item, selection.slice(), rt);
+            index++;
+            mod._after(render, iti);
+          }
+        };
+        chips.appendChild(b);
+      });
+    }
+
+    // Restarting an item resets its clock, so latency is not the dependent
+    // measure for any paradigm that offers this button.
+    document.getElementById(o.rootId + '-reset').onclick = render;
+    render();
   };
 
   /* ===================================================================

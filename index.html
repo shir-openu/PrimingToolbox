@@ -24,13 +24,18 @@
   shir-openu/PrimingToolbox-v1 (un-deployed).
 
   ---------------------------------------------------------------------------
-  PREVIOUS VERSION OF THIS FILE ON GITHUB (2026-08-10 edit)
+  PREVIOUS VERSIONS OF THIS FILE ON GITHUB
   ---------------------------------------------------------------------------
-  The version of index.html immediately before the ABCD-article wiring:
+  Newest first. Each link is the file exactly as it was before the next edit.
 
+  Before the article's Section 5 paradigms (goal, moral, money, advertising)
+  were wired in, and before the participant-link chain was flattened:
+      https://github.com/shir-openu/PrimingToolbox/blob/57eef45/index.html
+
+  Before the ABCD-article wiring, the scrollable chooser and the ?open= links:
       https://github.com/shir-openu/PrimingToolbox/blob/bc0bfdff32f68d9fe23a16eda4187ecc018c5c40/index.html
 
-  Local copy of the same state:
+  Local copy of that same state:
       D:\Dropbox\Research\PRIMING_TOOLBOX\_BACKUP_index_pre_abcd_link_2026-08-10.html
   ===========================================================================
 -->
@@ -107,6 +112,10 @@
         <option value="masked">Masked Lexical Decision</option>
         <option value="syntactic">Syntactic Priming</option>
         <option value="repetition">Repetition Priming</option>
+        <option value="goal">Goal Priming</option>
+        <option value="moral">Moral Priming</option>
+        <option value="money">Money Priming</option>
+        <option value="advertising">Advertising Priming</option>
       </select>
 
       <div class="sidebar-footer">
@@ -2590,6 +2599,14 @@
   <script src="js/masked_fab.js"></script>
   <script src="js/syntactic_fab.js"></script>
   <script src="js/repetition_fab.js"></script>
+  <!-- The article's Section 5 examples that can run in a browser. Racial
+       priming (5.5) needs broadcast video advertisements and naturalistic
+       priming (5.6) needs the participant to physically taste a product, so
+       neither is implemented; both are marked as such on the article page. -->
+  <script src="js/goal_fab.js"></script>
+  <script src="js/moral_fab.js"></script>
+  <script src="js/money_fab.js"></script>
+  <script src="js/advertising_fab.js"></script>
   <script src="js/timeline_fab.js"></script>
   <script src="js/asm_validator.js"></script>
 
@@ -2810,7 +2827,12 @@
         // prime is primary for its own response, so secondariness fails.
         // Listing it unlabelled next to the others would contradict the paper
         // this platform is built on.
-        { type: 'repetition',     name: 'Repetition Priming',     blurb: 'Boundary case - secondariness fails', boundary: true }
+        { type: 'repetition',     name: 'Repetition Priming',     blurb: 'Boundary case - secondariness fails', boundary: true },
+        // The framework article's Section 5 examples that a browser can run.
+        { type: 'goal',           name: 'Goal Priming',           blurb: 'Achievement cues + persistence (Bargh & Gollwitzer, 1994)' },
+        { type: 'moral',          name: 'Moral Priming',          blurb: 'Moral reminders + ethical choice (Aquino et al., 2009)' },
+        { type: 'money',          name: 'Money Priming',          blurb: 'Money cues + self-sufficiency (Vohs et al., 2006)' },
+        { type: 'advertising',    name: 'Advertising Priming',    blurb: 'Incidental brand exposure (Ferraro et al., 2009)' }
       ];
     }
 
@@ -3004,6 +3026,12 @@
       if (type === 'masked') { MaskedLexical.open(); return; }
       if (type === 'syntactic') { SyntacticPriming.open(); return; }
       if (type === 'repetition') { RepetitionPriming.open(); return; }
+
+      // Section 5 examples from the framework article
+      if (type === 'goal') { GoalPriming.open(); return; }
+      if (type === 'moral') { MoralPriming.open(); return; }
+      if (type === 'money') { MoneyPriming.open(); return; }
+      if (type === 'advertising') { AdvertisingPriming.open(); return; }
 
       loadExperimentConfig(type);
       if (!currentConfig) {
@@ -3218,6 +3246,12 @@
       if (type === 'syntactic') { SyntacticPriming.openBuilder(); return; }
       if (type === 'repetition') { RepetitionPriming.openBuilder(); return; }
 
+      // Section 5 examples from the framework article
+      if (type === 'goal') { GoalPriming.openBuilder(); return; }
+      if (type === 'moral') { MoralPriming.openBuilder(); return; }
+      if (type === 'money') { MoneyPriming.openBuilder(); return; }
+      if (type === 'advertising') { AdvertisingPriming.openBuilder(); return; }
+
       document.getElementById('templateBuilderOverlay').classList.add('active');
     }
 
@@ -3414,41 +3448,40 @@
     document.addEventListener('DOMContentLoaded', function() {
       PTA.initSupabase();
 
-      // First check for Stroop URL config (participant links)
-      if (!Stroop.checkUrlConfig()) {
-        // Check for Semantic Priming participant link
-        if (!Semantic.checkUrlConfig()) {
-          // Check for Evaluative Conditioning participant link
-          if (!EvaluativeConditioning.checkUrlConfig()) {
-            // Check for AMP participant link
-            if (!AMP.checkUrlConfig()) {
-              // Check for Number Priming participant link
-              if (!NumberPriming.checkUrlConfig()) {
-                // Check for Subliminal Priming participant link
-                if (!Subliminal.checkUrlConfig()) {
-                  // V2 _fab paradigm participant links
-                  if (!Affective.checkUrlConfig()) {
-                    if (!Social.checkUrlConfig()) {
-                      if (!NegativePriming.checkUrlConfig()) {
-                        if (!MaskedLexical.checkUrlConfig()) {
-                          if (!SyntacticPriming.checkUrlConfig()) {
-                            if (!RepetitionPriming.checkUrlConfig()) {
-                              // Not a participant link. Try the article's
-                              // ?open= deep link first, then the generic config.
-                              if (!checkOpenParam()) {
-                                checkUrlConfig();
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+      // Participant links. Each module owns one URL parameter and returns true
+      // when the link is its own; the first claim wins.
+      //
+      // This used to be a twelve-level nested if, one level per paradigm, and
+      // grew a level every time a paradigm was added. A list is the same logic
+      // and cannot be mis-nested. A module that throws must not take the page
+      // down with it, so each call is guarded - before, one bad decode would
+      // have killed every check after it AND the fallbacks below.
+      var PARTICIPANT_LINK_MODULES = [
+        'Stroop', 'Semantic', 'EvaluativeConditioning', 'AMP', 'NumberPriming',
+        'Subliminal', 'Affective', 'Social', 'NegativePriming', 'MaskedLexical',
+        'SyntacticPriming', 'RepetitionPriming',
+        'GoalPriming', 'MoralPriming', 'MoneyPriming', 'AdvertisingPriming'
+      ];
+
+      var claimed = false;
+      for (var i = 0; i < PARTICIPANT_LINK_MODULES.length; i++) {
+        var name = PARTICIPANT_LINK_MODULES[i];
+        var mod = window[name];
+        if (!mod || typeof mod.checkUrlConfig !== 'function') {
+          console.warn('index.html: ' + name + ' has no checkUrlConfig - skipping.');
+          continue;
         }
+        try {
+          if (mod.checkUrlConfig()) { claimed = true; break; }
+        } catch (e) {
+          console.error('index.html: ' + name + '.checkUrlConfig() threw', e);
+        }
+      }
+
+      // Not a participant link. Try the article's ?open= deep link, then the
+      // generic ?config= payload.
+      if (!claimed && !checkOpenParam()) {
+        checkUrlConfig();
       }
     });
   </script>

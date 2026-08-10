@@ -127,11 +127,20 @@ window.Subliminal = {
    * Sets up keyboard listener and estimates monitor frame rate.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
+
     // Set up keyboard listener
     document.addEventListener('keydown', this.handleKeydown.bind(this));
 
     // Estimate frame rate
     this.estimateFrameRate();
+
+    // Installs _after()/_clearTimers(). This module tracked only its builder
+    // preview interval - the whole trial chain, INCLUDING the response window,
+    // was untracked, and close() cleared nothing. Of the six older modules this
+    // was the least protected against a timer firing into a later trial.
+    PTK.timers(this);
 
     console.log('Subliminal module initialized');
   },
@@ -179,6 +188,7 @@ window.Subliminal = {
    * Returns to builder if opened from there, or shows thank you screen.
    */
   close: function() {
+    this._clearTimers();
     document.getElementById('subliminal-overlay').classList.remove('active');
     this.state.awaitingResponse = false;
 
@@ -427,7 +437,7 @@ window.Subliminal = {
     const stimulus = document.getElementById('subliminal-stimulus');
     stimulus.innerHTML = '<span class="subliminal-fixation">+</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       this.showForwardMask(trial);
     }, this.timing.fixation);
   },
@@ -441,7 +451,7 @@ window.Subliminal = {
     const stimulus = document.getElementById('subliminal-stimulus');
     stimulus.innerHTML = '<span class="subliminal-mask">' + this.data.defaultMask + '</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       this.showPrime(trial);
     }, this.timing.forwardMask);
   },
@@ -482,7 +492,7 @@ window.Subliminal = {
     const stimulus = document.getElementById('subliminal-stimulus');
     stimulus.innerHTML = '<span class="subliminal-mask">' + this.data.defaultMask + '</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       this.showTarget(trial);
     }, this.timing.backwardMask);
   },
@@ -542,7 +552,7 @@ window.Subliminal = {
       // Brief feedback for awareness
       const stimulus = document.getElementById('subliminal-stimulus');
       stimulus.innerHTML = '<span style="font-size: 1.2rem; color: #9aa6b2;">Response recorded</span>';
-      setTimeout(() => this.runTrial(), 500);
+      this._after(() => this.runTrial(), 500);
     } else {
       // Lexical decision response
       const response = key === 'arrowright' ? 'word' : 'nonword';
@@ -570,7 +580,7 @@ window.Subliminal = {
         stimulus.innerHTML = '<span class="feedback-incorrect" style="font-size: 1.5rem;">Incorrect</span>';
       }
 
-      setTimeout(() => this.runTrial(), this.timing.feedback);
+      this._after(() => this.runTrial(), this.timing.feedback);
     }
   },
 
@@ -608,6 +618,7 @@ window.Subliminal = {
    * Shows awareness check summary if enabled.
    */
   showResults: function() {
+    this._clearTimers();
     document.getElementById('subliminal-trial').classList.remove('active');
     document.getElementById('subliminal-results').classList.add('active');
 

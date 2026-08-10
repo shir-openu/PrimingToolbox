@@ -139,7 +139,14 @@ window.Semantic = {
    * Sets up keyboard event listener.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
     document.addEventListener('keydown', this.handleKeydown.bind(this));
+    // Installs _after()/_clearTimers(). The response window was already stored
+    // and cleared, but the display chain (fixation -> prime -> ISI -> target)
+    // and the feedback/ITI advance timers were not, and close() cleared none
+    // of them - so the chain survived the overlay closing.
+    PTK.timers(this);
     console.log('Semantic Priming module initialized');
   },
 
@@ -161,6 +168,8 @@ window.Semantic = {
    * Returns to builder or shows thank-you if participant mode.
    */
   close: function() {
+    this._clearTimers();
+    clearTimeout(this.responseTimeout);
     document.getElementById('semantic-overlay').classList.remove('active');
     this.state.awaitingResponse = false;
     this.state.phase = 'setup';
@@ -334,7 +343,7 @@ window.Semantic = {
     this.state.awaitingResponse = false;
     stimulus.innerHTML = '<span class="semantic-fixation">+</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       this.showPrime(trial, stimulus);
     }, this.timing.fixation);
   },
@@ -354,7 +363,7 @@ window.Semantic = {
     // If primeDuration = 200ms and SOA = 250ms, then ISI = 50ms
     const isiDuration = Math.max(0, this.timing.soa - this.timing.primeDuration);
 
-    setTimeout(() => {
+    this._after(() => {
       this.showISI(trial, stimulus, isiDuration);
     }, this.timing.primeDuration);
   },
@@ -371,7 +380,7 @@ window.Semantic = {
     stimulus.innerHTML = ''; // Blank screen
 
     if (duration > 0) {
-      setTimeout(() => {
+      this._after(() => {
         this.showTarget(trial, stimulus);
       }, duration);
     } else {
@@ -393,7 +402,7 @@ window.Semantic = {
     this.state.awaitingResponse = true;
 
     // Set response timeout
-    this.responseTimeout = setTimeout(() => {
+    this.responseTimeout = this._after(() => {
       if (this.state.awaitingResponse) {
         this.handleResponse(null, true); // timeout
       }
@@ -441,7 +450,7 @@ window.Semantic = {
     if (this.showFeedback && !timeout) {
       this.displayFeedback(correct);
     } else {
-      setTimeout(() => this.runTrial(), timeout ? 500 : this.timing.iti);
+      this._after(() => this.runTrial(), timeout ? 500 : this.timing.iti);
     }
   },
 
@@ -459,7 +468,7 @@ window.Semantic = {
       stimulus.innerHTML = '<span class="feedback-incorrect" style="font-size: 2rem; color: #ff6b6b;">Incorrect</span>';
     }
 
-    setTimeout(() => this.runTrial(), this.timing.feedbackDuration + this.timing.iti);
+    this._after(() => this.runTrial(), this.timing.feedbackDuration + this.timing.iti);
   },
 
   /**
@@ -485,6 +494,7 @@ window.Semantic = {
    * Computes priming effect: unrelated RT - related RT.
    */
   showResults: function() {
+    this._clearTimers();
     document.getElementById('semantic-trial').classList.remove('active');
     document.getElementById('semantic-results').classList.add('active');
     this.state.phase = 'results';

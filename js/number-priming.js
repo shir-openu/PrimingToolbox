@@ -153,7 +153,15 @@ window.NumberPriming = {
    * Sets up keyboard listener.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
     document.addEventListener('keydown', this.handleKeydown.bind(this));
+    // Installs _after()/_clearTimers(). This module tracked its response window
+    // and its builder preview interval, but NOT the nested display chain
+    //   fixation -> prime -> ISI -> target
+    // nor the feedback/ITI advance timers, and close() cleared nothing at all -
+    // not even the responseTimeout it had already stored. All of it is tracked now.
+    PTK.timers(this);
     console.log('NumberPriming module initialized');
   },
 
@@ -174,6 +182,8 @@ window.NumberPriming = {
    * Returns to builder if opened from there, or shows thank you screen.
    */
   close: function() {
+    this._clearTimers();
+    clearTimeout(this.responseTimeout);
     const overlay = document.getElementById('number-priming-overlay');
     if (overlay) {
       overlay.classList.remove('active');
@@ -394,25 +404,25 @@ window.NumberPriming = {
       stimulus.innerHTML = '<span class="np-fixation">+</span>';
     }
 
-    setTimeout(() => {
+    this._after(() => {
       // Phase 2: Forward Mask
       if (stimulus) {
         stimulus.innerHTML = `<span class="np-mask">${this.builderSettings.maskChar}</span>`;
       }
 
-      setTimeout(() => {
+      this._after(() => {
         // Phase 3: Prime
         if (stimulus) {
           stimulus.innerHTML = `<span class="np-prime">${trial.prime}</span>`;
         }
 
-        setTimeout(() => {
+        this._after(() => {
           // Phase 4: Backward Mask
           if (stimulus) {
             stimulus.innerHTML = `<span class="np-mask">${this.builderSettings.maskChar}</span>`;
           }
 
-          setTimeout(() => {
+          this._after(() => {
             // Phase 5: Target
             if (stimulus) {
               stimulus.innerHTML = `<span class="np-target">${trial.target}</span>`;
@@ -421,7 +431,7 @@ window.NumberPriming = {
             this.state.awaitingResponse = true;
 
             // Set timeout for response
-            this.responseTimeout = setTimeout(() => {
+            this.responseTimeout = this._after(() => {
               if (this.state.awaitingResponse) {
                 this.handleTimeout();
               }
@@ -473,17 +483,17 @@ window.NumberPriming = {
         }
       }
 
-      setTimeout(() => {
+      this._after(() => {
         // ITI
         const stimulus = document.getElementById('np-stimulus');
         if (stimulus) stimulus.innerHTML = '';
-        setTimeout(() => this.runTrial(), this.builderSettings.itiDuration);
+        this._after(() => this.runTrial(), this.builderSettings.itiDuration);
       }, this.builderSettings.feedbackDuration);
     } else {
       // No feedback, go to ITI directly
       const stimulus = document.getElementById('np-stimulus');
       if (stimulus) stimulus.innerHTML = '';
-      setTimeout(() => this.runTrial(), this.builderSettings.itiDuration);
+      this._after(() => this.runTrial(), this.builderSettings.itiDuration);
     }
   },
 
@@ -517,13 +527,13 @@ window.NumberPriming = {
         stimulus.innerHTML = `<span class="feedback-timeout" style="font-size: 1.5rem; color: #fbbf24;">${feedbackText.timeout}</span>`;
       }
 
-      setTimeout(() => {
+      this._after(() => {
         const stimulus = document.getElementById('np-stimulus');
         if (stimulus) stimulus.innerHTML = '';
-        setTimeout(() => this.runTrial(), this.builderSettings.itiDuration);
+        this._after(() => this.runTrial(), this.builderSettings.itiDuration);
       }, this.builderSettings.feedbackDuration);
     } else {
-      setTimeout(() => this.runTrial(), this.builderSettings.itiDuration);
+      this._after(() => this.runTrial(), this.builderSettings.itiDuration);
     }
   },
 
@@ -559,6 +569,7 @@ window.NumberPriming = {
    * Shows congruent vs incongruent RT and accuracy.
    */
   showResults: function() {
+    this._clearTimers();
     this.state.currentPhase = 'results';
 
     const trial = document.getElementById('number-priming-trial');

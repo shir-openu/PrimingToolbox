@@ -105,8 +105,16 @@ window.Stroop = {
    * Sets up keyboard event listener.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
     // Set up keyboard listener
     document.addEventListener('keydown', this.handleKeydown.bind(this));
+    // Installs _after()/_clearTimers(). close() previously set awaitingResponse
+    // false but cancelled neither the 500 ms stimulus timer nor the 300 ms
+    // feedback timer, so the chain reached showResults() and saveResults() with
+    // the overlay already shut - writing rows for a run the participant had
+    // abandoned.
+    PTK.timers(this);
     console.log('Stroop module initialized');
   },
 
@@ -127,6 +135,7 @@ window.Stroop = {
    * Returns to builder or shows thank-you if participant mode.
    */
   close: function() {
+    this._clearTimers();
     document.getElementById('stroop-overlay').classList.remove('active');
     this.state.awaitingResponse = false;
 
@@ -294,7 +303,7 @@ window.Stroop = {
     this.state.awaitingResponse = false;
 
     // After fixation, show stimulus
-    setTimeout(() => {
+    this._after(() => {
       const word = this.data.words[trial.language][trial.wordMeaning];
       const color = this.data.colors[trial.inkColor].hex;
       const dir = (trial.language === 'he' || trial.language === 'ar') ? 'rtl' : 'ltr';
@@ -346,7 +355,7 @@ window.Stroop = {
       stimulus.innerHTML = '<span class="feedback-incorrect" style="font-size: 2rem;">Incorrect</span>';
     }
 
-    setTimeout(() => this.runTrial(), 300);
+    this._after(() => this.runTrial(), 300);
   },
 
   /**

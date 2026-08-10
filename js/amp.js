@@ -320,10 +320,15 @@ window.AMP = {
    */
   showMessage: function(title, text, callback) {
     const stimulus = document.getElementById('amp-stimulus');
+    // title and text are interpolated into innerHTML. Both callers currently
+    // pass hardcoded literals, so this is NOT a live hole - but it is one
+    // refactor away from becoming one the moment anything config-derived is
+    // passed in. Escaped rather than rewritten so the #amp-continue-btn wiring
+    // below keeps working unchanged.
     stimulus.innerHTML = `
       <div style="text-align: center; max-width: 500px;">
-        <h3 style="color: #ff4db8; margin-bottom: 20px;">${title}</h3>
-        <p style="color: #e5e7eb; line-height: 1.6; margin-bottom: 30px;">${text}</p>
+        <h3 style="color: #ff4db8; margin-bottom: 20px;">${PTK.esc(title)}</h3>
+        <p style="color: #e5e7eb; line-height: 1.6; margin-bottom: 30px;">${PTK.esc(text)}</p>
         <button id="amp-continue-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; padding: 14px 35px; border-radius: 10px; cursor: pointer; font-size: 16px;">Continue</button>
       </div>
     `;
@@ -391,9 +396,18 @@ window.AMP = {
 
     // Use emoji as placeholder if no image URL
     if (trial.primeUrl && trial.primeUrl.length > 0) {
-      stimulus.innerHTML = `<img src="${trial.primeUrl}" class="amp-prime-image" alt="prime">`;
+      // trial.primeUrl went straight into a src="" attribute, so a value
+      // containing a quote could close the attribute and add its own, e.g.
+      // onerror=. Setting the property instead means the string is only ever
+      // treated as a URL and can never become markup.
+      const img = document.createElement('img');
+      img.className = 'amp-prime-image';
+      img.alt = 'prime';
+      img.src = trial.primeUrl;
+      stimulus.textContent = '';
+      stimulus.appendChild(img);
     } else {
-      stimulus.innerHTML = `<span class="amp-prime-emoji">${trial.primeEmoji}</span>`;
+      PTK.showText(stimulus, trial.primeEmoji, 'amp-prime-emoji');
     }
 
     // Use requestAnimationFrame for more precise timing
@@ -418,7 +432,10 @@ window.AMP = {
    */
   showTarget: function(trial, callback) {
     const stimulus = document.getElementById('amp-stimulus');
-    stimulus.innerHTML = `<span style="font-size: 6rem; color: #ffffff; font-weight: bold; display: block; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif;">${trial.target}</span>`;
+    PTK.showText(stimulus, trial.target, null, {
+      fontSize: '6rem', color: '#ffffff', fontWeight: 'bold', display: 'block',
+      fontFamily: "'Noto Sans SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif"
+    });
 
     // Use setTimeout for reliable timing
     this._after(callback, this.config.timing.target);

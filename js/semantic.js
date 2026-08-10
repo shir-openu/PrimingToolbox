@@ -356,7 +356,9 @@ window.Semantic = {
   showPrime: function(trial, stimulus) {
     // Phase 2: Prime
     this.state.phase = 'prime';
-    stimulus.innerHTML = `<span class="semantic-prime">${trial.prime}</span>`;
+    // trial.prime is config-derived and reachable from a ?semantic= link, so it
+    // must never be parsed as HTML. See PTK.showText.
+    PTK.showText(stimulus, trial.prime, 'semantic-prime');
 
     // Calculate ISI timing
     // SOA = time from prime onset to target onset
@@ -397,7 +399,7 @@ window.Semantic = {
   showTarget: function(trial, stimulus) {
     // Phase 4: Target
     this.state.phase = 'target';
-    stimulus.innerHTML = `<span class="semantic-target">${trial.target}</span>`;
+    PTK.showText(stimulus, trial.target, 'semantic-target');
     this.state.stimulusOnset = performance.now();
     this.state.awaitingResponse = true;
 

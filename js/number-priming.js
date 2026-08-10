@@ -407,25 +407,25 @@ window.NumberPriming = {
     this._after(() => {
       // Phase 2: Forward Mask
       if (stimulus) {
-        stimulus.innerHTML = `<span class="np-mask">${this.builderSettings.maskChar}</span>`;
+        PTK.showText(stimulus, this.builderSettings.maskChar, 'np-mask');
       }
 
       this._after(() => {
         // Phase 3: Prime
         if (stimulus) {
-          stimulus.innerHTML = `<span class="np-prime">${trial.prime}</span>`;
+          PTK.showText(stimulus, trial.prime, 'np-prime');
         }
 
         this._after(() => {
           // Phase 4: Backward Mask
           if (stimulus) {
-            stimulus.innerHTML = `<span class="np-mask">${this.builderSettings.maskChar}</span>`;
+            PTK.showText(stimulus, this.builderSettings.maskChar, 'np-mask');
           }
 
           this._after(() => {
             // Phase 5: Target
             if (stimulus) {
-              stimulus.innerHTML = `<span class="np-target">${trial.target}</span>`;
+              PTK.showText(stimulus, trial.target, 'np-target');
             }
             this.state.targetOnset = performance.now();
             this.state.awaitingResponse = true;
@@ -477,9 +477,11 @@ window.NumberPriming = {
 
       if (stimulus) {
         if (correct) {
-          stimulus.innerHTML = `<span class="feedback-correct" style="font-size: 1.5rem; color: #4ade80;">${feedbackText.correct}</span>`;
+          PTK.showText(stimulus, feedbackText.correct, 'feedback-correct',
+            { fontSize: '1.5rem', color: '#4ade80' });
         } else {
-          stimulus.innerHTML = `<span class="feedback-incorrect" style="font-size: 1.5rem; color: #ff6b6b;">${feedbackText.incorrect}</span>`;
+          PTK.showText(stimulus, feedbackText.incorrect, 'feedback-incorrect',
+            { fontSize: '1.5rem', color: '#ff6b6b' });
         }
       }
 
@@ -524,7 +526,8 @@ window.NumberPriming = {
       const feedbackText = this.data.instructions[lang].feedback;
 
       if (stimulus) {
-        stimulus.innerHTML = `<span class="feedback-timeout" style="font-size: 1.5rem; color: #fbbf24;">${feedbackText.timeout}</span>`;
+        PTK.showText(stimulus, feedbackText.timeout, 'feedback-timeout',
+          { fontSize: '1.5rem', color: '#fbbf24' });
       }
 
       this._after(() => {

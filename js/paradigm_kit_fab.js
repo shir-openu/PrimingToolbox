@@ -67,6 +67,41 @@ window.PTK = (function () {
   };
 
   /**
+   * Put a stimulus on screen without ever parsing it as HTML.
+   *
+   * Added 2026-08-10 after a real hole in stroop.js: the trial renderer built
+   * its stimulus with a template literal into innerHTML, and the stimulus text
+   * comes from this.data, which checkUrlConfig overwrites WHOLESALE from the
+   * ?exp= participant link. A crafted link therefore ran arbitrary script on a
+   * page holding the Supabase key. The same shape existed in semantic,
+   * number-priming and amp.
+   *
+   * textContent never parses HTML, and assigning to el.style.* silently drops
+   * an invalid value rather than letting it break out of an attribute - so this
+   * removes the bug class instead of escaping one instance of it.
+   *
+   * @param {HTMLElement} host      element to clear and fill
+   * @param {string} text           the stimulus, treated as plain text always
+   * @param {string} [className]
+   * @param {Object} [style]        e.g. { color: '#fff', fontSize: '6rem' }
+   * @returns {HTMLElement} the span created
+   */
+  PTK.showText = function (host, text, className, style) {
+    if (!host) return null;
+    var span = document.createElement('span');
+    if (className) span.className = className;
+    if (style) {
+      Object.keys(style).forEach(function (k) {
+        try { span.style[k] = style[k]; } catch (e) { /* invalid value: dropped */ }
+      });
+    }
+    span.textContent = text == null ? '' : String(text);
+    host.textContent = '';
+    host.appendChild(span);
+    return span;
+  };
+
+  /**
    * Install a tracked-timer registry on a module.
    *
    * Contract requirement 22. An untracked setTimeout from trial N fires during

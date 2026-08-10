@@ -119,7 +119,15 @@ window.EvaluativeConditioning = {
    * Sets up keyboard listener.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
     document.addEventListener('keydown', this.handleKeydown.bind(this));
+    // Installs _after()/_clearTimers(). This module had EIGHT setTimeout calls
+    // and not one clearTimeout, so the learning chain
+    //   fixation -> CS/US -> ITI -> next trial
+    // kept running after close(): it went on incrementing state.currentTrial and
+    // rendering into a hidden overlay. Reaction time cannot detect that.
+    PTK.timers(this);
     console.log('Evaluative Conditioning module initialized');
   },
 
@@ -138,6 +146,7 @@ window.EvaluativeConditioning = {
    * Close EC overlay.
    */
   close: function() {
+    this._clearTimers();
     const overlay = document.getElementById('evaluative-overlay');
     if (overlay) {
       overlay.classList.remove('active');
@@ -339,7 +348,7 @@ window.EvaluativeConditioning = {
       </div>
     `;
 
-    setTimeout(() => this.runLearningTrial(), 3000);
+    this._after(() => this.runLearningTrial(), 3000);
   },
 
   /**
@@ -363,7 +372,7 @@ window.EvaluativeConditioning = {
     // Show fixation
     stimulus.innerHTML = '<span class="fixation-cross">+</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       // Show CS and US together (or sequentially based on params)
       this.displayCSUS(trial, stimulus);
 
@@ -384,11 +393,11 @@ window.EvaluativeConditioning = {
         ? this.params.csDuration + this.params.csUSDelay + this.params.usDuration
         : Math.max(this.params.csDuration, this.params.usDuration);
 
-      setTimeout(() => {
+      this._after(() => {
         this.state.currentTrial++;
         // ITI before next trial
         stimulus.innerHTML = '';
-        setTimeout(() => this.runLearningTrial(), this.params.iti);
+        this._after(() => this.runLearningTrial(), this.params.iti);
       }, totalDuration);
     }, this.params.fixationDuration);
   },
@@ -425,7 +434,7 @@ window.EvaluativeConditioning = {
         </div>
       `;
 
-      setTimeout(() => {
+      this._after(() => {
         container.innerHTML = `
           <div class="csus-display">
             <div class="cs-stimulus">
@@ -507,7 +516,7 @@ window.EvaluativeConditioning = {
       </div>
     `;
 
-    setTimeout(() => this.runTestTrial(), 3000);
+    this._after(() => this.runTestTrial(), 3000);
   },
 
   /**
@@ -531,7 +540,7 @@ window.EvaluativeConditioning = {
     // Show fixation
     stimulus.innerHTML = '<span class="fixation-cross">+</span>';
 
-    setTimeout(() => {
+    this._after(() => {
       // Show CS alone
       stimulus.innerHTML = `
         <div class="test-display">
@@ -602,7 +611,7 @@ window.EvaluativeConditioning = {
     const stimulus = document.getElementById('test-stimulus');
     stimulus.innerHTML = '';
 
-    setTimeout(() => this.runTestTrial(), this.params.iti);
+    this._after(() => this.runTestTrial(), this.params.iti);
   },
 
   /**
@@ -632,6 +641,7 @@ window.EvaluativeConditioning = {
    * EC Effect = positive-paired mean - negative-paired mean.
    */
   showResults: function() {
+    this._clearTimers();
     this.state.phase = 'results';
 
     document.getElementById('evaluative-test').classList.remove('active');

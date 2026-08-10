@@ -127,8 +127,15 @@ window.AMP = {
    * Sets up keyboard listener and generates mask pattern.
    */
   init: function() {
+    if (this._initDone) return;          // was unguarded: every call bound another keydown listener
+    this._initDone = true;
     document.addEventListener('keydown', this.handleKeydown.bind(this));
     this.generateMaskPattern();
+    // Installs _after()/_clearTimers(). AMP had five setTimeout calls and not
+    // one clearTimeout, so the five-phase chain
+    //   fixation -> prime -> ISI -> target -> mask -> ITI
+    // survived close() and kept advancing trials into a hidden overlay.
+    PTK.timers(this);
     console.log('AMP module initialized');
   },
 
@@ -173,6 +180,7 @@ window.AMP = {
    * Returns to builder if opened from there, or shows thank you screen.
    */
   close: function() {
+    this._clearTimers();
     document.getElementById('amp-overlay').classList.remove('active');
     this.state.awaitingResponse = false;
 
@@ -353,13 +361,13 @@ window.AMP = {
     stimulus.innerHTML = '<span class="amp-fixation">+</span>';
     this.state.awaitingResponse = false;
 
-    setTimeout(() => {
+    this._after(() => {
       // Phase 2: Prime (75ms)
       this.showPrime(trial, () => {
         // Phase 3: Blank/ISI (125ms)
         stimulus.innerHTML = '';
 
-        setTimeout(() => {
+        this._after(() => {
           // Phase 4: Target (200ms)
           this.showTarget(trial, () => {
             // Phase 5: Mask (until response)
@@ -413,7 +421,7 @@ window.AMP = {
     stimulus.innerHTML = `<span style="font-size: 6rem; color: #ffffff; font-weight: bold; display: block; font-family: 'Noto Sans SC', 'Microsoft YaHei', 'SimHei', 'Heiti SC', sans-serif;">${trial.target}</span>`;
 
     // Use setTimeout for reliable timing
-    setTimeout(callback, this.config.timing.target);
+    this._after(callback, this.config.timing.target);
   },
 
   /**
@@ -471,7 +479,7 @@ window.AMP = {
     const stimulus = document.getElementById('amp-stimulus');
     stimulus.innerHTML = '';
 
-    setTimeout(() => this.runTrial(), this.config.timing.iti);
+    this._after(() => this.runTrial(), this.config.timing.iti);
   },
 
   /**
@@ -504,6 +512,7 @@ window.AMP = {
    * Shows pleasant response proportions for positive vs negative primes.
    */
   showResults: function() {
+    this._clearTimers();
     document.getElementById('amp-trial').classList.remove('active');
     document.getElementById('amp-results').classList.add('active');
     this.state.phase = 'results';

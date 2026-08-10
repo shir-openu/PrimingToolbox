@@ -874,12 +874,12 @@ window.Subliminal = {
       row.dataset.index = index;
       row.innerHTML = `
         <td>
-          <input type="text" value="${stim.prime}"
+          <input type="text" value="${PTK.esc(stim.prime)}"
                  onchange="Subliminal.updateStimulus(${index}, 'prime', this.value.toUpperCase())"
                  placeholder="Prime word" style="text-transform: uppercase;">
         </td>
         <td>
-          <input type="text" value="${stim.target}"
+          <input type="text" value="${PTK.esc(stim.target)}"
                  onchange="Subliminal.updateStimulus(${index}, 'target', this.value.toUpperCase())"
                  placeholder="Target word" style="text-transform: uppercase;">
         </td>
@@ -901,7 +901,7 @@ window.Subliminal = {
 
     container.innerHTML = this.builderNonwords.map((nw, i) => `
       <div class="nonword-item" style="display: flex; gap: 10px; margin-bottom: 8px;">
-        <input type="text" value="${nw}"
+        <input type="text" value="${PTK.esc(nw)}"
                onchange="Subliminal.updateNonword(${i}, this.value.toUpperCase())"
                placeholder="Nonword" style="text-transform: uppercase; flex: 1;">
         <button class="btn-remove-row" onclick="Subliminal.removeNonword(${i})"
@@ -1124,7 +1124,7 @@ window.Subliminal = {
                     border-radius: 20px; padding: 40px; max-width: 650px; text-align: center;">
           <h2 style="color: #ffffff; margin-bottom: 20px;">Your Experiment Link is Ready!</h2>
           <p style="color: #9aa6b2; margin-bottom: 10px;">Send this link to your participants:</p>
-          <input type="text" value="${link}" readonly style="
+          <input type="text" value="${PTK.esc(link)}" readonly style="
             width: 100%; padding: 15px; background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
             color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;

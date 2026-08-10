@@ -755,9 +755,9 @@ window.AMP = {
     return `
       <div class="stimulus-card" data-type="${type}" data-index="${index}">
         <div class="stimulus-preview">${stim.emoji}</div>
-        <input type="text" value="${stim.label}" placeholder="Label"
+        <input type="text" value="${PTK.esc(stim.label)}" placeholder="Label"
                onchange="AMP.updateBuilderStimulus('${type}', ${index}, 'label', this.value)">
-        <input type="text" value="${stim.emoji}" placeholder="Emoji" maxlength="2"
+        <input type="text" value="${PTK.esc(stim.emoji)}" placeholder="Emoji" maxlength="2"
                onchange="AMP.updateBuilderStimulus('${type}', ${index}, 'emoji', this.value)">
         <button class="btn-remove" onclick="AMP.removeBuilderStimulus('${type}', ${index})"
                 ${this.builderStimuli[type].length <= 2 ? 'disabled' : ''}>Remove</button>
@@ -922,7 +922,7 @@ window.AMP = {
                   border-radius: 20px; padding: 40px; max-width: 650px; text-align: center;">
         <h2 style="color: #ffffff; margin-bottom: 20px;">Your AMP Experiment Link is Ready!</h2>
         <p style="color: #9aa6b2; margin-bottom: 10px;">Send this link to your participants:</p>
-        <input type="text" value="${link}" readonly style="
+        <input type="text" value="${PTK.esc(link)}" readonly style="
           width: 100%; padding: 15px; background: rgba(0,0,0,0.3);
           border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
           color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;">

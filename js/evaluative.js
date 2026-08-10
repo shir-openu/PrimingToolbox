@@ -897,9 +897,9 @@ window.EvaluativeConditioning = {
     this.builderStimuli.cs.forEach((stim, index) => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td><input type="text" value="${stim.id}" onchange="EvaluativeConditioning.updateCS(${index}, 'id', this.value)"></td>
-        <td><input type="text" value="${stim.label}" onchange="EvaluativeConditioning.updateCS(${index}, 'label', this.value)"></td>
-        <td><input type="color" value="${stim.color}" onchange="EvaluativeConditioning.updateCS(${index}, 'color', this.value)"></td>
+        <td><input type="text" value="${PTK.esc(stim.id)}" onchange="EvaluativeConditioning.updateCS(${index}, 'id', this.value)"></td>
+        <td><input type="text" value="${PTK.esc(stim.label)}" onchange="EvaluativeConditioning.updateCS(${index}, 'label', this.value)"></td>
+        <td><input type="color" value="${PTK.esc(stim.color)}" onchange="EvaluativeConditioning.updateCS(${index}, 'color', this.value)"></td>
         <td><button class="btn-remove-row" onclick="EvaluativeConditioning.removeCS(${index})" ${this.builderStimuli.cs.length <= 2 ? 'disabled' : ''}>x</button></td>
       `;
       tbody.appendChild(row);
@@ -922,9 +922,9 @@ window.EvaluativeConditioning = {
     usArray.forEach((stim, index) => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td><input type="text" value="${stim.id}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'id', this.value)"></td>
-        <td><input type="text" value="${stim.content}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'content', this.value)"></td>
-        <td><input type="color" value="${stim.color}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'color', this.value)"></td>
+        <td><input type="text" value="${PTK.esc(stim.id)}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'id', this.value)"></td>
+        <td><input type="text" value="${PTK.esc(stim.content)}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'content', this.value)"></td>
+        <td><input type="color" value="${PTK.esc(stim.color)}" onchange="EvaluativeConditioning.updateUS('${valence}', ${index}, 'color', this.value)"></td>
         <td><button class="btn-remove-row" onclick="EvaluativeConditioning.removeUS('${valence}', ${index})" ${usArray.length <= 1 ? 'disabled' : ''}>x</button></td>
       `;
       tbody.appendChild(row);
@@ -1072,7 +1072,7 @@ window.EvaluativeConditioning = {
       <div style="background: rgba(17, 24, 39, 0.95); border: 1px solid rgba(255, 77, 184, 0.3); border-radius: 20px; padding: 40px; max-width: 650px; text-align: center;">
         <h2 style="color: #ffffff; margin-bottom: 20px;">Your Experiment Link is Ready!</h2>
         <p style="color: #9aa6b2; margin-bottom: 10px;">Send this link to your participants:</p>
-        <input type="text" value="${link}" readonly style="width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;">
+        <input type="text" value="${PTK.esc(link)}" readonly style="width: 100%; padding: 15px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: #ffffff; font-size: 0.85rem; margin-bottom: 20px;">
         <div style="display: flex; gap: 15px; justify-content: center;">
           <button onclick="navigator.clipboard.writeText('${link}').then(() => alert('Link copied!'))" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Copy Link</button>
           <button onclick="this.closest('div').parentElement.parentElement.remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px 25px; border-radius: 8px; cursor: pointer;">Close</button>

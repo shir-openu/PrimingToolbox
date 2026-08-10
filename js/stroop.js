@@ -653,29 +653,29 @@ window.Stroop = {
       row.dataset.index = index;
       row.innerHTML = `
         <td>
-          <input type="text" value="${stim.id}"
+          <input type="text" value="${PTK.esc(stim.id)}"
                  onchange="Stroop.updateStimulus(${index}, 'id', this.value)"
                  placeholder="Color name">
         </td>
         <td>
           <div class="color-preview">
-            <input type="color" value="${stim.color}"
+            <input type="color" value="${PTK.esc(stim.color)}"
                    onchange="Stroop.updateStimulus(${index}, 'color', this.value)">
           </div>
         </td>
         <td>
-          <input type="text" value="${stim.wordLang1}"
+          <input type="text" value="${PTK.esc(stim.wordLang1)}"
                  onchange="Stroop.updateStimulus(${index}, 'wordLang1', this.value)"
                  placeholder="Word in Language 1">
         </td>
         <td>
-          <input type="text" value="${stim.wordLang2}"
+          <input type="text" value="${PTK.esc(stim.wordLang2)}"
                  onchange="Stroop.updateStimulus(${index}, 'wordLang2', this.value)"
                  placeholder="Word in Language 2"
                  style="direction: auto;">
         </td>
         <td>
-          <input type="text" class="response-key-input" value="${stim.key}"
+          <input type="text" class="response-key-input" value="${PTK.esc(stim.key)}"
                  onchange="Stroop.updateStimulus(${index}, 'key', this.value.toUpperCase())"
                  maxlength="1">
         </td>

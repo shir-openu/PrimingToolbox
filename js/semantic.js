@@ -718,8 +718,8 @@ window.Semantic = {
       this.builderStimuli.relatedPairs.forEach((pair, idx) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><input type="text" value="${pair.prime}" onchange="Semantic.updatePair('related', ${idx}, 'prime', this.value)" onclick="event.stopPropagation()"></td>
-          <td><input type="text" value="${pair.target}" onchange="Semantic.updatePair('related', ${idx}, 'target', this.value)" onclick="event.stopPropagation()"></td>
+          <td><input type="text" value="${PTK.esc(pair.prime)}" onchange="Semantic.updatePair('related', ${idx}, 'prime', this.value)" onclick="event.stopPropagation()"></td>
+          <td><input type="text" value="${PTK.esc(pair.target)}" onchange="Semantic.updatePair('related', ${idx}, 'target', this.value)" onclick="event.stopPropagation()"></td>
           <td><button class="btn-remove-row" onclick="event.stopPropagation(); Semantic.removePair('related', ${idx})" ${this.builderStimuli.relatedPairs.length <= 3 ? 'disabled' : ''}>x</button></td>
         `;
         relatedTbody.appendChild(row);
@@ -733,8 +733,8 @@ window.Semantic = {
       this.builderStimuli.unrelatedPairs.forEach((pair, idx) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><input type="text" value="${pair.prime}" onchange="Semantic.updatePair('unrelated', ${idx}, 'prime', this.value)" onclick="event.stopPropagation()"></td>
-          <td><input type="text" value="${pair.target}" onchange="Semantic.updatePair('unrelated', ${idx}, 'target', this.value)" onclick="event.stopPropagation()"></td>
+          <td><input type="text" value="${PTK.esc(pair.prime)}" onchange="Semantic.updatePair('unrelated', ${idx}, 'prime', this.value)" onclick="event.stopPropagation()"></td>
+          <td><input type="text" value="${PTK.esc(pair.target)}" onchange="Semantic.updatePair('unrelated', ${idx}, 'target', this.value)" onclick="event.stopPropagation()"></td>
           <td><button class="btn-remove-row" onclick="event.stopPropagation(); Semantic.removePair('unrelated', ${idx})" ${this.builderStimuli.unrelatedPairs.length <= 3 ? 'disabled' : ''}>x</button></td>
         `;
         unrelatedTbody.appendChild(row);
@@ -748,7 +748,7 @@ window.Semantic = {
       this.builderStimuli.nonwordTargets.forEach((nonword, idx) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><input type="text" value="${nonword}" onchange="Semantic.updateNonword(${idx}, this.value)" onclick="event.stopPropagation()"></td>
+          <td><input type="text" value="${PTK.esc(nonword)}" onchange="Semantic.updateNonword(${idx}, this.value)" onclick="event.stopPropagation()"></td>
           <td><button class="btn-remove-row" onclick="event.stopPropagation(); Semantic.removeNonword(${idx})" ${this.builderStimuli.nonwordTargets.length <= 3 ? 'disabled' : ''}>x</button></td>
         `;
         nonwordTbody.appendChild(row);

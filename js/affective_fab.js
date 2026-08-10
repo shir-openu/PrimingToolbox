@@ -42,11 +42,113 @@ window.Affective = {
   showFeedback: true,
   _initDone: false,
 
+  practiceTrials: 4,
+
+  /* ---------- spec: drives the setup screen and the Template Builder ---------- */
+
+  spec: function () {
+    var self = this;
+    return {
+      key: 'affective',
+      name: 'Affective Priming',
+      source: 'Fazio, Sanbonmatsu, Powell & Kardes (1986)',
+      urlParam: 'affective',
+      template: 'affective-priming',
+      accent: '#ff4db8',
+      defaultExperimentId: 'affective_priming',
+      startFn: 'Affective.start()',
+      closeFn: 'Affective.close()',
+      abcd: {
+        A: 'A briefly flashed word carrying positive or negative feeling.',
+        B: 'Judging whether the adjective that follows is positive or negative.',
+        C: 'Judgement latency when prime and target carry opposite feeling.',
+        D: 'Judgement latency when they carry the same feeling.'
+      },
+      characteristics: {
+        association: 'Prime and target share an evaluative dimension - both are positive, or both negative, or they clash.',
+        secondariness: 'The first word is never judged and is irrelevant to the decision about the adjective.',
+        modulation: 'Matching feeling speeds the judgement; clashing feeling slows it.'
+      },
+      instructions: 'A word flashes, then an adjective. Judge the adjective as positive or negative.',
+      howToPlay: [
+        'A <b>+</b> appears in the middle of the screen. Look at it.',
+        'A word flashes very briefly. <b>Ignore it</b> &ndash; it is not part of your task.',
+        'Then an <b>adjective</b> appears. Decide as fast as you can whether it is a <b>good</b> thing or a <b>bad</b> thing, and press the matching key.',
+        'A few practice trials run first and are not recorded.'
+      ],
+      keyLegend: 'Keys: <b>' + String(self.responseKeys.positive).toUpperCase() + '</b> = positive &nbsp;&nbsp; <b>' +
+                 String(self.responseKeys.negative).toUpperCase() + '</b> = negative',
+      example: '<div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;align-items:center;text-align:center;">' +
+        '<div><div style="font-size:1.9rem;color:#ffffff;">+</div>' +
+          '<div style="color:#9aa6b2;font-size:.78rem;margin-top:6px;">look here</div></div>' +
+        '<div style="color:#64748b;">&rarr;</div>' +
+        '<div><div style="font-size:1.6rem;font-weight:700;color:#a78bfa;">PUPPY</div>' +
+          '<div style="color:#9aa6b2;font-size:.78rem;margin-top:6px;">flashes &ndash; ignore it</div></div>' +
+        '<div style="color:#64748b;">&rarr;</div>' +
+        '<div><div style="font-size:1.6rem;font-weight:700;color:#ffffff;">LOVELY</div>' +
+          '<div style="color:#4ade80;font-size:.85rem;margin-top:6px;">good thing &rarr; press ' +
+            String(self.responseKeys.positive).toUpperCase() + '</div></div>' +
+      '</div>',
+      stimulusGroups: [
+        { key: 'positivePrimes', label: 'Positive primes', type: 'words', min: 2 },
+        { key: 'negativePrimes', label: 'Negative primes', type: 'words', min: 2 },
+        { key: 'positiveTargets', label: 'Positive target adjectives', type: 'words', min: 2,
+          help: 'These are what the participant judges.' },
+        { key: 'negativeTargets', label: 'Negative target adjectives', type: 'words', min: 2 }
+      ],
+      timingFields: [
+        { key: 'fixation', label: 'Fixation', min: 0, max: 3000, step: 50 },
+        { key: 'primeDuration', label: 'Prime', min: 10, max: 2000, step: 10,
+          help: 'Fazio et al. used a short SOA; fixation + prime + ISI is the SOA.' },
+        { key: 'isi', label: 'Blank after the prime', min: 0, max: 2000, step: 10 },
+        { key: 'responseTimeout', label: 'Response window', min: 500, max: 10000, step: 100 },
+        { key: 'iti', label: 'Gap between trials', min: 0, max: 5000, step: 50 }
+      ],
+      practice: { def: 4 },
+      repetitions: { prop: 'trialsPerCondition', def: 5, min: 1, max: 20,
+                     label: 'Trials per condition',
+                     help: 'Four conditions, so the scored block is four times this number.' },
+      toConfig: function (mod) { return mod.toConfig(); },
+      applyConfig: function (mod, config) {
+        if (config.responseKeys) mod.responseKeys = config.responseKeys;
+      },
+      asm: function (mod) {
+        return {
+          instructions: 'Judge whether the adjective is positive or negative.',
+          primes: mod.data.positivePrimes.concat(mod.data.negativePrimes),
+          targets: mod.data.positiveTargets.concat(mod.data.negativeTargets),
+          conditions: ['congruent', 'incongruent'],
+          baseline: 'incongruent',
+          response: { positive: mod.responseKeys.positive, negative: mod.responseKeys.negative }
+        };
+      }
+    };
+  },
+
+  toConfig: function () {
+    return {
+      template: 'affective-priming',
+      experimenterEmail: this.experimenterEmail,
+      userExperimentId: this.userExperimentId,
+      trialsPerCondition: this.trialsPerCondition,
+      practiceTrials: this.practiceTrials,
+      responseKeys: this.responseKeys,
+      timing: this.timing,
+      stimuli: {
+        positivePrimes: this.data.positivePrimes,
+        negativePrimes: this.data.negativePrimes,
+        positiveTargets: this.data.positiveTargets,
+        negativeTargets: this.data.negativeTargets
+      }
+    };
+  },
+
   /* ---------- setup ---------- */
 
   init: function () {
     if (this._initDone) return;
     document.addEventListener('keydown', this.handleKeydown.bind(this));
+    PTK.timers(this);
     this._initDone = true;
     console.log('Affective Priming module initialized');
   },
@@ -59,14 +161,8 @@ window.Affective = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:48px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="affective-setup">' +
-          '<h2 style="color:#ff4db8;">Affective Priming</h2>' +
-          '<p style="color:#9aa6b2;">A word flashes, then an adjective appears. Judge the <b>adjective</b> as fast as you can:</p>' +
-          '<p style="font-size:1.05rem;margin:18px 0;"><b style="color:#4ade80;">P</b> = positive &nbsp;&nbsp; <b style="color:#f87171;">N</b> = negative</p>' +
-          '<p style="color:#9aa6b2;font-size:.9rem;">Ignore the first word — it is not part of the task.</p>' +
-          '<button class="btn" onclick="Affective.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="Affective.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="affective-setup"></div>' +
         '<div id="affective-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="affective-progress">Trial 1</div>' +
           '<div id="affective-stimulus" style="font-size:3rem;font-weight:700;margin:80px 0;min-height:80px;letter-spacing:2px;">+</div>' +
@@ -77,6 +173,7 @@ window.Affective = {
           '<h2 style="color:#ff4db8;">Complete</h2>' +
           '<div id="affective-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<button class="btn" onclick="Affective.exportCSV()" style="margin-top:10px;">Download CSV</button> ' +
+          '<button class="btn" onclick="Affective.exportXLSX()">Download Excel</button> ' +
           '<button class="btn" onclick="Affective.restart()">Try Again</button> ' +
           '<button class="btn btn-secondary" onclick="Affective.close()">Close</button>' +
         '</div>' +
@@ -88,13 +185,26 @@ window.Affective = {
     this.ensureOverlay();
     this.init();
     document.getElementById('affective-overlay').style.display = 'block';
+    PTK.paintSetup('affective-setup', this, this.spec());
     document.getElementById('affective-setup').style.display = 'block';
     document.getElementById('affective-trial').style.display = 'none';
     document.getElementById('affective-results').style.display = 'none';
+    var p = document.getElementById('affective-params');
+    if (p) {
+      p.textContent = (this.trialsPerCondition * 4) + ' scored trials' +
+        (this.practiceTrials ? ', after ' + this.practiceTrials + ' practice trials' : '') +
+        '. Prime ' + this.timing.primeDuration + ' ms, response window ' +
+        this.timing.responseTimeout + ' ms.';
+    }
     this.state.phase = 'setup';
   },
 
   close: function () {
+    // Was: only _timeout was ever cleared. The nested fixation/prime/ISI chain
+    // in runTrial and the advance timer in record were untracked, so closing
+    // mid-trial left them running into a hidden overlay.
+    this._clearTimers();
+    clearTimeout(this._timeout);
     const ov = document.getElementById('affective-overlay');
     if (ov) ov.style.display = 'none';
     this.state.awaitingResponse = false;
@@ -130,44 +240,88 @@ window.Affective = {
   },
 
   start: function () {
-    this.state.trials = this.buildTrials();
     this.state.currentTrial = 0;
     this.state.results = [];
     document.getElementById('affective-setup').style.display = 'none';
     document.getElementById('affective-results').style.display = 'none';
     document.getElementById('affective-trial').style.display = 'block';
+
+    if (this.practiceTrials > 0) {
+      this.state.isPractice = true;
+      this.state.trials = PTA.shuffleArray(this.buildTrials()).slice(0, this.practiceTrials);
+    } else {
+      this.state.isPractice = false;
+      this.state.trials = this.buildTrials();
+    }
+    this.runTrial();
+  },
+
+  beginScored: function () {
+    this.state.isPractice = false;
+    this.state.trials = this.buildTrials();
+    this.state.currentTrial = 0;
+    this.state.results = [];
     this.runTrial();
   },
 
   runTrial: function () {
+    this._clearTimers();
+    const self = this;
     const t = this.state.trials[this.state.currentTrial];
-    if (!t) { this.showResults(); return; }
-    const stim = document.getElementById('affective-stimulus');
+    const stimEl = document.getElementById('affective-stimulus');
+
+    if (!t) {
+      if (this.state.isPractice) {
+        this.state.awaitingResponse = false;
+        document.getElementById('affective-feedback').textContent = '';
+        stimEl.style.fontSize = '1.05rem';
+        stimEl.innerHTML = 'Practice finished.<br>Press <b>' +
+          String(this.responseKeys.positive).toUpperCase() + '</b> to begin the real trials.';
+        const go = function (e) {
+          if ((e.key || '').toLowerCase() !== self.responseKeys.positive) return;
+          document.removeEventListener('keydown', go);
+          stimEl.style.fontSize = '3rem';
+          self.beginScored();
+        };
+        document.addEventListener('keydown', go);
+        return;
+      }
+      this.showResults();
+      return;
+    }
+
+    const stim = stimEl;
     const fb = document.getElementById('affective-feedback');
     fb.textContent = '';
     document.getElementById('affective-progress').textContent =
-      'Trial ' + (this.state.currentTrial + 1) + ' of ' + this.state.trials.length;
+      (this.state.isPractice ? 'Practice trial ' : 'Trial ') +
+      (this.state.currentTrial + 1) + ' of ' + this.state.trials.length;
 
     this.state.phase = 'fixation';
     this.state.awaitingResponse = false;
     stim.textContent = '+';
     stim.style.color = '#ffffff';
 
-    setTimeout(() => {
+    // Every step of the chain is tracked, so close() can cancel all of it.
+    const myTrial = this.state.currentTrial;
+    this._after(() => {
       this.state.phase = 'prime';
       stim.textContent = t.prime;
       stim.style.color = '#a78bfa';
-      setTimeout(() => {
+      this._after(() => {
         this.state.phase = 'isi';
         stim.textContent = '';
-        setTimeout(() => {
+        this._after(() => {
           this.state.phase = 'target';
           stim.textContent = t.target;
           stim.style.color = '#ffffff';
           this.state.stimulusOnset = performance.now();
           this.state.awaitingResponse = true;
-          this._timeout = setTimeout(() => {
-            if (this.state.awaitingResponse) this.record(null);
+          this._after(() => {
+            // scoped to THIS trial, so it can never fire into a later one
+            if (this.state.awaitingResponse && this.state.currentTrial === myTrial) {
+              this.record(null);
+            }
           }, this.timing.responseTimeout);
         }, this.timing.isi);
       }, this.timing.primeDuration);
@@ -185,14 +339,18 @@ window.Affective = {
 
   record: function (response) {
     if (!this.state.awaitingResponse) return;
-    clearTimeout(this._timeout);
+    this._clearTimers();
     this.state.awaitingResponse = false;
     const t = this.state.trials[this.state.currentTrial];
     const rt = response ? (performance.now() - this.state.stimulusOnset) : null;
     const correct = response ? (response === t.targetVal) : false;
 
-    this.state.results.push({ ...t, response, correct, rt });
-    this.saveTrial(t, response, correct, rt);
+    // Practice trials are shown, then discarded - they must not reach results
+    // or Supabase, or they inflate the baseline and shrink the effect.
+    if (!this.state.isPractice) {
+      this.state.results.push({ ...t, response, correct, rt });
+      this.saveTrial(t, response, correct, rt);
+    }
 
     if (this.showFeedback) {
       const fb = document.getElementById('affective-feedback');
@@ -200,7 +358,7 @@ window.Affective = {
       fb.style.color = correct ? '#4ade80' : '#f87171';
     }
     this.state.currentTrial++;
-    setTimeout(() => this.runTrial(), this.timing.feedbackDuration + this.timing.iti / 2);
+    this._after(() => this.runTrial(), this.timing.feedbackDuration + this.timing.iti / 2);
   },
 
   /* ---------- persistence (existing columns only) ---------- */
@@ -278,59 +436,36 @@ window.Affective = {
 
   /* ---------- builder + participant link ---------- */
 
-  openBuilder: function () {
-    // Minimal builder: collect experimenter identity + generate a shareable link.
-    this.ensureOverlay();
-    const email = prompt('Your email (for data attribution):', this.experimenterEmail || '');
-    if (email === null) return;
-    const expId = prompt('Experiment ID (e.g. affective_pilot_1):', this.userExperimentId || '');
-    if (expId === null) return;
-    this.experimenterEmail = email.trim();
-    this.userExperimentId = expId.trim();
-
-    const config = {
-      template: 'affective-priming',
-      experimenterEmail: this.experimenterEmail,
-      userExperimentId: this.userExperimentId,
-      trialsPerCondition: this.trialsPerCondition,
-      timing: { ...this.timing }
-    };
-    // Fold in any timing planned on the interactive timeline.
-    if (window.currentConfig && window.currentConfig.presentation) {
-      const p = window.currentConfig.presentation;
-      if (typeof p.fixation_ms === 'number') config.timing.fixation = p.fixation_ms;
-      if (typeof p.prime_duration_ms === 'number') config.timing.primeDuration = p.prime_duration_ms;
-      if (typeof p.ISI_ms === 'number') config.timing.isi = p.ISI_ms;
-    }
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-    const link = window.location.href.split('?')[0] + '?affective=' + encoded;
-    window.prompt('Participant link (copy and send):', link);
+  exportXLSX: function () {
+    if (!this.state.results.length) { alert('No results to export.'); return; }
+    const headers = ['trial', 'prime', 'prime_valence', 'target', 'target_valence',
+                     'congruent', 'response', 'correct', 'rt_ms'];
+    const rows = this.state.results.map((r, i) =>
+      [i + 1, r.prime, r.primeVal, r.target, r.targetVal, r.congruent,
+       r.response || 'none', r.correct, r.rt === null ? '' : Math.round(r.rt)]);
+    PTK.exportXLSX(headers, rows, 'affective_priming');
   },
 
-  checkUrlConfig: function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const raw = urlParams.get('affective');
-    if (!raw) return false;
-    try {
-      const config = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      if (config.template !== 'affective-priming') return false;
-      this.isParticipantMode = true;
-      this.experimenterEmail = config.experimenterEmail || '';
-      this.userExperimentId = config.userExperimentId || '';
-      this.trialsPerCondition = config.trialsPerCondition || 5;
-      if (config.timing) {
-        this.timing.fixation = config.timing.fixation || 500;
-        this.timing.primeDuration = config.timing.primeDuration || 200;
-        this.timing.isi = config.timing.isi || 100;
-      }
-      const layout = document.querySelector('.layout');
-      if (layout) layout.style.display = 'none';
-      this.open();
-      return true;
-    } catch (e) {
-      console.error('Affective: bad participant config', e);
-      return false;
+  openBuilder: function () {
+    this.ensureOverlay();
+    this.init();
+    // Fold in any timing planned on the interactive timeline before the builder
+    // reads this.timing, so the two cannot disagree on screen.
+    if (window.currentConfig && window.currentConfig.presentation) {
+      const p = window.currentConfig.presentation;
+      if (typeof p.fixation_ms === 'number') this.timing.fixation = p.fixation_ms;
+      if (typeof p.prime_duration_ms === 'number') this.timing.primeDuration = p.prime_duration_ms;
+      if (typeof p.ISI_ms === 'number') this.timing.isi = p.ISI_ms;
     }
+    PTK.openBuilder(this, this.spec());
+  },
+
+  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+
+  checkUrlConfig: function () {
+    this.ensureOverlay();
+    this.init();
+    return PTK.checkUrlConfig(this, this.spec());
   }
 };
 

@@ -51,9 +51,105 @@ window.Social = {
   repetitions: 1,
   _initDone: false,
 
+  spec: function () {
+    return {
+      key: 'social',
+      name: 'Social Priming',
+      source: 'Bargh, Chen & Burrows (1996)',
+      urlParam: 'social',
+      template: 'social-priming',
+      accent: '#ff4db8',
+      defaultExperimentId: 'social_priming',
+      startFn: 'Social.start()',
+      closeFn: 'Social.close()',
+      abcd: {
+        A: 'Stereotype words hidden among the scrambled sentences.',
+        B: 'The behaviour that follows - in the original, walking speed.',
+        C: 'Behaviour after sentences containing no stereotype words.',
+        D: 'Behaviour after sentences containing them.'
+      },
+      characteristics: {
+        association: 'The hidden words are associated with a stereotype that is never named.',
+        secondariness: 'The words are not required to build the sentences, and you are never told they matter.',
+        modulation: 'The activated stereotype shifts the behaviour measured afterwards.'
+      },
+      boundaryNote:
+        'Measurement caveat: the original measured walking speed down a corridor, which a browser cannot ' +
+        'observe. The stand-in here is how long each sentence takes to build. That is a weaker proxy, and ' +
+        '"Start this one again" resets its clock, so treat the latency as illustrative.',
+      instructions: 'Build a grammatical four-word sentence from each set of five words.',
+      howToPlay: [
+        'You will see <b>five scrambled words</b>.',
+        'Click <b>four</b> of them, in the right order, to make a short sentence that makes sense. One word is left over on purpose.',
+        'If you misclick, press <b>Start this one again</b> and the set resets.',
+        'Work quickly and naturally. There is no scoring and nothing to memorise.'
+      ],
+      keyLegend: 'Everything is clicked - no keyboard, no time limit.',
+      example: '<div style="text-align:center;">' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-bottom:10px;">You see these five words:</div>' +
+        '<div style="font-size:1.15rem;color:#e5e7eb;letter-spacing:.5px;">' +
+          'clock &nbsp; she &nbsp; the &nbsp; ball &nbsp; threw</div>' +
+        '<div style="color:#4ade80;font-size:1rem;margin-top:12px;">&rarr; click: she &middot; threw &middot; the &middot; ball</div>' +
+        '<div style="color:#9aa6b2;font-size:.82rem;margin-top:6px;">&ldquo;clock&rdquo; is the leftover word</div>' +
+      '</div>',
+      stimulusGroups: [
+        { key: 'primeItems', label: 'Stereotype sentence sets', type: 'rows', min: 2,
+          fields: [{ key: 'wordsText', label: 'Five words, comma separated' },
+                   { key: 'stereotype', label: 'Which word is the cue' }],
+          help: 'Five words; four must form a grammatical sentence. One carries the stereotype.' },
+        { key: 'neutralItems', label: 'Neutral sentence sets', type: 'rows', min: 2,
+          fields: [{ key: 'wordsText', label: 'Five words, comma separated' }],
+          help: 'Same structure, no stereotype word. These give the baseline.' }
+      ],
+      timingFields: [],
+      repetitions: { prop: 'repetitions', def: 1, min: 1, max: 5,
+                     label: 'Passes through the item set',
+                     help: 'Each pass shows every sentence set once.' },
+      toConfig: function (mod) { return mod.toConfig(); },
+      afterApply: function (mod) { mod.absorbBuilderRows(); },
+      asm: function (mod) {
+        return {
+          instructions: 'Make a grammatical four-word sentence from each set of five words.',
+          primes: mod.data.primeItems.map(function (i) { return i.stereotype; }).filter(Boolean),
+          targets: ['sentence construction latency'],
+          conditions: ['prime', 'neutral'],
+          baseline: 'neutral',
+          response: { 'click four words in order': 'click' }
+        };
+      }
+    };
+  },
+
+  toConfig: function () {
+    return {
+      template: 'social-priming',
+      experimenterEmail: this.experimenterEmail,
+      userExperimentId: this.userExperimentId,
+      repetitions: this.repetitions,
+      stimuli: { primeItems: this.data.primeItems, neutralItems: this.data.neutralItems }
+    };
+  },
+
+  /** The builder edits sentence sets as comma-separated text. */
+  absorbBuilderRows: function () {
+    ['primeItems', 'neutralItems'].forEach(function (key) {
+      var rows = this.data[key];
+      if (!rows || !rows.length || rows[0].wordsText === undefined) return;
+      var rebuilt = [];
+      rows.forEach(function (r) {
+        var words = String(r.wordsText || '').split(',')
+          .map(function (w) { return w.trim(); }).filter(Boolean);
+        if (words.length < 5) return;
+        rebuilt.push({ words: words, stereotype: (r.stereotype || '').trim() || null });
+      });
+      if (rebuilt.length >= 2) this.data[key] = rebuilt;
+    }, this);
+  },
+
   init: function () {
     if (this._initDone) return;
     this._initDone = true;
+    PTK.timers(this);
     console.log('Social Priming module initialized');
   },
 
@@ -65,12 +161,8 @@ window.Social = {
     el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(6,10,20,.97);z-index:2000;overflow:auto;';
     el.innerHTML =
       '<div style="max-width:760px;margin:0 auto;padding:44px 24px;color:#e5e7eb;text-align:center;font-family:inherit;">' +
-        '<div id="social-setup">' +
-          '<h2 style="color:#ff4db8;">Scrambled Sentences</h2>' +
-          '<p style="color:#9aa6b2;line-height:1.7;">For each set of five words, click <b>four</b> of them, in order, to make a short grammatical sentence. Work as quickly and naturally as you can.</p>' +
-          '<button class="btn" onclick="Social.start()" style="margin-top:14px;">Start</button> ' +
-          '<button class="btn btn-secondary" onclick="Social.close()">Cancel</button>' +
-        '</div>' +
+        // Filled by PTK.paintSetup on open() - see js/paradigm_kit_fab.js
+        '<div id="social-setup"></div>' +
         '<div id="social-trial" style="display:none;">' +
           '<div style="color:#9aa6b2;font-size:.85rem;" id="social-progress">Item 1</div>' +
           '<div id="social-built" style="min-height:44px;font-size:1.5rem;margin:24px 0;color:#4ade80;letter-spacing:1px;"></div>' +
@@ -82,6 +174,7 @@ window.Social = {
           '<div id="social-results-body" style="color:#cbd5e1;line-height:1.9;"></div>' +
           '<p style="color:#9aa6b2;font-size:.82rem;max-width:520px;margin:10px auto;">Note: online measure is sentence-completion latency, a proxy for the classic walking-speed measure.</p>' +
           '<button class="btn" onclick="Social.exportCSV()">Download CSV</button> ' +
+          '<button class="btn" onclick="Social.exportXLSX()">Download Excel</button> ' +
           '<button class="btn" onclick="Social.restart()">Try Again</button> ' +
           '<button class="btn btn-secondary" onclick="Social.close()">Close</button>' +
         '</div>' +
@@ -93,13 +186,20 @@ window.Social = {
     this.ensureOverlay();
     this.init();
     document.getElementById('social-overlay').style.display = 'block';
+    PTK.paintSetup('social-setup', this, this.spec());
     document.getElementById('social-setup').style.display = 'block';
     document.getElementById('social-trial').style.display = 'none';
     document.getElementById('social-results').style.display = 'none';
+    var p = document.getElementById('social-params');
+    if (p) {
+      p.textContent = ((this.data.primeItems.length + this.data.neutralItems.length) * this.repetitions) +
+        ' sentence sets, in a random order.';
+    }
     this.state.phase = 'setup';
   },
 
   close: function () {
+    this._clearTimers();
     const ov = document.getElementById('social-overlay');
     if (ov) ov.style.display = 'none';
     this.state.phase = 'setup';
@@ -173,7 +273,7 @@ window.Social = {
     this.state.results.push(result);
     this.saveTrial(result);
     this.state.currentTrial++;
-    setTimeout(() => this.renderItem(), 350);
+    this._after(() => this.renderItem(), 350);
   },
 
   saveTrial: function (result) {
@@ -238,44 +338,34 @@ window.Social = {
     document.body.appendChild(m);
   },
 
-  openBuilder: function () {
-    this.ensureOverlay();
-    const email = prompt('Your email (for data attribution):', this.experimenterEmail || '');
-    if (email === null) return;
-    const expId = prompt('Experiment ID (e.g. social_pilot_1):', this.userExperimentId || '');
-    if (expId === null) return;
-    this.experimenterEmail = email.trim();
-    this.userExperimentId = expId.trim();
-    const config = {
-      template: 'social-priming',
-      experimenterEmail: this.experimenterEmail,
-      userExperimentId: this.userExperimentId,
-      repetitions: this.repetitions
-    };
-    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-    const link = window.location.href.split('?')[0] + '?social=' + encoded;
-    window.prompt('Participant link (copy and send):', link);
+  exportXLSX: function () {
+    if (!this.state.results.length) { alert('No results to export.'); return; }
+    const headers = ['item', 'condition', 'stereotype_word', 'sentence', 'completion_ms'];
+    const rows = this.state.results.map((r, i) =>
+      [i + 1, r.condition, r.stereotype, r.sentence, Math.round(r.rt)]);
+    PTK.exportXLSX(headers, rows, 'social_priming');
   },
 
+  openBuilder: function () {
+    this.ensureOverlay();
+    this.init();
+    var self = this;
+    // present the sentence sets in the flat shape the table can edit
+    ['primeItems', 'neutralItems'].forEach(function (key) {
+      self.data[key] = self.data[key].map(function (it) {
+        return it.wordsText !== undefined ? it
+          : { wordsText: it.words.join(', '), stereotype: it.stereotype || '' };
+      });
+    });
+    PTK.openBuilder(this, this.spec());
+  },
+
+  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+
   checkUrlConfig: function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const raw = urlParams.get('social');
-    if (!raw) return false;
-    try {
-      const config = JSON.parse(decodeURIComponent(escape(atob(raw))));
-      if (config.template !== 'social-priming') return false;
-      this.isParticipantMode = true;
-      this.experimenterEmail = config.experimenterEmail || '';
-      this.userExperimentId = config.userExperimentId || '';
-      this.repetitions = config.repetitions || 1;
-      const layout = document.querySelector('.layout');
-      if (layout) layout.style.display = 'none';
-      this.open();
-      return true;
-    } catch (e) {
-      console.error('Social: bad participant config', e);
-      return false;
-    }
+    this.ensureOverlay();
+    this.init();
+    return PTK.checkUrlConfig(this, this.spec());
   }
 };
 

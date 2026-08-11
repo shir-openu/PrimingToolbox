@@ -28,6 +28,10 @@
   ---------------------------------------------------------------------------
   Newest first. Each link is the file exactly as it was before the next edit.
 
+  Before the two Build From Scratch cards, the participant instructions
+  screen and the per-condition results grid (2026-08-11):
+      https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/index.html
+
   Before the article's Section 5 paradigms (goal, moral, money, advertising)
   were wired in, and before the participant-link chain was flattened:
       https://github.com/shir-openu/PrimingToolbox/blob/57eef45/index.html
@@ -218,18 +222,37 @@
             </div>
           </div>
 
-          <!-- Learn More Card -->
-          <div class="module-card" onclick="showLearnMore()" style="border-color:#bb7be666;">
+          <!-- Build From Scratch. Until 2026-08-11 this card called
+               showLearnMore(), which was alert('coming soon!'). It now opens
+               the real builder: build/from-scratch.html. -->
+          <div class="module-card" onclick="showBuildFromScratch()" style="border-color:#bb7be666;">
             <div class="module-content">
-              <div class="module-icon">&#128218;</div>
+              <div class="module-icon">&#128295;</div>
               <div class="module-title" style="color:#bb7be6;">Build From Scratch</div>
               <div class="module-description">
-                Understand the ABCD framework and priming paradigms.
+                Your own experiment, not a template. Stimuli, conditions, keys and timing.
               </div>
               <ul class="module-options">
-                <li>ABCD Framework</li>
-                <li>Priming types</li>
-                <li>Research resources</li>
+                <li>Your own stimuli and conditions</li>
+                <li>Optional ABCD description</li>
+                <li>Participant link at the end</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Build on the Timeline: the same builder, timing drawn rather
+               than typed. Added 2026-08-11. -->
+          <div class="module-card" onclick="showBuildOnTimeline()" style="border-color:#2fd4c466;">
+            <div class="module-content">
+              <div class="module-icon">&#9202;</div>
+              <div class="module-title" style="color:#2fd4c4;">Build With The Timeline</div>
+              <div class="module-description">
+                Draw the trial first: drag each phase to length, then fill in the rest.
+              </div>
+              <ul class="module-options">
+                <li>Drag prime, gap and target</li>
+                <li>Same steps as Build From Scratch</li>
+                <li>The timing travels with the link</li>
               </ul>
             </div>
           </div>
@@ -3081,16 +3104,72 @@
       document.getElementById('experimentTitle').textContent = currentConfig.name || 'Experiment';
       document.getElementById('experimentDescription').textContent = currentConfig.description || '';
 
-      // Set up response keys display
+      // Instructions. A config built in Build From Scratch carries the author's
+      // own instructions, and before this they were collected, encoded into the
+      // link, and never shown - so a participant opening such a link saw a bare
+      // Start button and no task.
+      //
+      // Deliberately NOT shown here: config.abcd, the author's description of
+      // the design. Telling a participant which stimulus is the prime and what
+      // it is expected to do destroys secondariness, which is the thing being
+      // measured. It travels with the design for the experimenter's records
+      // and for the exported file only.
+      const optionHost = document.getElementById('optionSelectors');
+      if (optionHost) {
+        optionHost.textContent = '';
+        const lines = String(currentConfig.instructions || '')
+          .split('\n').map(s => s.trim()).filter(Boolean);
+        if (lines.length) {
+          const box = document.createElement('div');
+          box.style.cssText =
+            'background:rgba(102,126,234,.15);border:2px solid rgba(102,126,234,.4);' +
+            'border-radius:15px;padding:20px 24px;margin:0 auto 22px;max-width:640px;text-align:left;';
+          const h = document.createElement('h3');
+          h.textContent = 'Instructions';
+          h.style.cssText = 'color:#ff4db8;margin:0 0 12px;font-size:1.05rem;';
+          box.appendChild(h);
+          const ol = document.createElement('ol');
+          ol.style.cssText = 'color:#e5e7eb;margin:0;padding-left:20px;line-height:1.7;font-size:.98rem;';
+          lines.forEach(t => {
+            const li = document.createElement('li');
+            li.textContent = t;            // author text: never innerHTML
+            li.style.marginBottom = '6px';
+            ol.appendChild(li);
+          });
+          box.appendChild(ol);
+          optionHost.appendChild(box);
+        }
+      }
+
+      // Set up response keys display. Labels and keys are author-supplied and
+      // arrive through the URL, so they are built as text nodes rather than
+      // interpolated into innerHTML.
       const keysContainer = document.getElementById('responseKeys');
-      keysContainer.innerHTML = '';
-      for (const [label, key] of Object.entries(currentConfig.response.keys)) {
-        keysContainer.innerHTML += `
-          <div class="key-hint">
-            <span class="key">${key}</span>
-            <span class="label">${label}</span>
-          </div>
-        `;
+      const keyMap = (currentConfig.response && currentConfig.response.keys) || {};
+      keysContainer.textContent = '';
+      const hints = [];
+      for (const [label, key] of Object.entries(keyMap)) {
+        const hint = document.createElement('div');
+        hint.className = 'key-hint';
+        const k = document.createElement('span');
+        k.className = 'key';
+        k.textContent = key;
+        const l = document.createElement('span');
+        l.className = 'label';
+        l.textContent = label;
+        hint.appendChild(k);
+        hint.appendChild(l);
+        keysContainer.appendChild(hint);
+        hints.push(key + ' = ' + label);
+      }
+
+      // The line under the stimulus still said "Press the key corresponding to
+      // the ink color" for every non-Stroop experiment.
+      const trialInstruction = document.getElementById('trialInstruction');
+      if (trialInstruction) {
+        trialInstruction.textContent = hints.length
+          ? 'Respond as fast as you can:  ' + hints.join('   |   ')
+          : (currentConfig.description || '');
       }
 
       // Show overlay
@@ -3182,7 +3261,34 @@
           </div>
         `;
       } else {
-        // Generic results
+        // Generic results. One overall RT cannot show a priming effect - the
+        // effect is the difference BETWEEN conditions - so the per-condition
+        // means the engine now computes are shown alongside it. Conditions are
+        // author-supplied text (Build From Scratch), so they are escaped.
+        const esc = (window.PTA && PTA.escapeHtml) ? PTA.escapeHtml : (s => String(s));
+        const conds = (stats.conditions || []).filter(c => c.meanRT != null);
+        const condCards = conds.map(c => `
+          <div class="result-card">
+            <h3>${esc(c.condition)}</h3>
+            <div class="result-value">${Math.round(c.meanRT)}</div>
+            <div class="result-unit">ms &middot; ${c.n} trial${c.n === 1 ? '' : 's'}</div>
+          </div>
+        `).join('');
+
+        // The contrast is only stated when there are exactly two conditions.
+        // With three or more, "which minus which" is the experimenter's
+        // decision, not something to guess at.
+        let contrast = '';
+        if (conds.length === 2) {
+          const diff = conds[1].meanRT - conds[0].meanRT;
+          contrast = `
+          <div class="result-card" style="grid-column: span 2; background: rgba(47, 212, 196, 0.1); border-color: rgba(47, 212, 196, 0.5);">
+            <h3 style="color: #2fd4c4;">Difference</h3>
+            <div class="result-value" style="color: #2fd4c4;">${Math.round(diff)}</div>
+            <div class="result-unit">ms (${esc(conds[1].condition)} &minus; ${esc(conds[0].condition)})</div>
+          </div>`;
+        }
+
         grid.innerHTML = `
           <div class="result-card">
             <h3>Mean RT</h3>
@@ -3194,6 +3300,7 @@
             <div class="result-value">${stats.errorRate.toFixed(1)}%</div>
             <div class="result-unit">${results.filter(r => !r.correct).length}/${stats.totalTrials} errors</div>
           </div>
+          ${condCards}${contrast}
         `;
       }
     });
@@ -3382,9 +3489,22 @@
       }
     }
 
-    // Learn More function
+    // The two Build From Scratch cards. Both open the same builder
+    // (js/scratch_builder_fab.js) in its two modes; separate pages rather than
+    // an overlay because they are long forms with their own draft in
+    // localStorage, and a participant must never land on one by accident.
+    function showBuildFromScratch() {
+      window.location.href = 'build/from-scratch.html';
+    }
+
+    function showBuildOnTimeline() {
+      window.location.href = 'build/timeline.html';
+    }
+
+    // Kept: older builds bound this to the Build From Scratch card, and a
+    // stale cached page could still call it.
     function showLearnMore() {
-      alert('coming soon!');
+      showBuildFromScratch();
     }
 
     // The ABCD Framework card. Opens the article page that carries the full

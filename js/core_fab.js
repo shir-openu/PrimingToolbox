@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before encodeConfig/decodeConfig were made
+ * UTF-8 safe, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/core_fab.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Core Module
@@ -104,7 +109,15 @@ PTA.getUrlParams = function() {
  */
 PTA.decodeConfig = function(encodedConfig) {
   try {
-    const decoded = atob(encodedConfig);
+    let decoded;
+    try {
+      // UTF-8 aware, and byte-for-byte identical to plain atob() for the
+      // pure-ASCII payloads every previously issued link contains - so old
+      // links keep working.
+      decoded = decodeURIComponent(escape(atob(encodedConfig)));
+    } catch (utf8) {
+      decoded = atob(encodedConfig);
+    }
     return JSON.parse(decoded);
   } catch (e) {
     console.error('PTA: Failed to decode config', e);
@@ -120,7 +133,12 @@ PTA.decodeConfig = function(encodedConfig) {
 PTA.encodeConfig = function(config) {
   try {
     const json = JSON.stringify(config);
-    return btoa(json);
+    // btoa() alone throws "characters outside of the Latin1 range" on the
+    // first Hebrew, Arabic or Chinese stimulus, which returned null and
+    // produced a link reading "?config=null". Since the Build From Scratch
+    // pages let an author type stimuli in any script, that is not a
+    // hypothetical. Matches PTK.encode, so the repo now has one encoding.
+    return btoa(unescape(encodeURIComponent(json)));
   } catch (e) {
     console.error('PTA: Failed to encode config', e);
     return null;

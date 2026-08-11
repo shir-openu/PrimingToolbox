@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before {type, items} stimulus sets stopped
+ * contributing the literal string "text" to both stimulus lists, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/asm_validator.js
+ */
 /**
  * asm_validator.js -- design-time check of the three priming characteristics.
  *
@@ -33,6 +38,13 @@
     if (typeof node === 'string' || typeof node === 'number') return [String(node)];
     if (Array.isArray(node)) return node.flatMap(v => collectStrings(v, depth + 1));
     if (typeof node === 'object') {
+      // A stimulus set is written {type:'text', items:[...]} throughout this
+      // toolbox. Walking it blindly also collects the *type* - the literal
+      // string 'text' - into both the prime list and the target list, which
+      // then overlap, and the secondariness check reported that the prime was
+      // also the target, quoting "text". Every generic config in index.html
+      // has this shape, so the false warning fired on all of them.
+      if (Array.isArray(node.items)) return collectStrings(node.items, depth + 1);
       const keys = ['word', 'text', 'label', 'id', 'name', 'stimulus', 'value', 'emoji'];
       const direct = keys.filter(k => typeof node[k] === 'string').map(k => node[k]);
       if (direct.length) return direct;

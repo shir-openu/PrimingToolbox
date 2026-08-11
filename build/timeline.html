@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build on the Timeline - PrimingToolbox</title>
+  <meta name="description" content="Draw a priming trial on an interactive timeline, then fill in the stimuli, conditions and keys to get a working online experiment and a participant link.">
+
+  <!--
+    Build on the Timeline - the same builder as build/from-scratch.html, with
+    the drag timeline (js/timeline_fab.js) in place of the typed timing fields.
+
+    ScratchBuilder in 'timeline' mode reads TimelinePlanner.getPlan() when it
+    assembles the config, so whatever the timeline shows at that moment is what
+    participants get. Nothing has to be "applied" first.
+
+    The timeline is un-docked here: css/experiment.css fixes .timeline-container
+    to the bottom of the viewport for the landing page, and css/builder.css
+    overrides that so it sits inline as the subject of this page.
+  -->
+
+  <link rel="stylesheet" href="../css/experiment.css?v=1.1">
+  <link rel="stylesheet" href="../css/builder.css?v=1.0">
+</head>
+<body class="sb-body">
+
+  <div class="sb-wrap">
+
+    <div class="sb-top">
+      <a class="sb-back" href="../index.html">&larr; PrimingToolbox</a>
+      <a class="sb-back" href="../article/abcd-framework.html">The ABCD framework</a>
+    </div>
+
+    <h1 class="sb-title" style="color:#2fd4c4;">Build on the timeline</h1>
+    <p class="sb-sub">
+      Start from the shape of a single trial. Drag the right edge of any block to make that phase longer or
+      shorter and the whole trial re-times itself; hold <b>Shift</b> for 1 ms steps, or focus a block and use
+      the arrow keys. When the trial looks right, fill in the steps underneath - the stimuli, the conditions,
+      the keys - and the timing you drew travels with the participant link.
+    </p>
+
+    <!-- The planner attaches to exactly these three ids/classes. -->
+    <div class="sb-timeline-host">
+      <div class="timeline-container">
+        <div class="timeline-header">
+          <span class="timeline-title">Trial Timeline</span>
+          <span class="timeline-total">Total duration: <span id="total-duration">1600</span> ms</span>
+        </div>
+        <div class="timeline-track" id="timeline-track">
+          <div class="timeline-axis"></div>
+          <div class="timeline-ticks" id="timeline-ticks"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-switch">
+      Would rather type exact millisecond values into a form?
+      <a href="from-scratch.html" style="color:#bb7be6;">Use the full builder instead &rarr;</a>
+      - same steps, the timing is six numbers.
+    </div>
+
+    <div id="sb-root"></div>
+
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="../js/core_fab.js"></script>
+  <script src="../js/engine_fab.js"></script>
+  <script src="../js/paradigm_kit_fab.js"></script>
+  <script src="../js/asm_validator.js"></script>
+  <script src="../js/timeline_fab.js"></script>
+  <script src="../js/scratch_builder_fab.js"></script>
+
+  <script>
+    // timeline_fab.js registers its own DOMContentLoaded listener when it
+    // loads, which is before this one, so TimelinePlanner.init() has already
+    // built the editor bar by the time this runs.
+    document.addEventListener('DOMContentLoaded', function () {
+      ScratchBuilder.mount({ host: 'sb-root', mode: 'timeline' });
+
+      // The editor bar is built for the landing page and carries two controls
+      // that mean nothing here: "Load from selected" reads the Quick Settings
+      // dropdown, which this page does not have, and "Insert into experiment
+      // draft" writes into a draft that this page does not use - the builder
+      // reads the plan directly. Rather than fork the planner, the two buttons
+      // are corrected in place.
+      var bar = document.getElementById('tl-editor-fab');
+      if (!bar) return;
+      Array.prototype.forEach.call(bar.querySelectorAll('button'), function (b) {
+        if (/load from selected/i.test(b.textContent)) {
+          b.remove();
+        } else if (/insert into experiment draft/i.test(b.textContent)) {
+          b.textContent = 'Use this timing';
+          b.title = 'Copy these values into the summary in step 5. The link always uses whatever the timeline shows.';
+          b.onclick = function () {
+            ScratchBuilder.refreshTiming();
+          };
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Build From Scratch - PrimingToolbox</title>
+  <meta name="description" content="Build a working online priming experiment from nothing: stimuli, conditions, keys, timing, and an optional ABCD description checked against the definition of priming.">
+
+  <!--
+    Build From Scratch - the full form.
+
+    Sister page: build/timeline.html, which is this same builder with the trial
+    timeline in place of the typed timing fields. Both call
+    ScratchBuilder.mount() from js/scratch_builder_fab.js; keeping the logic in
+    that one module is what stops the two pages from drifting apart.
+
+    Load order matters and is the same order index.html uses:
+      core_fab.js        PTA namespace, Supabase, encode/decode
+      engine_fab.js      PTA.Engine (the generic trial loop the built config runs on)
+      paradigm_kit_fab.js  PTK: link modal, UTF-8 safe encoding, escaping
+      asm_validator.js   PTA.validateASM - the definition check
+      scratch_builder_fab.js  this page's builder
+  -->
+
+  <link rel="stylesheet" href="../css/builder.css?v=1.0">
+</head>
+<body class="sb-body">
+
+  <div class="sb-wrap">
+
+    <div class="sb-top">
+      <a class="sb-back" href="../index.html">&larr; PrimingToolbox</a>
+      <a class="sb-back" href="../article/abcd-framework.html">The ABCD framework</a>
+    </div>
+
+    <h1 class="sb-title" style="color:#bb7be6;">Build an experiment from scratch</h1>
+    <p class="sb-sub">
+      Not a template with the stimuli swapped out - an experiment that did not exist before. Work down the
+      seven steps: who you are, what participants see, what they answer, the trials themselves, the timing,
+      and - if you want it - a description of the design in the ABCD framework that the platform will check
+      against what you actually built. At the end you get a link you can send to participants, and the
+      results come back under "Get My Data" like any other experiment here.
+    </p>
+
+    <div class="sb-switch">
+      Prefer to draw the trial rather than type millisecond values?
+      <a href="timeline.html" style="color:#2fd4c4;">Build it on the timeline instead &rarr;</a>
+      - same builder, the timing comes from a timeline you drag.
+    </div>
+
+    <div id="sb-root"></div>
+
+  </div>
+
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="../js/core_fab.js"></script>
+  <script src="../js/engine_fab.js"></script>
+  <script src="../js/paradigm_kit_fab.js"></script>
+  <script src="../js/asm_validator.js"></script>
+  <script src="../js/scratch_builder_fab.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      ScratchBuilder.mount({ host: 'sb-root', mode: 'full' });
+    });
+  </script>
+
+</body>
+</html>

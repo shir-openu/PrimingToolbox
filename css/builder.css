@@ -1,0 +1,211 @@
+/* =====================================================
+   PrimingToolbox - Build From Scratch pages
+   =====================================================
+   Shared by build/from-scratch.html and build/timeline.html.
+   Both pages are the same builder (js/scratch_builder_fab.js) in two modes,
+   so they must not drift apart visually - hence one stylesheet, not two
+   <style> blocks.
+
+   Colours are the platform family (report40 set) already used by the landing
+   cards and the trial timeline, one per section, so a section, its heading,
+   its border and the matching timeline block all read as the same thing.
+   ===================================================== */
+
+:root {
+  --sb-bg:      #0b0f19;
+  --sb-panel:   rgba(17, 24, 39, 0.62);
+  --sb-line:    rgba(255, 255, 255, 0.10);
+  --sb-text:    #e5e7eb;
+  --sb-muted:   #9aa6b2;
+  --sb-dim:     #64748b;
+
+  --sb-sky:     #61a3ed;
+  --sb-salmon:  #e38b82;
+  --sb-orange:  #ff9b1e;
+  --sb-pink:    #ea5cd5;
+  --sb-green:   #39d461;
+  --sb-amber:   #ffd166;
+  --sb-lilac:   #bb7be6;
+  --sb-teal:    #2fd4c4;
+  --sb-magenta: #d41bb9;
+}
+
+body.sb-body {
+  margin: 0;
+  background: var(--sb-bg);
+  color: var(--sb-text);
+  font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.sb-wrap { max-width: 1080px; margin: 0 auto; padding: 28px 22px 90px; }
+
+/* ---------- header ---------- */
+
+.sb-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 6px; }
+.sb-back {
+  color: var(--sb-muted); text-decoration: none; font-size: .9rem;
+  border: 1px solid var(--sb-line); border-radius: 999px; padding: 5px 14px;
+}
+.sb-back:hover { color: #fff; border-color: rgba(255, 255, 255, .35); }
+
+.sb-title { font-size: 2rem; margin: 14px 0 4px; }
+.sb-sub { color: var(--sb-muted); margin: 0 0 6px; max-width: 74ch; }
+.sb-sub a { font-weight: 600; }
+
+.sb-switch {
+  display: inline-block; margin: 14px 0 6px; font-size: .88rem;
+  color: var(--sb-muted); border: 1px dashed var(--sb-line);
+  border-radius: 12px; padding: 10px 16px;
+}
+.sb-switch a { font-weight: 600; }
+
+/* ---------- sections ---------- */
+
+.sb-sec {
+  background: var(--sb-panel);
+  border: 1px solid var(--sb-line);
+  border-left: 4px solid var(--sb-accent, #888);
+  border-radius: 14px;
+  padding: 20px 22px;
+  margin: 18px 0;
+}
+.sb-sec h2 {
+  font-size: 1.08rem; margin: 0 0 4px;
+  color: var(--sb-accent, #fff);
+  display: flex; align-items: baseline; gap: 10px;
+}
+.sb-sec h2 .sb-num {
+  font-size: .78rem; font-weight: 700; letter-spacing: .1em;
+  border: 1px solid currentColor; border-radius: 6px; padding: 1px 7px; opacity: .85;
+}
+.sb-sec > p.sb-note { color: var(--sb-muted); font-size: .9rem; margin: 0 0 14px; max-width: 78ch; }
+
+.sb-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+
+label.sb-f { display: flex; flex-direction: column; gap: 5px; font-size: .82rem; color: var(--sb-muted); }
+label.sb-f > span.sb-lab { font-weight: 600; color: var(--sb-text); }
+label.sb-f > span.sb-help { font-size: .78rem; color: var(--sb-dim); line-height: 1.45; }
+
+input[type=text], input[type=email], input[type=number], select, textarea {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid var(--sb-line);
+  border-radius: 8px;
+  color: var(--sb-text);
+  padding: 8px 10px;
+  font: inherit; font-size: .92rem;
+  width: 100%; box-sizing: border-box;
+}
+textarea { min-height: 84px; resize: vertical; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--sb-accent, #888);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .06);
+}
+select option { background: #131a28; color: #e5e7eb; }
+
+.sb-check { display: flex; align-items: flex-start; gap: 9px; font-size: .88rem; color: var(--sb-text); }
+.sb-check input { width: auto; margin-top: 4px; }
+
+/* ---------- buttons ---------- */
+
+.sb-btn {
+  background: var(--sb-accent, #667eea); color: #08111d;
+  border: none; border-radius: 9px; padding: 9px 18px;
+  font: inherit; font-weight: 700; font-size: .9rem; cursor: pointer;
+}
+.sb-btn:hover { filter: brightness(1.12); }
+.sb-btn.ghost {
+  background: transparent; color: var(--sb-text);
+  border: 1px solid var(--sb-line); font-weight: 600;
+}
+.sb-btn.ghost:hover { border-color: var(--sb-accent, #888); color: #fff; }
+.sb-btn.small { padding: 5px 12px; font-size: .8rem; border-radius: 7px; }
+.sb-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; align-items: center; }
+
+/* ---------- editable tables ---------- */
+
+.sb-table { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: 6px; }
+.sb-table th {
+  text-align: left; font-size: .74rem; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--sb-dim); font-weight: 700; padding: 6px 8px 8px; border-bottom: 1px solid var(--sb-line);
+}
+.sb-table td { padding: 4px 6px; vertical-align: top; }
+.sb-table tr:hover td { background: rgba(255, 255, 255, .025); }
+.sb-scroll { max-height: 380px; overflow-y: auto; overflow-x: auto; margin-top: 4px; }
+.sb-x {
+  background: transparent; border: 1px solid var(--sb-line); color: var(--sb-muted);
+  border-radius: 6px; cursor: pointer; padding: 4px 9px; font: inherit; line-height: 1;
+}
+.sb-x:hover { color: #ff8080; border-color: #ff8080; }
+
+/* ---------- optional block (the ABCD declaration) ---------- */
+
+.sb-optional {
+  border: 1px dashed var(--sb-lilac);
+  border-radius: 12px; padding: 4px 16px 16px; margin-top: 6px;
+  background: rgba(187, 123, 230, .05);
+}
+.sb-optional > summary {
+  cursor: pointer; padding: 12px 0; font-weight: 700; color: var(--sb-lilac);
+  list-style: none;
+}
+.sb-optional > summary::-webkit-details-marker { display: none; }
+.sb-optional > summary::before { content: '\25B8  '; }
+.sb-optional[open] > summary::before { content: '\25BE  '; }
+.sb-tag {
+  display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; border: 1px solid currentColor; border-radius: 5px;
+  padding: 1px 6px; margin-inline-start: 8px; opacity: .8;
+}
+
+.sb-abcd { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.sb-slot {
+  background: rgba(0, 0, 0, .28); border: 1px solid var(--sb-line);
+  border-radius: 11px; padding: 12px 14px;
+}
+.sb-slot .sb-letter { font-size: 1.35rem; font-weight: 800; line-height: 1; }
+.sb-slot .sb-role {
+  font-size: .72rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--sb-muted); margin: 5px 0 8px;
+}
+
+/* ---------- report / output ---------- */
+
+.sb-report { margin-top: 14px; }
+.sb-report:empty { display: none; }
+.sb-report > div { background: #f7f8fa; border-radius: 10px; padding: 4px 12px 10px; color: #222; }
+
+.sb-out {
+  margin-top: 12px; background: rgba(0, 0, 0, .35);
+  border: 1px solid var(--sb-line); border-radius: 10px; padding: 12px 14px;
+}
+.sb-out textarea { font-family: ui-monospace, Consolas, monospace; font-size: .78rem; min-height: 64px; }
+.sb-msg { font-size: .86rem; margin-top: 8px; min-height: 1.2em; }
+.sb-msg.ok { color: var(--sb-green); }
+.sb-msg.warn { color: var(--sb-amber); }
+.sb-msg.bad { color: #ff8080; }
+
+/* ---------- the timeline page ---------- */
+
+/* css/experiment.css pins .timeline-container to the bottom of the viewport,
+   where it is a docked strip under the landing page. On this page the timeline
+   is the subject of the page, not a status bar, so it is un-docked and given
+   the same card shell as every section around it. Overridden here rather than
+   by editing experiment.css, which the landing page still depends on. */
+.sb-timeline-host { margin: 6px 0 18px; }
+.sb-timeline-host .timeline-container {
+  position: static;
+  inset: auto;
+  margin: 0;
+  border-radius: 14px;
+  border: 1px solid var(--sb-line);
+  border-left: 4px solid var(--sb-amber);
+  padding: 14px 18px 16px;
+  z-index: auto;
+}
+
+@media (max-width: 620px) {
+  .sb-wrap { padding: 18px 14px 70px; }
+  .sb-title { font-size: 1.5rem; }
+}

@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before the response-timeout double-fire fix
+ * and the per-condition generic stats, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/engine_fab.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Trial Engine (V2 _fab wrapper)
@@ -502,6 +507,22 @@ PTA.Engine = {
       document.removeEventListener('keydown', this.responseHandler);
     }
 
+    // One token per trial. The timeout below used to guard on
+    // `if (this.responseHandler)`, which is truthy for the whole run: a
+    // participant who answered in time still got a second recordResponse()
+    // for the SAME trial when the window elapsed, scored as no response, and
+    // it advanced the experiment a second time - so half the trials were
+    // skipped and a null row was written for each. The bug needs a fast
+    // responder to show itself, which is why it survived: it never fires when
+    // you step through the task slowly by hand.
+    const token = (this.responseToken || 0) + 1;
+    this.responseToken = token;
+
+    if (this.responseTimeoutId) {
+      clearTimeout(this.responseTimeoutId);
+      this.responseTimeoutId = null;
+    }
+
     // Create response handler
     this.responseHandler = (event) => {
       const key = event.key.toUpperCase();
@@ -516,8 +537,14 @@ PTA.Engine = {
       }
 
       if (responseValue !== null) {
+        if (this.responseToken !== token) return;   // already resolved
+        this.responseToken = token + 1;
         event.preventDefault();
         document.removeEventListener('keydown', this.responseHandler);
+        if (this.responseTimeoutId) {
+          clearTimeout(this.responseTimeoutId);
+          this.responseTimeoutId = null;
+        }
         this.recordResponse(trial, responseValue);
       }
     };
@@ -526,11 +553,12 @@ PTA.Engine = {
 
     // Timeout if specified
     if (this.config.presentation.response_timeout_ms) {
-      setTimeout(() => {
-        if (this.responseHandler) {
-          document.removeEventListener('keydown', this.responseHandler);
-          this.recordResponse(trial, null); // No response
-        }
+      this.responseTimeoutId = setTimeout(() => {
+        if (this.responseToken !== token) return;   // the participant answered
+        this.responseToken = token + 1;
+        this.responseTimeoutId = null;
+        document.removeEventListener('keydown', this.responseHandler);
+        this.recordResponse(trial, null); // No response
       }, this.config.presentation.response_timeout_ms);
     }
   },
@@ -712,12 +740,37 @@ PTA.Engine = {
       const correctTrials = results.filter(r => r.correct === true).length;
       const totalTrials = results.length;
 
+      // Per-condition means. Without these a design built on this platform can
+      // only ever report one overall RT, and one number cannot show a priming
+      // effect - the effect IS the difference between conditions. Every
+      // generic result row already carries `condition`, so this is a summary
+      // of data that was being collected and then thrown away.
+      const byCondition = {};
+      results.forEach(r => {
+        const c = r.condition || 'default';
+        if (!byCondition[c]) byCondition[c] = { condition: c, n: 0, correct: 0, rts: [] };
+        const b = byCondition[c];
+        b.n++;
+        if (r.correct === true) b.correct++;
+        if (r.rt && r.correct !== false) b.rts.push(r.rt);
+      });
+      const conditions = Object.keys(byCondition).map(c => {
+        const b = byCondition[c];
+        return {
+          condition: c,
+          n: b.n,
+          meanRT: b.rts.length ? PTA.mean(b.rts) : null,
+          accuracy: b.n ? (b.correct / b.n) * 100 : null
+        };
+      });
+
       stats = {
         meanRT: PTA.mean(rts),
         medianRT: PTA.median(rts),
         accuracy: (correctTrials / totalTrials) * 100,
         errorRate: ((totalTrials - correctTrials) / totalTrials) * 100,
-        totalTrials: totalTrials
+        totalTrials: totalTrials,
+        conditions: conditions
       };
     }
 
@@ -788,6 +841,14 @@ PTA.Engine = {
       document.removeEventListener('keydown', this.responseHandler);
       this.responseHandler = null;
     }
+
+    // Invalidate any response window still pending, or a timeout left over
+    // from the closed run would record a response into the next one.
+    if (this.responseTimeoutId) {
+      clearTimeout(this.responseTimeoutId);
+      this.responseTimeoutId = null;
+    }
+    this.responseToken = (this.responseToken || 0) + 1;
 
     return this;
   }

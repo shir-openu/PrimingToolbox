@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/evaluative.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Evaluative Conditioning Module
@@ -34,6 +39,26 @@
  * @namespace EvaluativeConditioning
  */
 window.EvaluativeConditioning = {
+  /**
+   * This experiment, described in the ABCD framework.
+   */
+  abcdSpec: {
+    accent: '#39d461',
+    articleAnchor: '#s2',
+    abcd: {
+      A: 'The valenced word repeatedly paired with a neutral shape in the learning phase (HAPPY, or PAIN).',
+      B: 'The neutral shape itself, which you rate for pleasantness at test.',
+      C: 'The rating that shape would receive without having been paired with anything.',
+      D: 'The rating it receives after the pairing.'
+    },
+    characteristics: {
+      association: 'The pairing is the association: repeated co-occurrence is what links A to B in the first place.',
+      secondariness: 'At test you rate only the shape, and are never asked about the word it appeared with.',
+      modulation: 'Shapes paired with positive words are rated more pleasant than shapes paired with negative ones.'
+    },
+    boundaryNote: 'This is the weakest of the three for secondariness, and worth thinking about. During the learning phase the pairing IS the task, so A is not incidental there; it becomes secondary only at test. Conditioning and priming overlap at exactly this seam.'
+  },
+
 
   /**
    * Stimulus configuration data.
@@ -167,6 +192,7 @@ window.EvaluativeConditioning = {
   showSetup: function() {
     this.state.phase = 'setup';
     document.getElementById('evaluative-setup').style.display = 'block';
+    if (window.PTK) PTK.injectAbcd('evaluative-setup', this.abcdSpec);
     document.getElementById('evaluative-learning').classList.remove('active');
     document.getElementById('evaluative-test').classList.remove('active');
     document.getElementById('evaluative-results').classList.remove('active');

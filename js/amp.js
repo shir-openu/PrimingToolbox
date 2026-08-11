@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/amp.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - AMP (Affect Misattribution Procedure) Module
@@ -35,6 +40,26 @@
  * @namespace AMP
  */
 window.AMP = {
+  /**
+   * This experiment, described in the ABCD framework.
+   */
+  abcdSpec: {
+    accent: '#ea5cd5',
+    articleAnchor: '#s2',
+    abcd: {
+      A: 'The affective image flashed before each pictograph.',
+      B: 'The Chinese pictograph you judge as pleasant or unpleasant.',
+      C: 'How often that pictograph is called pleasant after a neutral prime.',
+      D: 'How often it is called pleasant after a positive or a negative prime.'
+    },
+    characteristics: {
+      association: 'Prime and judgement share one dimension - valence - so the prime can push the judgement either way.',
+      secondariness: 'You are told in so many words to ignore the image and judge only the pictograph. The instruction to disregard A is part of the procedure.',
+      modulation: 'The proportion of pleasant judgements shifts with the valence of the prime, although the pictograph is unfamiliar and carries no meaning of its own for you.'
+    },
+    boundaryNote: 'The effect works by misattribution: the feeling A causes is read off as a property of B. Participants routinely insist they ignored the primes, and the shift appears anyway.'
+  },
+
 
   /**
    * Experiment configuration for timing and trials.
@@ -172,6 +197,7 @@ window.AMP = {
     document.getElementById('amp-setup').style.display = 'block';
     document.getElementById('amp-trial').classList.remove('active');
     document.getElementById('amp-results').classList.remove('active');
+    if (window.PTK) PTK.injectAbcd('amp-setup', this.abcdSpec);
     this.state.phase = 'setup';
   },
 

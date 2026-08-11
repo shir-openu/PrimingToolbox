@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/subliminal.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Subliminal Priming Module
@@ -31,6 +36,26 @@
  * @namespace Subliminal
  */
 window.Subliminal = {
+  /**
+   * This experiment, described in the ABCD framework.
+   */
+  abcdSpec: {
+    accent: '#8ea8ff',
+    articleAnchor: '#s2',
+    abcd: {
+      A: 'The prime word, shown for about 33 ms between a forward and a backward mask.',
+      B: 'The letter string you judge as a real word or not.',
+      C: 'Decision speed after an unrelated masked prime.',
+      D: 'Decision speed after a related masked prime.'
+    },
+    characteristics: {
+      association: 'Prime and target share meaning, exactly as in the visible version of this task.',
+      secondariness: 'The strongest case on the platform: the prime is not merely ignored, it cannot be reported. The awareness check at the end is there to test that claim rather than assume it.',
+      modulation: 'A related prime speeds the lexical decision even though the prime is never consciously seen.'
+    },
+    boundaryNote: 'If the awareness check shows the primes were visible after all, the run is still a valid priming experiment. It is simply no longer a subliminal one.'
+  },
+
 
   /**
    * Data configuration for default stimuli.
@@ -181,6 +206,7 @@ window.Subliminal = {
     document.getElementById('subliminal-results').classList.remove('active');
     this.renderResponseKeys();
     this.updateTimingDisplay();
+    if (window.PTK) PTK.injectAbcd('subliminal-setup', this.abcdSpec);
   },
 
   /**

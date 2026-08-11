@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/number-priming.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Number Priming Module (Dehaene Paradigm)
@@ -35,6 +40,26 @@
  * @namespace NumberPriming
  */
 window.NumberPriming = {
+  /**
+   * This experiment, described in the ABCD framework.
+   */
+  abcdSpec: {
+    accent: '#2fd4c4',
+    articleAnchor: '#s2',
+    abcd: {
+      A: 'The number flashed between the two masks - in masked mode, too brief to report.',
+      B: 'The number you compare against 5.',
+      C: 'Comparison speed when the prime falls on the other side of 5 from the target.',
+      D: 'Comparison speed when prime and target fall on the same side.'
+    },
+    characteristics: {
+      association: 'Prime and target are both magnitudes judged against the same reference, so they can agree or conflict on the very same decision.',
+      secondariness: 'The comparison is made about the target alone; in masked mode the prime cannot even be reported.',
+      modulation: 'A prime on the same side of 5 speeds the comparison; one on the other side slows it.'
+    },
+    boundaryNote: 'Masked and explicit mode differ only in how long A is shown. That makes this the clearest place on the platform to see that awareness of the prime is not part of the definition - the effect survives either way.'
+  },
+
 
   /**
    * Data configuration for numbers, responses, timing, and instructions.
@@ -212,6 +237,7 @@ window.NumberPriming = {
     if (results) results.classList.remove('active');
 
     this.renderResponseKeys();
+    if (window.PTK) PTK.injectAbcd('number-priming-setup', this.abcdSpec);
   },
 
   /**

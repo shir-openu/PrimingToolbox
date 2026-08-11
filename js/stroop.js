@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/stroop.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Stroop Language Dominance Module
@@ -32,6 +37,28 @@
  * @namespace Stroop
  */
 window.Stroop = {
+  /**
+   * This experiment, described in the ABCD framework. Rendered on the setup
+   * screen by PTK.injectAbcd (js/paradigm_kit_fab.js) so it matches the panel
+   * every other paradigm on the platform shows.
+   */
+  abcdSpec: {
+    accent: '#ff9b1e',
+    articleAnchor: '#s2',
+    abcd: {
+      A: 'The colour word itself - the meaning you are told to ignore (the word RED).',
+      B: 'The ink colour the word is printed in, which is what you must name.',
+      C: 'Naming speed when the word names the same colour as the ink.',
+      D: 'Naming speed when the word names a different colour.'
+    },
+    characteristics: {
+      association: 'Word meaning and ink colour are drawn from the same set of colour concepts, so they can agree or conflict.',
+      secondariness: 'You are told to ignore the word, and the ink can be named without reading it. You read it anyway - that is the finding.',
+      modulation: 'A conflicting word slows naming and raises errors relative to an agreeing one.'
+    },
+    boundaryNote: 'Two things to be honest about. Stroop is usually called interference rather than priming, because the effect is a cost rather than a benefit - under the three characteristics that is a difference of direction, not of kind. And this task has only congruent and incongruent trials, so what is compared is two primed conditions rather than a primed one against a neutral baseline C.'
+  },
+
 
   /**
    * Color and language configuration data.
@@ -128,6 +155,7 @@ window.Stroop = {
     document.getElementById('stroop-trial').classList.remove('active');
     document.getElementById('stroop-results').classList.remove('active');
     this.renderResponseKeys();
+    if (window.PTK) PTK.injectAbcd('stroop-setup', this.abcdSpec);
   },
 
   /**

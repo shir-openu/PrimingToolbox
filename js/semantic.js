@@ -1,3 +1,8 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
+ * panel on its setup screen, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/semantic.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Semantic Priming Module
@@ -32,6 +37,27 @@
  * @namespace Semantic
  */
 window.Semantic = {
+  /**
+   * This experiment, described in the ABCD framework. Section 3.1 of the
+   * framework is this exact case, so the panel links straight to it.
+   */
+  abcdSpec: {
+    accent: '#61a3ed',
+    articleAnchor: '#s31',
+    abcd: {
+      A: 'The prime word shown before the target (DOCTOR).',
+      B: 'The letter string you judge as a real word or not (NURSE).',
+      C: 'Decision speed for that target after an unrelated prime.',
+      D: 'Decision speed for the same target after a related prime.'
+    },
+    characteristics: {
+      association: 'Prime and target share meaning; the related and unrelated sets differ in nothing else.',
+      secondariness: 'No response is ever collected to the prime, and the lexical decision can be made without it.',
+      modulation: 'A related prime speeds the word/nonword decision and lowers the error rate.'
+    },
+    boundaryNote: 'The unrelated condition is standing in for the baseline C here. A strictly neutral prime - a row of Xs, or a nonword - is the cleaner baseline, and the builder lets you add one.'
+  },
+
 
   /**
    * Default stimulus configuration.
@@ -160,6 +186,7 @@ window.Semantic = {
     document.getElementById('semantic-trial').classList.remove('active');
     document.getElementById('semantic-results').classList.remove('active');
     this.renderResponseKeys();
+    if (window.PTK) PTK.injectAbcd('semantic-setup', this.abcdSpec);
     this.state.phase = 'setup';
   },
 

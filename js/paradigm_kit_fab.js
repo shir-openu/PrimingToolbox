@@ -5,6 +5,10 @@
  *
  * NEW FILE, 2026-08-10.
  *
+ * PREVIOUS VERSION ON GITHUB (before the ABCD panel was split out of
+ * paintSetup into abcdPanel/injectAbcd, 2026-08-11):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/paradigm_kit_fab.js
+ *
  * PREVIOUS VERSION ON GITHUB (first published version, before the shared
  * scrambled-sentence prime phase was added for goal / money / moral priming):
  *     https://github.com/shir-openu/PrimingToolbox/blob/57eef45/js/paradigm_kit_fab.js
@@ -163,10 +167,10 @@ window.PTK = (function () {
      =================================================================== */
 
   /**
-   * UTF-8 safe. PTA.encodeConfig uses bare btoa(JSON.stringify(...)), which
-   * throws on any non-Latin-1 character, so it cannot carry Hebrew, Arabic or
-   * Chinese stimuli. Every paradigm module already uses this form; it is
-   * centralised here so the two encoders in the repo stop diverging.
+   * UTF-8 safe. PTA.encodeConfig used to be bare btoa(JSON.stringify(...)),
+   * which throws on any non-Latin-1 character, so it could not carry Hebrew,
+   * Arabic or Chinese stimuli; it was brought into line with this on
+   * 2026-08-11, so the repo now has one encoding rather than two.
    */
   PTK.encode = function (config) {
     return btoa(unescape(encodeURIComponent(JSON.stringify(config))));
@@ -941,16 +945,25 @@ window.PTK = (function () {
    * @param {Object} spec  needs: name, source, accent, howToPlay[], example (HTML),
    *                       abcd{A,B,C,D}, characteristics{...}, startFn, closeFn
    */
-  PTK.paintSetup = function (containerId, mod, spec) {
-    var box = document.getElementById(containerId);
-    if (!box) return;
-    var accent = spec.accent || '#ff4db8';
+  /**
+   * The "What is being measured: the ABCD framework" panel, on its own.
+   *
+   * Split out of paintSetup on 2026-08-11 so the six paradigms that predate
+   * this kit - stroop, semantic, evaluative, amp, number-priming, subliminal -
+   * can carry the same panel without being rewritten onto paintSetup. They
+   * paint their own setup screens, with their own builders and option
+   * selectors, and migrating them would be a large change with nothing to gain;
+   * what they were missing was only this box.
+   *
+   * @param {Object} spec  {accent, abcd:{A,B,C,D}, characteristics:{...},
+   *                        articleAnchor, boundaryNote, articleBase}
+   * @returns {string} HTML
+   */
+  PTK.abcdPanel = function (spec) {
     var e = PTK.esc;
-
-    var steps = (spec.howToPlay || []).map(function (s, i) {
-      return '<li style="margin-bottom:10px;line-height:1.65;">' +
-        '<span style="color:' + e(accent) + ';font-weight:700;">' + (i + 1) + '.</span> ' + s + '</li>';
-    }).join('');
+    var accent = spec.accent || '#ff4db8';
+    // Pages in a subdirectory pass their own prefix; index.html needs none.
+    var base = spec.articleBase == null ? 'article/abcd-framework.html' : spec.articleBase;
 
     var chars = ['association', 'secondariness', 'modulation'].map(function (k) {
       var v = (spec.characteristics || {})[k];
@@ -971,6 +984,70 @@ window.PTK = (function () {
         '<div style="color:#b6c0cc;font-size:.9rem;line-height:1.6;">' +
           e((spec.abcd || {})[k] || '-') + '</div>' +
       '</div>';
+    }).join('');
+
+    return '<div style="background:rgba(17,24,39,.55);border:1px solid rgba(255,77,184,.28);border-radius:15px;' +
+             'padding:22px 24px;margin-bottom:22px;text-align:left;">' +
+        '<h3 style="color:' + e(accent) + ';margin-bottom:6px;font-size:1.05rem;">What is being measured: the ABCD framework</h3>' +
+        '<p style="color:#9aa6b2;font-size:.88rem;line-height:1.6;margin-bottom:16px;">' +
+          'Every priming experiment on this platform is described the same way, so designs from different ' +
+          'fields can be compared. <a href="' + e(base) + e(spec.articleAnchor || '') +
+          '" style="color:' + e(accent) + ';font-weight:600;">' +
+          (spec.articleAnchor && spec.articleAnchor !== '#s2'
+            ? 'Read this experiment&rsquo;s case in the framework &rarr;'
+            : 'Read the framework &rarr;') +
+          '</a></p>' +
+        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">' + abcd + '</div>' +
+        '<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09);">' +
+          '<div style="color:#e5e7eb;font-size:.92rem;margin-bottom:10px;font-weight:600;">' +
+            'The three characteristics that make this priming</div>' + chars +
+          (spec.boundaryNote
+            ? '<div style="margin-top:12px;border-left:3px solid #e38b82;background:rgba(153,15,35,.14);' +
+                     'border-radius:0 10px 10px 0;padding:12px 14px;color:#d6c2c6;font-size:.9rem;line-height:1.65;">' +
+                e(spec.boundaryNote) + '</div>'
+            : '') +
+        '</div>' +
+      '</div>';
+  };
+
+  /**
+   * Put the ABCD panel into a setup screen this kit did not build.
+   *
+   * Inserted before the first top-level <button> in the container, so the
+   * screen reads instructions -> what is being measured -> Start, rather than
+   * putting the explanation below the button nobody scrolls past. Idempotent:
+   * these modules call open() every time the experiment is launched.
+   *
+   * @param {string} containerId  the module's own setup div
+   * @param {Object} spec         as for PTK.abcdPanel
+   */
+  PTK.injectAbcd = function (containerId, spec) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    var id = containerId + '-abcd-fab';
+    if (document.getElementById(id)) return;
+
+    var wrap = document.createElement('div');
+    wrap.id = id;
+    wrap.innerHTML = PTK.abcdPanel(spec);
+
+    var anchor = null;
+    for (var i = 0; i < box.children.length; i++) {
+      if (box.children[i].tagName === 'BUTTON') { anchor = box.children[i]; break; }
+    }
+    if (anchor) box.insertBefore(wrap, anchor);
+    else box.appendChild(wrap);
+  };
+
+  PTK.paintSetup = function (containerId, mod, spec) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    var accent = spec.accent || '#ff4db8';
+    var e = PTK.esc;
+
+    var steps = (spec.howToPlay || []).map(function (s, i) {
+      return '<li style="margin-bottom:10px;line-height:1.65;">' +
+        '<span style="color:' + e(accent) + ';font-weight:700;">' + (i + 1) + '.</span> ' + s + '</li>';
     }).join('');
 
     box.innerHTML =
@@ -994,28 +1071,7 @@ window.PTK = (function () {
       '</div>' +
 
       // ---- what is being measured ----
-      '<div style="background:rgba(17,24,39,.55);border:1px solid rgba(255,77,184,.28);border-radius:15px;' +
-             'padding:22px 24px;margin-bottom:22px;text-align:left;">' +
-        '<h3 style="color:' + e(accent) + ';margin-bottom:6px;font-size:1.05rem;">What is being measured: the ABCD framework</h3>' +
-        '<p style="color:#9aa6b2;font-size:.88rem;line-height:1.6;margin-bottom:16px;">' +
-          'Every priming experiment on this platform is described the same way, so designs from different ' +
-          'fields can be compared. <a href="article/abcd-framework.html' + e(spec.articleAnchor || '') +
-          '" style="color:' + e(accent) + ';font-weight:600;">' +
-          (spec.articleAnchor && spec.articleAnchor !== '#s2'
-            ? 'Read this experiment&rsquo;s case in the framework &rarr;'
-            : 'Read the framework &rarr;') +
-          '</a></p>' +
-        '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;">' + abcd + '</div>' +
-        '<div style="margin-top:18px;padding-top:16px;border-top:1px solid rgba(255,255,255,.09);">' +
-          '<div style="color:#e5e7eb;font-size:.92rem;margin-bottom:10px;font-weight:600;">' +
-            'The three characteristics that make this priming</div>' + chars +
-          (spec.boundaryNote
-            ? '<div style="margin-top:12px;border-left:3px solid #e38b82;background:rgba(153,15,35,.14);' +
-                     'border-radius:0 10px 10px 0;padding:12px 14px;color:#d6c2c6;font-size:.9rem;line-height:1.65;">' +
-                e(spec.boundaryNote) + '</div>'
-            : '') +
-        '</div>' +
-      '</div>' +
+      PTK.abcdPanel(spec) +
 
       '<div id="' + e(spec.key) + '-params" style="color:#64748b;font-size:.85rem;margin:0 auto 18px;' +
              'max-width:560px;line-height:1.7;"></div>' +

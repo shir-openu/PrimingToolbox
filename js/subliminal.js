@@ -420,11 +420,29 @@ window.Subliminal = {
    * Reads timing settings from UI, generates trials, and begins first trial.
    */
   start: function() {
-    // Get timing settings from UI
-    this.timing.prime = parseInt(document.getElementById('subliminal-prime-duration')?.value) || 33;
-    this.timing.forwardMask = parseInt(document.getElementById('subliminal-forward-mask')?.value) || 500;
-    this.timing.backwardMask = parseInt(document.getElementById('subliminal-backward-mask')?.value) || 100;
-    this.timing.fixation = parseInt(document.getElementById('subliminal-fixation')?.value) || 500;
+    // Read the timing controls ONLY IF THEY EXIST.
+    //
+    // These four inputs live in the standalone subliminal.html, which is an
+    // untracked local file and not part of the site. On index.html - the only
+    // page a participant ever reaches - getElementById returns null, so
+    // `parseInt(undefined) || 33` handed back the default every time.
+    //
+    // That silently threw away the timing carried in the participant link.
+    // checkUrlConfig applies config.timing.prime / forwardMask / backwardMask /
+    // fixation and then calls open(); the participant presses Start and start()
+    // overwrote all four. For this paradigm that is not a detail: the prime
+    // duration IS the manipulation. A link built to run a 50 ms prime ran at
+    // 33 ms, and the experimenter had no way to know their setting was ignored.
+    const readInto = (id, prop) => {
+      const el = document.getElementById(id);
+      if (!el) return;                       // no control here: keep what we have
+      const v = parseInt(el.value, 10);
+      if (Number.isFinite(v) && v >= 0) this.timing[prop] = v;
+    };
+    readInto('subliminal-prime-duration', 'prime');
+    readInto('subliminal-forward-mask', 'forwardMask');
+    readInto('subliminal-backward-mask', 'backwardMask');
+    readInto('subliminal-fixation', 'fixation');
 
     this.state.trials = this.generateTrials();
     this.state.currentTrial = 0;

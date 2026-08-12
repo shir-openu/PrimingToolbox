@@ -910,14 +910,34 @@ window.NumberPriming = {
     const maskCharEl = document.getElementById('builder-np-mask-char');
 
     if (modeEl) {
+      // Apply the preset ONLY when the mode has actually changed.
+      //
+      // index.html wires onchange="NumberPriming.updateBuilderSettings()" on
+      // every field in this builder, so this function runs whenever ANY of them
+      // changes. The preset was unconditional: type 60 into Prime Duration,
+      // leave the field, and this branch immediately wrote 43 back into it -
+      // and the line below then read 43 out again. The input was, in practice,
+      // impossible to change, and nothing said why.
+      //
+      // Prime duration is the whole difference between masked and explicit
+      // priming, so silently pinning it to a preset removes the one setting a
+      // student most needs to vary.
+      // Deliberately NOT on the first call either: the field is already
+      // populated from builderSettings when the builder renders, and applying
+      // the preset then would clobber a duration the experimenter had set
+      // earlier in the session. A preset belongs to the act of switching mode.
+      const modeChanged = this._lastMode !== undefined && this._lastMode !== modeEl.value;
+      this._lastMode = modeEl.value;
       this.builderSettings.mode = modeEl.value;
-      // Auto-set prime duration based on mode
-      if (modeEl.value === 'masked' && primeDurEl) {
-        this.builderSettings.primeDuration = 43;
-        primeDurEl.value = 43;
-      } else if (modeEl.value === 'explicit' && primeDurEl) {
-        this.builderSettings.primeDuration = 200;
-        primeDurEl.value = 200;
+
+      if (modeChanged && primeDurEl) {
+        if (modeEl.value === 'masked') {
+          this.builderSettings.primeDuration = 43;
+          primeDurEl.value = 43;
+        } else if (modeEl.value === 'explicit') {
+          this.builderSettings.primeDuration = 200;
+          primeDurEl.value = 200;
+        }
       }
     }
     if (primeDurEl) this.builderSettings.primeDuration = parseInt(primeDurEl.value) || 43;

@@ -97,6 +97,22 @@ every module in js/, not sampled:
   `timeline_fab.js` interpolates `p.label`/`p.letter`, but those are hard-coded
   phase names and `applyTimelinePlan` copies the plan INTO the config rather
   than the reverse, so a participant link cannot reach them.
+- **Timers after close.** All sixteen paradigm modules call `_clearTimers()` in
+  `close()`. The shared engine did not until 2026-08-12 - see
+  `engine_timers.test.js`.
+- **A second `start()` in the paradigm modules — mechanism real, not reachable,
+  and unguarded.** None of the sixteen clears timers in `start()`, and calling
+  `start()` twice directly DOES leave two trial chains running (measured: the
+  module's `_timers` goes 1 -> 2). It is not reachable through the interface
+  because the first click hides the Start button, so a real double-click has
+  nothing to land on. Not fixed, because sixteen speculative edits to working
+  code are worse than a documented risk.
+  **But the safety here is incidental, not designed.** It rests on the screen
+  switching synchronously. If a module ever hides that button asynchronously,
+  keeps it visible, or gains a keyboard path that survives the switch, two
+  chains will run and both will write rows. `engine_fab` guards this explicitly
+  in `init()` because there the second door WAS reachable - `startExperiment()`
+  calls `init()` directly without resetting.
 - **Elapsed time.** No module computes an elapsed time from `Date.now()`.
   `evaluative.js` and `core_fab.js` use both clocks, correctly:
   `performance.now()` for elapsed, `Date.now()` only for timestamps and ids.

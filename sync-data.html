@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sync Supabase Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body style="font-family: system-ui; padding: 40px; background: #1a1a2e; color: white;">
+  <h1>Syncing Supabase Data...</h1>
+  <div id="status">Connecting...</div>
+
+  <script>
+    (async function() {
+      const statusEl = document.getElementById('status');
+
+      try {
+        const supabase = window.supabase.createClient(
+          'https://luhgdmzksitdkbysdfbr.supabase.co',
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aGdkbXprc2l0ZGtieXNkZmJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjU0MDMsImV4cCI6MjA4MDEwMTQwM30.kxiMmJE4N5U5pM-3d81URKCwZ5PSsE-19AIr5KWOMlQ'
+        );
+
+        statusEl.textContent = 'Fetching all data...';
+
+        const { data, error } = await supabase
+          .from('experiment_results')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Create JSON file for download
+        const jsonData = JSON.stringify(data, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'supabase_data.json';
+        a.click();
+
+        statusEl.innerHTML = '<span style="color: #4ade80;">Done! Downloaded ' + data.length + ' rows.</span><br><br>' +
+          'Move <strong>supabase_data.json</strong> from Downloads to:<br>' +
+          '<code style="background:#333;padding:5px;">D:\\Dropbox\\Research\\PRIMING_TOOLBOX\\</code><br><br>' +
+          'Claude can now read your data!';
+
+      } catch (e) {
+        statusEl.innerHTML = '<span style="color: #f87171;">Error: ' + e.message + '</span>';
+      }
+    })();
+  </script>
+</body>
+</html>

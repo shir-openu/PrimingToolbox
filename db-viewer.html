@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PrimingToolbox - Database Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 { color: #ff4db8; margin-bottom: 10px; }
+    h2 { color: #667eea; margin-top: 30px; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .card {
+      background: rgba(17, 24, 39, 0.8);
+      border: 1px solid rgba(255, 77, 184, 0.3);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    input, button {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.3);
+      color: white;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      cursor: pointer;
+      border: none;
+    }
+    button:hover { opacity: 0.9; }
+    .btn-secondary {
+      background: rgba(22, 153, 153, 0.3);
+      border: 1px solid #169999;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    th { background: rgba(102, 126, 234, 0.2); color: #a78bfa; }
+    tr:hover { background: rgba(255,255,255,0.05); }
+    .status { padding: 8px 12px; border-radius: 6px; margin-bottom: 15px; }
+    .status.success { background: rgba(22, 153, 153, 0.2); border: 1px solid #169999; }
+    .status.error { background: rgba(153, 15, 35, 0.2); border: 1px solid #990f23; }
+    .stats { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+    .stat-box {
+      background: rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.4);
+      border-radius: 10px;
+      padding: 15px 25px;
+      text-align: center;
+    }
+    .stat-value { font-size: 2rem; color: #ff4db8; font-weight: bold; }
+    .stat-label { color: #9aa6b2; font-size: 0.85rem; }
+    .experiment-list { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .exp-tag {
+      background: rgba(255, 77, 184, 0.2);
+      border: 1px solid rgba(255, 77, 184, 0.5);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .exp-tag:hover { background: rgba(255, 77, 184, 0.4); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PrimingToolbox - Database Viewer</h1>
+    <p style="color: #9aa6b2;">Check your experiment data in Supabase</p>
+
+    <div id="status" class="status"></div>
+
+    <!-- Quick Stats -->
+    <div class="card">
+      <h2 style="margin-top:0;">Database Overview</h2>
+      <div class="stats" id="stats">
+        <div class="stat-box">
+          <div class="stat-value" id="total-trials">-</div>
+          <div class="stat-label">Total Trials</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="total-participants">-</div>
+          <div class="stat-label">Unique Participants</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="total-experiments">-</div>
+          <div class="stat-label">Experiment IDs</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="today-trials">-</div>
+          <div class="stat-label">Today's Trials</div>
+        </div>
+      </div>
+      <button onclick="loadOverview()">Refresh Stats</button>
+    </div>
+
+    <!-- Search by Email -->
+    <div class="card">
+      <h2 style="margin-top:0;">Find My Experiments</h2>
+      <p style="color: #9aa6b2;">Enter your email to see all your experiment IDs</p>
+      <input type="email" id="searchEmail" placeholder="your.email@university.edu" style="width: 300px;">
+      <button onclick="findExperiments()">Find Experiments</button>
+      <div id="experiment-results"></div>
+    </div>
+
+    <!-- Recent Entries -->
+    <div class="card">
+      <h2 style="margin-top:0;">Recent Entries</h2>
+      <button onclick="loadRecent(10)">Last 10</button>
+      <button onclick="loadRecent(50)" class="btn-secondary">Last 50</button>
+      <button onclick="loadToday()" class="btn-secondary">Today Only</button>
+      <div id="recent-table"></div>
+    </div>
+
+    <!-- Load Specific Experiment -->
+    <div class="card">
+      <h2 style="margin-top:0;">Load Specific Experiment</h2>
+      <input type="email" id="expEmail" placeholder="Email" style="width: 250px;">
+      <input type="text" id="expId" placeholder="Experiment ID" style="width: 200px;">
+      <button onclick="loadExperiment()">Load Data</button>
+      <button onclick="downloadCSV()" class="btn-secondary">Download CSV</button>
+      <div id="experiment-table"></div>
+    </div>
+  </div>
+
+  <script>
+    // Supabase config
+    const SUPABASE_URL = 'https://luhgdmzksitdkbysdfbr.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx1aGdkbXprc2l0ZGtieXNkZmJyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MjU0MDMsImV4cCI6MjA4MDEwMTQwM30.kxiMmJE4N5U5pM-3d81URKCwZ5PSsE-19AIr5KWOMlQ';
+
+    // NOT `let supabase` - the CDN library above defines window.supabase, and a
+    // top-level `let` of the same name is a redeclaration SyntaxError that kills
+    // this entire script block. The viewer showed nothing for that reason alone,
+    // independent of which project it addressed.
+    let db;
+    let currentData = [];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        document.getElementById('status').className = 'status success';
+        document.getElementById('status').innerHTML = '<strong>Connected to Supabase</strong>';
+        loadOverview();
+        loadRecent(10);
+      } catch (e) {
+        document.getElementById('status').className = 'status error';
+        document.getElementById('status').innerHTML = '<strong>Connection Failed:</strong> ' + e.message;
+      }
+    });
+
+    // Load overview stats
+    async function loadOverview() {
+      const { data, error } = await db
+        .from('experiment_results')
+        .select('participant_id, user_experiment_id, created_at');
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const todayTrials = data.filter(d => d.created_at && d.created_at.startsWith(today));
+      const uniqueParticipants = new Set(data.map(d => d.participant_id)).size;
+      const uniqueExperiments = new Set(data.map(d => d.user_experiment_id)).size;
+
+      document.getElementById('total-trials').textContent = data.length;
+      document.getElementById('total-participants').textContent = uniqueParticipants;
+      document.getElementById('total-experiments').textContent = uniqueExperiments;
+      document.getElementById('today-trials').textContent = todayTrials.length;
+    }
+
+    // Find experiments by email
+    async function findExperiments() {
+      const email = document.getElementById('searchEmail').value.trim();
+      if (!email) {
+        alert('Please enter an email');
+        return;
+      }
+
+      const { data, error } = await db
+        .from('experiment_results')
+        .select('user_experiment_id, created_at')
+        .eq('experimenter_email', email);
+
+      if (error) {
+        document.getElementById('experiment-results').innerHTML =
+          '<p style="color: #990f23;">Error: ' + error.message + '</p>';
+        return;
+      }
+
+      if (data.length === 0) {
+        document.getElementById('experiment-results').innerHTML =
+          '<p style="color: #9aa6b2;">No experiments found for this email.</p>';
+        return;
+      }
+
+      // Group by experiment ID
+      const experiments = {};
+      data.forEach(d => {
+        if (!experiments[d.user_experiment_id]) {
+          experiments[d.user_experiment_id] = { count: 0, lastDate: d.created_at };
+        }
+        experiments[d.user_experiment_id].count++;
+        if (d.created_at > experiments[d.user_experiment_id].lastDate) {
+          experiments[d.user_experiment_id].lastDate = d.created_at;
+        }
+      });
+
+      let html = '<p style="color: #169999;">Found ' + Object.keys(experiments).length + ' experiment(s):</p>';
+      html += '<div class="experiment-list">';
+      for (const [id, info] of Object.entries(experiments)) {
+        const date = info.lastDate ? new Date(info.lastDate).toLocaleDateString() : 'Unknown';
+        html += '<div class="exp-tag" onclick="selectExperiment(\'' + email + '\', \'' + id + '\')">';
+        html += '<strong>' + id + '</strong><br>' + info.count + ' trials | ' + date;
+        html += '</div>';
+      }
+      html += '</div>';
+
+      document.getElementById('experiment-results').innerHTML = html;
+    }
+
+    // Select experiment from list
+    function selectExperiment(email, expId) {
+      document.getElementById('expEmail').value = email;
+      document.getElementById('expId').value = expId;
+      loadExperiment();
+    }
+
+    // Load recent entries
+    async function loadRecent(limit) {
+      const { data, error } = await db
+        .from('experiment_results')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        document.getElementById('recent-table').innerHTML = '<p style="color: #990f23;">Error: ' + error.message + '</p>';
+        return;
+      }
+
+      currentData = data;
+      renderTable('recent-table', data);
+    }
+
+    // Load today's entries
+    async function loadToday() {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await db
+        .from('experiment_results')
+        .select('*')
+        .gte('created_at', today + 'T00:00:00')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        document.getElementById('recent-table').innerHTML = '<p style="color: #990f23;">Error: ' + error.message + '</p>';
+        return;
+      }
+
+      currentData = data;
+      renderTable('recent-table', data);
+    }
+
+    // Load specific experiment
+    async function loadExperiment() {
+      const email = document.getElementById('expEmail').value.trim();
+      const expId = document.getElementById('expId').value.trim();
+
+      if (!email || !expId) {
+        alert('Please enter both email and experiment ID');
+        return;
+      }
+
+      const { data, error } = await db
+        .from('experiment_results')
+        .select('*')
+        .eq('experimenter_email', email)
+        .eq('user_experiment_id', expId)
+        .order('trial_number', { ascending: true });
+
+      if (error) {
+        document.getElementById('experiment-table').innerHTML = '<p style="color: #990f23;">Error: ' + error.message + '</p>';
+        return;
+      }
+
+      currentData = data;
+      renderTable('experiment-table', data);
+    }
+
+    // Render table
+    function renderTable(containerId, data) {
+      if (data.length === 0) {
+        document.getElementById(containerId).innerHTML = '<p style="color: #9aa6b2;">No data found.</p>';
+        return;
+      }
+
+      const columns = ['created_at', 'experimenter_email', 'user_experiment_id', 'participant_id',
+                       'trial_number', 'language', 'ink_color', 'word_meaning', 'congruent',
+                       'response', 'correct', 'rt'];
+
+      let html = '<p style="color: #169999;">' + data.length + ' rows found</p>';
+      html += '<div style="overflow-x: auto;"><table><thead><tr>';
+      columns.forEach(col => {
+        html += '<th>' + col.replace(/_/g, ' ') + '</th>';
+      });
+      html += '</tr></thead><tbody>';
+
+      data.forEach(row => {
+        html += '<tr>';
+        columns.forEach(col => {
+          let val = row[col];
+          if (col === 'created_at' && val) {
+            val = new Date(val).toLocaleString();
+          }
+          html += '<td>' + (val !== null && val !== undefined ? val : '-') + '</td>';
+        });
+        html += '</tr>';
+      });
+
+      html += '</tbody></table></div>';
+      document.getElementById(containerId).innerHTML = html;
+    }
+
+    // Download CSV
+    function downloadCSV() {
+      if (currentData.length === 0) {
+        alert('No data to download. Load an experiment first.');
+        return;
+      }
+
+      const headers = Object.keys(currentData[0]);
+      const csvRows = [headers.join(',')];
+
+      currentData.forEach(row => {
+        const values = headers.map(h => {
+          const val = row[h];
+          if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
+            return '"' + val.replace(/"/g, '""') + '"';
+          }
+          return val ?? '';
+        });
+        csvRows.push(values.join(','));
+      });
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'experiment_data_' + new Date().toISOString().slice(0, 10) + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

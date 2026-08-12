@@ -1031,7 +1031,7 @@ window.ScratchBuilder = (function () {
                                     userExperimentId: S.expId || null });
     }
     say('Opening your experiment in a new tab. Nothing is saved from a preview.', 'ok');
-    window.open(indexUrl() + '?config=' + encode(preview), '_blank');
+    window.open(indexUrl() + '?config=' + encodeURIComponent(encode(preview)), '_blank');
   }
 
   function makeLink() {
@@ -1053,7 +1053,9 @@ window.ScratchBuilder = (function () {
       });
     }
 
-    var link = indexUrl() + '?config=' + encode(cfg);
+    // encodeURIComponent: a raw '+' from base64 decodes as a space and kills
+    // the link. See the note in PTK.buildLink.
+    var link = indexUrl() + '?config=' + encodeURIComponent(encode(cfg));
     if (window.PTK && PTK.showLinkModal) PTK.showLinkModal(link, C.teal);
     else window.prompt('Your participant link:', link);
 

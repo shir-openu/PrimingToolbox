@@ -166,7 +166,11 @@ window.PTK = (function () {
         userExperimentId: (config && config.userExperimentId) || null
       });
     }
-    return window.location.href.split('?')[0] + '?' + urlParam + '=' + PTK.encode(config);
+    // encodeURIComponent: base64 contains '+', and a raw '+' in a query string
+    // decodes as a SPACE - the payload is corrupted and the link silently dies.
+    // URLSearchParams turns %2B back into '+', so old links keep working.
+    return window.location.href.split('?')[0] + '?' + urlParam + '=' +
+           encodeURIComponent(PTK.encode(config));
   };
 
   /**

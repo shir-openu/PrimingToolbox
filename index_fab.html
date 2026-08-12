@@ -3493,7 +3493,9 @@
       // Encode config
       const encoded = PTA.encodeConfig(currentConfig);
       const baseUrl = window.location.origin + window.location.pathname;
-      const link = baseUrl + '?config=' + encoded;
+      // encodeURIComponent: base64 contains '+', which decodes as a SPACE in a
+      // query string and silently kills the link. Old links are unaffected.
+      const link = baseUrl + '?config=' + encodeURIComponent(encoded);
 
       document.getElementById('generatedLink').value = link;
       document.getElementById('generatedLinkContainer').style.display = 'block';

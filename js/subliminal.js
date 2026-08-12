@@ -1178,7 +1178,10 @@ window.Subliminal = {
 
     try {
       const configStr = btoa(unescape(encodeURIComponent(JSON.stringify(config))));
-      const link = window.location.href.split('?')[0] + '?exp=' + configStr;
+      // encodeURIComponent: base64 contains '+', and a raw '+' in a query
+      // string decodes as a SPACE, which corrupts the payload and makes the
+      // link silently dead. Verified. Old links are unaffected.
+      const link = window.location.href.split('?')[0] + '?exp=' + encodeURIComponent(configStr);
 
       // Show modal with link
       const modal = document.createElement('div');

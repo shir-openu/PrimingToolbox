@@ -1,11 +1,15 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/semantic.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/semantic.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/semantic.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/semantic.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/semantic.js
  */
 /**
  * =====================================================
@@ -59,7 +63,21 @@ window.Semantic = {
       secondariness: 'No response is ever collected to the prime, and the lexical decision can be made without it.',
       modulation: 'A related prime speeds the word/nonword decision and lowers the error rate.'
     },
-    boundaryNote: 'The unrelated condition is standing in for the baseline C here. A strictly neutral prime - a row of Xs, or a nonword - is the cleaner baseline, and the builder lets you add one.'
+    boundaryNote: 'The unrelated condition is standing in for the baseline C here. That is the usual practice and it works, but note 1 says what it costs and how to do better.',
+    footnotes: [
+      {
+        title: 'Unrelated is not the same as neutral.',
+        text: 'An unrelated prime is still a word: it is read, it activates its own meaning, and it can compete with the target. So D minus unrelated mixes facilitation from the related prime with interference from the unrelated one, and you cannot tell how much of the difference is which.'
+      },
+      {
+        title: 'The cleaner baseline.',
+        text: 'Use a genuinely neutral prime - a row of Xs, a nonword, or a blank interval of the same duration - as a third condition. Then related minus neutral is facilitation and unrelated minus neutral is interference, reported separately. Add it in the Template Builder as a third prime set, or as a condition column in Build From Scratch.'
+      },
+      {
+        title: 'Keep the timing identical.',
+        text: 'Whatever you use as the neutral prime must occupy the same interval as a real prime. If the neutral condition is shorter, the target simply arrives earlier and you have measured that instead.'
+      }
+    ]
   },
 
 

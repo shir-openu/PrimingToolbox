@@ -1,15 +1,18 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/number-priming.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/number-priming.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/number-priming.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/number-priming.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/number-priming.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/number-priming.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/number-priming.js
  */
 /**
  * =====================================================
@@ -65,7 +68,17 @@ window.NumberPriming = {
       secondariness: 'The comparison is made about the target alone; in masked mode the prime cannot even be reported.',
       modulation: 'A prime on the same side of 5 speeds the comparison; one on the other side slows it.'
     },
-    boundaryNote: 'Masked and explicit mode differ only in how long A is shown. That makes this the clearest place on the platform to see that awareness of the prime is not part of the definition - the effect survives either way.'
+    boundaryNote: 'Masked and explicit mode differ only in how long A is shown. That makes this the clearest place on the platform to see that awareness of the prime is not part of the definition - the effect survives either way.',
+    footnotes: [
+      {
+        title: 'Run it twice.',
+        text: 'Run the same design once in masked mode and once in explicit mode and compare. Both give a congruity effect; only the size changes. That is the demonstration, and it takes ten minutes.'
+      },
+      {
+        title: 'What the baseline should be.',
+        text: 'This task contrasts same-side and opposite-side primes, which are two primed conditions. For a real C, add a neutral prime that carries no magnitude - a row of hashes, or a letter string - shown for the same duration.'
+      }
+    ]
   },
 
 

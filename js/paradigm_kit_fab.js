@@ -1,10 +1,15 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/paradigm_kit_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/paradigm_kit_fab.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/paradigm_kit_fab.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/paradigm_kit_fab.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/paradigm_kit_fab.js
  */
 /**
  * =====================================================
@@ -1066,8 +1071,41 @@ window.PTK = (function () {
                      'border-radius:0 10px 10px 0;padding:12px 14px;color:#d6c2c6;font-size:.9rem;line-height:1.65;">' +
                 e(spec.boundaryNote) + '</div>'
             : '') +
+          PTK.footnotesHtml(spec.footnotes) +
         '</div>' +
       '</div>';
+  };
+
+  /**
+   * Numbered footnotes under the ABCD panel.
+   *
+   * Added 2026-08-12 at Shir's request. The boundary notes were arguments about
+   * whether a paradigm fits the definition, sitting in the middle of a panel a
+   * participant reads before starting - too heavy for that position, and the
+   * ones that carry a concrete "here is how to do it properly" were being lost
+   * inside them. Footnotes keep the panel short and put the caveat, the history
+   * and the implementation advice where a reader can take them or leave them.
+   *
+   * Each entry is {title, text}. Kept deliberately plain: no markup, escaped,
+   * because several of them quote stimulus names.
+   *
+   * @param {Array} notes
+   * @returns {string} HTML, or '' when there are none
+   */
+  PTK.footnotesHtml = function (notes) {
+    if (!notes || !notes.length) return '';
+    var e = PTK.esc;
+    var items = notes.map(function (n, i) {
+      var title = typeof n === 'string' ? '' : (n.title || '');
+      var text = typeof n === 'string' ? n : (n.text || '');
+      return '<li style="margin-bottom:8px;">' +
+        (title ? '<b style="color:#c4ccd6;">' + e(title) + '</b> ' : '') +
+        e(text) + '</li>';
+    }).join('');
+    return '<div style="margin-top:14px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.12);">' +
+      '<div style="color:#64748b;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Notes</div>' +
+      '<ol style="margin:0;padding-left:20px;color:#9aa6b2;font-size:.84rem;line-height:1.6;">' +
+      items + '</ol></div>';
   };
 
   /**

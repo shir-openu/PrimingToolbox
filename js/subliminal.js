@@ -1,15 +1,18 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/subliminal.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/subliminal.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/subliminal.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/subliminal.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/subliminal.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/subliminal.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/subliminal.js
  */
 /**
  * =====================================================
@@ -878,7 +881,27 @@ window.Subliminal = {
    * Renders stimulus tables and starts preview cycle.
    */
   openBuilder: function() {
-    document.getElementById('subliminal-builder-overlay').classList.add('active');
+    // #subliminal-builder-overlay exists only in the standalone subliminal.html,
+    // which is an untracked local file and not part of the site. On index.html
+    // this line threw "Cannot read properties of null" and the Template Builder
+    // chooser died silently on the 'subliminal' option - the one paradigm of
+    // sixteen whose template could not be edited at all. Guarding rather than
+    // failing silently: say what is missing, so it is a bug report and not a
+    // dead button.
+    const overlay = document.getElementById('subliminal-builder-overlay');
+    if (!overlay) {
+      console.error('Subliminal: #subliminal-builder-overlay is not on this page - ' +
+        'the Template Builder markup was never added to index.html.');
+      if (window.PTA && PTA.showMessage) {
+        PTA.showMessage('The Subliminal Template Builder is not available on this page yet. ' +
+          'You can still run the experiment with its default stimuli, or build a masked ' +
+          'design from scratch at build/from-scratch.html.', 'error');
+      } else {
+        alert('The Subliminal Template Builder is not available on this page yet.');
+      }
+      return;
+    }
+    overlay.classList.add('active');
     this.renderStimulusTable();
     this.renderNonwordsTable();
     this.startPreviewCycle();

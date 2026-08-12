@@ -1,15 +1,18 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/evaluative.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/evaluative.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/evaluative.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/evaluative.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/evaluative.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/evaluative.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/evaluative.js
  */
 /**
  * =====================================================
@@ -64,7 +67,21 @@ window.EvaluativeConditioning = {
       secondariness: 'At test you rate only the shape, and are never asked about the word it appeared with.',
       modulation: 'Shapes paired with positive words are rated more pleasant than shapes paired with negative ones.'
     },
-    boundaryNote: 'This is the weakest of the three for secondariness, and worth thinking about. During the learning phase the pairing IS the task, so A is not incidental there; it becomes secondary only at test. Conditioning and priming overlap at exactly this seam.'
+    boundaryNote: 'Secondariness holds where it is measured. At test you rate the shape and nothing asks you about the word it appeared with - the prime is genuinely incidental to the judgement. See note 1 for the part that is worth arguing about.',
+    footnotes: [
+      {
+        title: 'Two phases, one question.',
+        text: 'During the learning phase the pairing is the task, so A is not incidental there. It is at test that A is secondary - and test is where C and D are compared, so that is the phase the definition has to be applied to. Reading it that way, this experiment satisfies all three characteristics.'
+      },
+      {
+        title: 'Why it looks like a hard case.',
+        text: 'Conditioning and priming were named by different literatures at different times, and they overlap exactly here. Calling this priming stretches the older, narrower usage; it does not stretch the definition on this page. That is a definition evolving to cover what it always implied, not a paradigm being forced into it.'
+      },
+      {
+        title: 'What C really is here.',
+        text: 'The cleanest baseline is the same shape rated by participants who never saw it paired with anything, or paired with a neutral word. Rating a shape before the learning phase also works but is weaker: the pre-rating itself changes the later one.'
+      }
+    ]
   },
 
 

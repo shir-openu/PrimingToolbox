@@ -1,11 +1,15 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/stroop.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/stroop.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/stroop.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/stroop.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/stroop.js
  */
 /**
  * =====================================================
@@ -60,7 +64,17 @@ window.Stroop = {
       secondariness: 'You are told to ignore the word, and the ink can be named without reading it. You read it anyway - that is the finding.',
       modulation: 'A conflicting word slows naming and raises errors relative to an agreeing one.'
     },
-    boundaryNote: 'Two things to be honest about. Stroop is usually called interference rather than priming, because the effect is a cost rather than a benefit - under the three characteristics that is a difference of direction, not of kind. And this task has only congruent and incongruent trials, so what is compared is two primed conditions rather than a primed one against a neutral baseline C.'
+    boundaryNote: 'This task runs only congruent and incongruent trials, so what it compares is two primed conditions rather than a primed one against a neutral baseline C. Note 2 says how to add the neutral condition, and what you get by doing it.',
+    footnotes: [
+      {
+        title: 'Is Stroop priming?',
+        text: 'Stroop did not call it that - his 1935 paper is titled "Studies of interference in serial verbal reactions", and the term priming was not yet in use. Others applied it later, and the literature since treats this squarely inside the priming family: there is an explicit masked Stroop priming literature, and the response-priming tradition covers costs as readily as benefits. Under the three characteristics the direction of the effect is not what decides the question; association, secondariness and modulation are all satisfied here.'
+      },
+      {
+        title: 'Adding the neutral baseline.',
+        text: 'The classic neutral condition is a colour-neutral word (LOT, TABLE) or a row of Xs. With it you can separate the two halves of the effect that congruent-versus-incongruent alone confounds: facilitation is neutral minus congruent, interference is incongruent minus neutral. They are not the same size - interference is much the larger, and facilitation is small and sometimes absent - so reporting a single difference score hides which one moved. The choice of neutral matters too: Xs give a larger interference estimate than unrelated words, by as much as 65 ms (MacLeod, 1991). Add it in the Template Builder as a third word set.'
+      }
+    ]
   },
 
 
@@ -641,6 +655,39 @@ window.Stroop = {
    * Launch experiment preview from builder settings.
    * Transfers configuration to main experiment.
    */
+  /**
+   * Write a builder stimulus set into the live experiment data.
+   *
+   * Extracted 2026-08-12. This mapping existed only inside checkUrlConfig, so
+   * the ONLY route by which an edited stimulus table reached a running Stroop
+   * was the participant link. Preview took the two language dropdowns and
+   * nothing else: an experimenter who changed the colours, the words or the
+   * response keys and pressed Preview watched the DEFAULT experiment run, with
+   * no indication their edits had been ignored. One mapping, three callers.
+   *
+   * @param {Array} stimuli - builderStimuli rows [{id, color, wordLang1, wordLang2, key}]
+   * @param {string} lang1
+   * @param {string} lang2
+   */
+  applyBuilderStimuli: function(stimuli, lang1, lang2) {
+    if (!stimuli || !stimuli.length) return;
+    this.data.colors = {};
+    this.data.words[lang1] = {};
+    this.data.words[lang2] = {};
+    stimuli.forEach(stim => {
+      this.data.colors[stim.id] = {
+        hex: stim.color,
+        keys: [String(stim.key || '').toLowerCase()]
+      };
+      this.data.words[lang1][stim.id] = stim.wordLang1;
+      this.data.words[lang2][stim.id] = stim.wordLang2;
+    });
+  },
+
+  /**
+   * Launch experiment preview from builder settings.
+   * Transfers configuration to main experiment.
+   */
   previewFromBuilder: function() {
     // Get settings from builder
     const lang1 = document.getElementById('builder-lang1').value;
@@ -654,6 +701,9 @@ window.Stroop = {
     // Set up state from builder settings
     document.getElementById('language1').value = lang1;
     document.getElementById('language2').value = lang2;
+
+    // The edited stimulus table, which the preview used to ignore entirely.
+    this.applyBuilderStimuli(this.builderStimuli, lang1, lang2);
 
     this.state.openedFromBuilder = true;
     this.closeBuilder();
@@ -990,20 +1040,7 @@ window.Stroop = {
           this.userExperimentId = config.userExperimentId || '';
 
           // Apply custom stimuli
-          if (config.stimuli && config.stimuli.length > 0) {
-            this.data.colors = {};
-            this.data.words[config.lang1] = {};
-            this.data.words[config.lang2] = {};
-
-            config.stimuli.forEach(stim => {
-              this.data.colors[stim.id] = {
-                hex: stim.color,
-                keys: [stim.key.toLowerCase()]
-              };
-              this.data.words[config.lang1][stim.id] = stim.wordLang1;
-              this.data.words[config.lang2][stim.id] = stim.wordLang2;
-            });
-          }
+          this.applyBuilderStimuli(config.stimuli, config.lang1, config.lang2);
 
           this.state.lang1 = config.lang1 || 'en';
           this.state.lang2 = config.lang2 || 'he';

@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the builder said what the shape split would actually be, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/evaluative.js
+ *
  *   before a missing rating stopped being reported as zero, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/7ac64b9/js/evaluative.js
  *
@@ -1020,6 +1023,56 @@ window.EvaluativeConditioning = {
       `;
       tbody.appendChild(row);
     });
+
+    this.showCSBalance();
+  },
+
+  /**
+   * Say how the shapes will be split, because an odd number cannot be split.
+   *
+   * generateCSUSPairings assigns the first floor(n/2) shapes to positive and
+   * the REST to negative, so every odd count sends the extra shape to negative:
+   * 3 shapes is 1 against 2, 5 is 2 against 3. The builder offers Add and
+   * Remove, so those counts are one click away, and nothing said a word - the
+   * experimenter chose five shapes and got a design tilted toward negative.
+   *
+   * A participant link can set the list to any length at all (checkUrlConfig
+   * overwrites data.neutralStimuli from config.cs), and one shape produces NO
+   * positive condition whatsoever. The results screen now refuses to invent an
+   * effect from a missing condition, so that run ends honestly - but the design
+   * was already broken when the link was made, which is the moment to say so.
+   *
+   * This does not silently rebalance anything. Dropping or duplicating a shape
+   * to make the numbers even would be a change to someone's experiment made
+   * behind their back, which is worse than an uneven design they chose on
+   * purpose.
+   */
+  showCSBalance: function() {
+    const el = document.getElementById('cs-balance-note');
+    if (!el) return;
+
+    const n = this.builderStimuli.cs.length;
+    const pos = Math.floor(n / 2);
+    const neg = n - pos;
+
+    if (n >= 2 && pos === neg) {
+      el.textContent = n + ' shapes: ' + pos + ' paired with positive words, ' +
+                       neg + ' with negative. Balanced.';
+      el.style.color = '#4ade80';
+      return;
+    }
+
+    if (pos === 0) {
+      el.textContent = n + ' shape' + (n === 1 ? '' : 's') + ': every one would be ' +
+                       'paired with a negative word, so there is no positive condition ' +
+                       'and no comparison to make. Use at least two.';
+    } else {
+      el.textContent = n + ' shapes cannot be split evenly: ' + pos +
+                       ' would be paired with positive words and ' + neg +
+                       ' with negative. The comparison still works, but the extra ' +
+                       'shape always goes to negative. An even number avoids it.';
+    }
+    el.style.color = '#ff9b1e';
   },
 
   /**

@@ -1455,7 +1455,16 @@
                   <option value="10" selected>10 (Standard - ~300 trials)</option>
                   <option value="20">20 (Extended - ~600 trials)</option>
                 </select>
-                <div class="param-hint">More trials = more reliable results</div>
+                <!-- This said "More trials = more reliable results", which is
+                     only half of it. The number is how many times the WHOLE
+                     stimulus list runs, so with ten pairs, ten means each pair
+                     is seen ten times - and repeated pairs build repetition
+                     priming, which is a second effect sitting inside the one
+                     being measured. The design is unchanged; it just no longer
+                     goes unsaid. -->
+                <div class="param-hint">Each setting runs the whole stimulus list that many times,
+                  so every prime-target pair repeats that often. More trials steady the means;
+                  repeating the same pair also builds repetition priming.</div>
               </div>
 
               <div class="param-group">
@@ -1830,8 +1839,15 @@
               </table>
 
               <p class="stimulus-note">
-                Half of these will be paired with positive US, half with negative US. Use at least 2 CS (ideally 4+).
+                These are split between positive and negative US. An even number
+                splits evenly; an odd number cannot, and the extra shape is
+                paired with negative. Use at least 2 (ideally 4+).
               </p>
+              <!-- filled by EvaluativeConditioning.showCSBalance() on every add
+                   and remove: the actual split for the current count, because
+                   the sentence above used to promise "half and half" and that
+                   is not true of 3, 5 or 7 shapes -->
+              <p class="stimulus-note" id="cs-balance-note" style="font-weight:600;"></p>
             </div>
           </div>
         </div>

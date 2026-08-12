@@ -124,6 +124,57 @@ const IGNORE = /net::ERR|Failed to load resource|supabase|sheetjs|cdn\.|platform
     await p.close();
   }
 
+  console.log('\n[social priming: the fifth chip cannot double-record]');
+  {
+    // Same class of bug, different paradigm. The item closes on the fourth
+    // word, but the FIFTH chip stays enabled for the 350 ms before renderItem
+    // repaints. Clicking it pushed a fifth word, selection.length >= 4 was true
+    // again, and recordItem ran a second time - after currentTrial had already
+    // advanced. The previous item's words were filed under the NEXT item's
+    // condition and stereotype, a second row went to the database, and a real
+    // item was skipped. One stray click: one corrupted row, one missing one.
+    const p = await open();
+    const r = await p.evaluate(() => {
+      const S = window.Social;
+      if (!S) return { missing: true };
+      S.saveTrial = function () {};              // never touch the database
+      S.state = S.state || {};
+      S.state.results = [];
+      S.state.currentTrial = 0;
+      S.state.selection = [];
+      S.state.itemOnset = performance.now();
+      S.state.trials = [
+        { condition: 'prime',   stereotype: 'elderly', words: ['a', 'b', 'c', 'd', 'e'] },
+        { condition: 'neutral', stereotype: null,      words: ['f', 'g', 'h', 'i', 'j'] }
+      ];
+      S._after = function (fn) { return setTimeout(fn, 100000); };   // freeze the repaint
+      S.state.locked = false;
+      const fake = () => ({ disabled: false, style: {} });
+      const btns = [fake(), fake(), fake(), fake(), fake()];
+      S.pickWord('a', btns[0]);
+      S.pickWord('b', btns[1]);
+      S.pickWord('c', btns[2]);
+      S.pickWord('d', btns[3]);
+      const afterFour = S.state.results.length;
+      const trialAfterFour = S.state.currentTrial;
+      S.pickWord('e', btns[4]);                  // the stray fifth
+      return {
+        missing: false,
+        afterFour: afterFour,
+        afterFive: S.state.results.length,
+        trialAfterFour: trialAfterFour,
+        trialAfterFive: S.state.currentTrial,
+        rows: S.state.results.map(x => ({ c: x.condition, s: x.sentence }))
+      };
+    });
+    ok('social: four words record one item', !r.missing && r.afterFour === 1, JSON.stringify(r));
+    ok('social: the fifth chip records nothing', r.afterFive === 1, String(r.afterFive));
+    ok('social: no item is skipped', r.trialAfterFive === r.trialAfterFour, r.trialAfterFour + ' -> ' + r.trialAfterFive);
+    ok('social: the one row is the real one', r.rows && r.rows.length === 1 && r.rows[0].s === 'a b c d',
+       JSON.stringify(r.rows));
+    await p.close();
+  }
+
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

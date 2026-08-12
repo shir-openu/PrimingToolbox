@@ -83,9 +83,25 @@
     }
     const conds = pick(config, ['conditions', 'primeTypes', 'primeConditions', 'relations']);
     const condCount = conds ? collectStrings(conds, 0).length : 0;
+    // primeGroups counts NAMED prime groups - the older {related:[...],
+    // unrelated:[...]} shape, where the group names themselves are the
+    // conditions. It must not count the keys of a {type, items} stimulus set,
+    // which is the shape every config this toolbox builds actually uses.
+    //
+    // It did. Object.keys({type, items}).length is 2, so primeGroups was 2 for
+    // EVERY design, the `>= 2` branch always won, and the warn branch below was
+    // unreachable. Association reported "ok" for a design with one condition,
+    // and for a design with no conditions at all - measured, not inferred.
+    //
+    // This check is the platform's whole claim: it exists to tell a student
+    // that an effect cannot be attributed to association when nothing was
+    // contrasted. Passing unconditionally did not make it useless, it made it
+    // misleading - a green light on a design that has not earned one.
+    const STIMULUS_SET_KEYS = ['type', 'items'];
     const primeGroups = (() => {
       const p = pick(config, ['primes']);
-      return p && !Array.isArray(p) && typeof p === 'object' ? Object.keys(p).length : 0;
+      if (!p || Array.isArray(p) || typeof p !== 'object') return 0;
+      return Object.keys(p).filter(k => STIMULUS_SET_KEYS.indexOf(k) === -1).length;
     })();
     if (condCount >= 2 || primeGroups >= 2) {
       return check('association', 'ok',

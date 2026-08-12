@@ -933,8 +933,25 @@ window.ScratchBuilder = (function () {
 
     if (window.PTA && typeof PTA.validateASM === 'function' && panel) {
       var report = PTA.validateASM(cfg);
-      PTA.renderASMReport(report, panel);
+
+      // ORDER MATTERS HERE, and it used to be wrong.
+      //
+      // answerUnsure fills in any characteristic left on "not sure", and when
+      // it does it calls SB.repaint() - which empties ROOT and rebuilds every
+      // section, including a brand new, empty #sb-report. Rendering the report
+      // first and answering afterwards therefore threw the report away: the
+      // panel was still there, and it was blank.
+      //
+      // Measured: with one characteristic set to "not sure", running the check
+      // left #sb-report at zero characters. So the students who most need the
+      // definition report - the ones honest enough to say they are not sure,
+      // which is the entire reason that option exists - were the only ones who
+      // never saw it.
+      //
+      // Answer first, repaint, then render into the nodes that now exist.
       answerUnsure(report);
+      panel = document.getElementById('sb-report') || panel;
+      PTA.renderASMReport(report, panel);
       showDeclaredVsChecked(report);
       if (loud) {
         say(problems.length

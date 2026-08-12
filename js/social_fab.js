@@ -230,6 +230,7 @@ window.Social = {
   renderItem: function () {
     const t = this.state.trials[this.state.currentTrial];
     if (!t) { this.showResults(); return; }
+    this.state.locked = false;          // this item is open for picking
     this.state.selection = [];
     this.state.itemOnset = performance.now();
     document.getElementById('social-progress').textContent =
@@ -249,12 +250,25 @@ window.Social = {
   },
 
   pickWord: function (word, btn) {
+    // The item closes the moment the fourth word is picked, but the FIFTH chip
+    // stays on screen and enabled for the 350 ms before renderItem repaints.
+    // btn.disabled only stops a chip being clicked twice; it does nothing about
+    // a different chip being clicked once too often.
+    //
+    // Clicking it pushed a fifth word, `selection.length >= 4` was true again,
+    // and recordItem ran a second time - after state.currentTrial had already
+    // advanced. So the previous item's words were filed under the NEXT item's
+    // condition and stereotype, a second row went to the database, and the
+    // trial index advanced again, skipping a real item. One stray click
+    // therefore produced one corrupted row and one missing one.
+    if (this.state.locked) return;
     if (btn.disabled) return;
     btn.disabled = true;
     btn.style.opacity = '0.35';
     this.state.selection.push(word);
     document.getElementById('social-built').textContent = this.state.selection.join(' ');
     if (this.state.selection.length >= 4) {
+      this.state.locked = true;         // closed until renderItem opens the next
       const rt = performance.now() - this.state.itemOnset;
       this.recordItem(this.state.trials[this.state.currentTrial], this.state.selection.slice(), rt);
     }

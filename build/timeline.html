@@ -83,6 +83,11 @@
     // built the editor bar by the time this runs.
     document.addEventListener('DOMContentLoaded', function () {
       ScratchBuilder.mount({ host: 'sb-root', mode: 'timeline' });
+      // Same question, same answer, on the build pages: everything the
+      // author can change is outlined in purple and pulses once on open.
+      setTimeout(function () {
+        if (window.PTK && PTK.markEditable) PTK.markEditable('sb-root');
+      }, 120);
       // T in the DHSS proposal: this page IS the visual timeline representation
       // whose adoption the research question is about. Arriving here is the
       // opt-in; timeline_edit events are what make the adoption "active".

@@ -3357,6 +3357,28 @@
     function showTemplateBuilder() {
       const type = document.getElementById('experimentSelect').value;
 
+      // Six of the sixteen builders are overlays defined in this file rather
+      // than built by PTK, so they never reach PTK.markEditable. Mark whatever
+      // becomes visible shortly after the dispatch below, whichever route it
+      // took - one hook instead of six, and a new builder is covered for free.
+      //
+      // Shir, 2026-08-12: "you can't quickly see at a glance what is editable
+      // and what is not - highlight the boxes that ARE editable, purple glow."
+      setTimeout(function () {
+        if (!window.PTK || !PTK.markEditable) return;
+        const overlays = document.querySelectorAll(
+          '.stroop-overlay.active, .ptk-builder-overlay, [id$="-builder-overlay"]');
+        overlays.forEach(function (o) {
+          // NOT offsetParent: it is null for any position:fixed element, and
+          // every one of these builder overlays is fixed. That check silently
+          // skipped all five of them.
+          var cs = getComputedStyle(o);
+          if (cs.display !== 'none' && cs.visibility !== 'hidden' && o.offsetWidth > 0) {
+            PTK.markEditable(o);
+          }
+        });
+      }, 120);
+
       // Use Stroop Builder for Stroop experiment (or default to Stroop if nothing selected)
       if (type === 'stroop' || !type) {
         Stroop.openBuilder();

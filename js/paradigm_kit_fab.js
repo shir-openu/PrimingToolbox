@@ -861,6 +861,99 @@ window.PTK = (function () {
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
     overlay.scrollTop = 0;
+
+    // Answer "which of these can I change?" the moment the builder opens.
+    // After the layout has settled, or offsetParent is still null and every
+    // control looks hidden.
+    setTimeout(function () { PTK.markEditable(overlay); }, 60);
+  };
+
+  /* ===================================================================
+     "Which of these can I actually change?"
+     =================================================================== */
+
+  /**
+   * Mark every editable control in a builder, so it can be seen at a glance.
+   *
+   * Shir, 2026-08-12: "you can't quickly see at a glance what is editable and
+   * what is not - as a start, just highlight the boxes that ARE editable, with
+   * a purple glow", and pointed at her own page as the reference:
+   * https://shir-openu.github.io/differential_linear_operator_addition-en/
+   * That page uses --purple #a78bfa and a keyframe called controlBlink, two
+   * pulses, on its buttons and selects. Same colour, same shape, same restraint.
+   *
+   * Two layers, because a pulse alone only answers the question for three
+   * seconds:
+   *   - an OPENING PULSE across every editable control (her effect, 3 runs)
+   *   - a quiet permanent purple edge that stays after the pulse, so the
+   *     question is still answered ten minutes later
+   *
+   * Disabled and readonly controls are deliberately skipped: they are exactly
+   * the things this is meant to distinguish. Hidden ones are skipped too - a
+   * glow inside a collapsed section highlights nothing.
+   *
+   * @param {HTMLElement|string} root - builder container, or its id
+   * @param {Object} [opts]
+   * @param {boolean} [opts.pulse=true] - run the opening pulse
+   * @returns {number} how many controls were marked
+   */
+  PTK.markEditable = function (root, opts) {
+    opts = opts || {};
+    var host = typeof root === 'string' ? document.getElementById(root) : root;
+    if (!host) return 0;
+
+    if (!document.getElementById('ptk-editable-style')) {
+      var st = document.createElement('style');
+      st.id = 'ptk-editable-style';
+      st.textContent =
+        '@keyframes ptkControlBlink{' +
+          '0%,100%{box-shadow:0 0 0 1px rgba(167,139,250,.25) inset}' +
+          '50%{box-shadow:0 0 15px #a78bfa,0 0 0 2px #a78bfa inset}}' +
+        // the quiet state: still obviously "this one", but not shouting
+        '.ptk-editable{border-color:rgba(167,139,250,.55) !important;' +
+          'box-shadow:0 0 0 1px rgba(167,139,250,.22) inset;}' +
+        '.ptk-editable:focus{border-color:#a78bfa !important;' +
+          'box-shadow:0 0 10px rgba(167,139,250,.55) !important;outline:none;}' +
+        '.ptk-editable-pulse{animation:ptkControlBlink 1.5s ease-in-out 3;}' +
+        '.ptk-editable-legend{display:flex;align-items:center;gap:8px;margin:0 0 14px;' +
+          'font-size:.82rem;color:#c9b8f5;background:rgba(167,139,250,.10);' +
+          'border:1px solid rgba(167,139,250,.35);border-radius:9px;padding:8px 12px;}' +
+        '.ptk-editable-swatch{width:26px;height:14px;border-radius:4px;flex:none;' +
+          'border:1px solid #a78bfa;box-shadow:0 0 8px rgba(167,139,250,.7);}';
+      (document.head || document.documentElement).appendChild(st);
+    }
+
+    var controls = host.querySelectorAll('input, select, textarea');
+    var marked = 0;
+    Array.prototype.forEach.call(controls, function (el) {
+      if (el.disabled || el.readOnly) return;
+      if (el.type === 'hidden') return;
+      // offsetParent is null for anything inside a position:fixed ancestor, so
+      // it is not a visibility test. offsetWidth/offsetHeight are.
+      if (el.offsetWidth === 0 && el.offsetHeight === 0) return;      // not visible
+      el.classList.add('ptk-editable');
+      if (opts.pulse !== false) {
+        el.classList.add('ptk-editable-pulse');
+        // Remove the pulse class when it finishes so re-opening replays it.
+        setTimeout(function () { el.classList.remove('ptk-editable-pulse'); }, 4800);
+      }
+      marked++;
+    });
+
+    if (marked && opts.legend !== false && !host.querySelector('.ptk-editable-legend')) {
+      var bar = document.createElement('div');
+      bar.className = 'ptk-editable-legend';
+      var sw = document.createElement('span');
+      sw.className = 'ptk-editable-swatch';
+      bar.appendChild(sw);
+      var txt = document.createElement('span');
+      txt.textContent = 'Anything outlined in purple is yours to change (' + marked +
+        ' fields here). Anything else is fixed for this experiment - to change it, ' +
+        'build one from scratch.';
+      bar.appendChild(txt);
+      host.insertBefore(bar, host.firstChild);
+    }
+    return marked;
   };
 
   PTK.closeBuilder = function (spec) {

@@ -57,14 +57,11 @@ window.AMP = {
     abcd: {
       A: 'The affective image flashed before each pictograph.',
       B: 'The Chinese pictograph you judge as pleasant or unpleasant.',
-      // C described a neutral-prime baseline this experiment does not run.
-      // generateTrials uses primeTypes = ['positive', 'negative'] and the result
-      // is posProportion - negProportion, so what is compared is two PRIMED
-      // conditions - exactly the situation flagged on the Stroop panel. The
-      // neutral images are defined in stimuli.primes.neutral and never used.
-      // Corrected to describe the contrast that actually happens; note 2 says
-      // how to make a real C.
-      C: 'How often that pictograph is called pleasant after a NEGATIVE prime - this experiment uses the negative condition as its comparison.',
+      // C is now a real baseline. Until 2026-08-12 generateTrials ran only
+      // ['positive', 'negative'], so both compared conditions were primed and
+      // there was no C at all - the neutral images sat defined and unused. The
+      // neutral condition is now run, so C describes what it is supposed to.
+      C: 'How often that pictograph is called pleasant after a NEUTRAL prime - a blank shape carrying no feeling.',
       D: 'How often it is called pleasant after a POSITIVE prime.'
     },
     characteristics: {
@@ -72,15 +69,15 @@ window.AMP = {
       secondariness: 'You are told in so many words to ignore the image and judge only the pictograph. The instruction to disregard A is part of the procedure.',
       modulation: 'The proportion of pleasant judgements shifts with the valence of the prime, although the pictograph is unfamiliar and carries no meaning of its own for you.'
     },
-    boundaryNote: 'The effect works by misattribution: the feeling A causes is read off as a property of B. Participants routinely insist they ignored the primes, and the shift appears anyway. Like Stroop, this task compares two primed conditions rather than a primed one against a neutral baseline - note 2 says how to add one.',
+    boundaryNote: 'The effect works by misattribution: the feeling A causes is read off as a property of B. Participants routinely insist they ignored the primes, and the shift appears anyway. The run includes a neutral-prime baseline, so the positive and negative shifts can be reported separately rather than as one difference that cannot say which side moved.',
     footnotes: [
       {
         title: 'Why misattribution matters here.',
         text: 'The pictograph is unfamiliar and carries no meaning for you, so there is nothing for the prime to interfere with. Whatever shifts the judgement has to be the feeling itself, read off as if it belonged to the character. That is what makes this a measure of affect rather than of knowledge.'
       },
       {
-        title: 'Adding a real baseline.',
-        text: 'This run compares positive primes against negative ones, so both conditions are primed and neither is C. Neutral images are already defined in this experiment (a blank square and a plain box) and are simply not used. Add them as a third condition and you can report two separate numbers - how much a positive prime lifts the judgement above neutral, and how much a negative one lowers it - instead of one difference that cannot tell you which side moved.'
+        title: 'Why the neutral condition is here.',
+        text: 'An earlier version of this experiment compared positive primes against negative ones only. Both conditions were primed, so neither was a baseline, and the single difference between them could not say whether the positive primes had lifted the judgement or the negative ones had lowered it. Neutral primes now run as a third condition, and the result screen reports both movements separately.'
       },
       {
         title: 'Awareness is not the question.',
@@ -134,16 +131,30 @@ window.AMP = {
         { id: 'neg3', url: '', label: 'Negative 3', emoji: '🐍' },
         { id: 'neg4', url: '', label: 'Negative 4', emoji: '💀' }
       ],
+      // Four neutrals, to match the four positives and four negatives. There
+      // were two, which meant each neutral prime appeared three times as often
+      // as each emotional one - an imbalance in exposure that is itself a
+      // difference between the conditions being compared.
       neutral: [
         { id: 'neu1', url: '', label: 'Neutral 1', emoji: '⬜' },
-        { id: 'neu2', url: '', label: 'Neutral 2', emoji: '📦' }
+        { id: 'neu2', url: '', label: 'Neutral 2', emoji: '📦' },
+        { id: 'neu3', url: '', label: 'Neutral 3', emoji: '🔲' },
+        { id: 'neu4', url: '', label: 'Neutral 4', emoji: '🔳' }
       ]
     },
-    // Chinese ideographs as targets
+    // Chinese ideographs as targets.
+    //
+    // There were 24, which was exactly 2 conditions x 12 trials - every target
+    // appeared once. Adding the neutral condition makes 36 trials, so 12 more
+    // were added here. Without them targetIndex would have wrapped and twelve
+    // ideographs would have been judged twice by the same participant, who
+    // tends to remember what they said the first time.
     targets: [
       '會', '能', '應', '就', '後', '為', '從', '裡',
       '還', '很', '沒', '把', '與', '讓', '給', '等',
-      '當', '幾', '被', '更', '卻', '每', '問', '事'
+      '當', '幾', '被', '更', '卻', '每', '問', '事',
+      '想', '覺', '開', '話', '點', '種', '面', '明',
+      '意', '相', '度', '世'
     ],
     // Mask pattern (will be generated)
     mask: null
@@ -284,8 +295,17 @@ window.AMP = {
   generateTrials: function(isPractice = false) {
     const trials = [];
     const perCondition = isPractice ? 2 : this.config.trials.perCondition;
-    const primeTypes = ['positive', 'negative'];
+    // The neutral condition is C in the ABCD sense: the target judged with no
+    // emotional prime in front of it. Without it, positive and negative are
+    // both primed and the single difference between them cannot say which side
+    // actually moved.
+    const primeTypes = ['positive', 'negative', 'neutral'];
     const targets = [...this.stimuli.targets];
+
+    if (!isPractice && primeTypes.length * perCondition > targets.length) {
+      console.warn('AMP: ' + (primeTypes.length * perCondition) + ' trials but only ' +
+                   targets.length + ' unique targets - some will repeat within a session.');
+    }
 
     // Shuffle targets
     for (let i = targets.length - 1; i > 0; i--) {
@@ -589,31 +609,43 @@ window.AMP = {
     document.getElementById('amp-results').classList.add('active');
     this.state.phase = 'results';
 
-    // Calculate statistics
-    const positiveTrials = this.state.results.filter(r => r.primeType === 'positive');
-    const negativeTrials = this.state.results.filter(r => r.primeType === 'negative');
+    // Calculate statistics.
+    //
+    // A condition with no trials has NO percentage - it does not have 0%. The
+    // old code fell back to 0 and then subtracted it, so a participant who
+    // somehow produced no negative-prime trials was told they had a 60-point
+    // AMP effect. pleasantPct returns null instead and the display shows a dash.
+    const pleasantPct = (type) => {
+      const rows = this.state.results.filter(r => r.primeType === type);
+      if (!rows.length) return null;
+      return +(rows.filter(r => r.response === 'pleasant').length / rows.length * 100).toFixed(1);
+    };
+    const show = (v) => (v === null ? '—' : v + '%');
+    const diff = (a, b) => (a === null || b === null ? null : +(a - b).toFixed(1));
 
-    const posPleasant = positiveTrials.filter(r => r.response === 'pleasant').length;
-    const negPleasant = negativeTrials.filter(r => r.response === 'pleasant').length;
-
-    const posProportion = positiveTrials.length > 0 ?
-      (posPleasant / positiveTrials.length * 100).toFixed(1) : 0;
-    const negProportion = negativeTrials.length > 0 ?
-      (negPleasant / negativeTrials.length * 100).toFixed(1) : 0;
+    const posProportion = pleasantPct('positive');
+    const negProportion = pleasantPct('negative');
+    const neuProportion = pleasantPct('neutral');
 
     const avgRT = this.state.results.length > 0 ?
-      Math.round(this.state.results.reduce((sum, r) => sum + r.rt, 0) / this.state.results.length) : 0;
+      Math.round(this.state.results.reduce((sum, r) => sum + r.rt, 0) / this.state.results.length) : null;
 
-    const ampEffect = (posProportion - negProportion).toFixed(1);
+    // Headline effect stays positive-minus-negative so earlier runs remain
+    // comparable; the two halves below are what the neutral baseline buys.
+    const ampEffect = diff(posProportion, negProportion);
+    const lift = diff(posProportion, neuProportion);   // how far positive raised it
+    const drop = diff(neuProportion, negProportion);   // how far negative lowered it
 
     // Update display
-    document.getElementById('amp-pos-pleasant').textContent = `${posProportion}%`;
-    document.getElementById('amp-neg-pleasant').textContent = `${negProportion}%`;
-    document.getElementById('amp-effect').textContent = `${ampEffect}%`;
-    document.getElementById('amp-avg-rt').textContent = `${avgRT} ms`;
+    document.getElementById('amp-pos-pleasant').textContent = show(posProportion);
+    document.getElementById('amp-neg-pleasant').textContent = show(negProportion);
+    const neuEl = document.getElementById('amp-neu-pleasant');
+    if (neuEl) neuEl.textContent = show(neuProportion);
+    document.getElementById('amp-effect').textContent = show(ampEffect);
+    document.getElementById('amp-avg-rt').textContent = avgRT === null ? '—' : `${avgRT} ms`;
 
     // Generate interpretation
-    const interpretation = this.generateInterpretation(parseFloat(ampEffect));
+    const interpretation = this.generateInterpretation(ampEffect, lift, drop);
     document.getElementById('amp-interpretation').textContent = interpretation;
 
     // Save to Supabase
@@ -625,18 +657,38 @@ window.AMP = {
    * @param {number} effect - Difference in pleasant response % (positive - negative primes)
    * @returns {string} Interpretation text
    */
-  generateInterpretation: function(effect) {
-    if (effect > 20) {
-      return `You showed a strong AMP effect (${effect}% difference). Positive primes significantly increased pleasant judgments compared to negative primes. This indicates clear affective priming.`;
-    } else if (effect > 10) {
-      return `You showed a moderate AMP effect (${effect}% difference). Positive primes led to more pleasant judgments than negative primes.`;
-    } else if (effect > 0) {
-      return `You showed a small AMP effect (${effect}% difference). There was a slight tendency to rate targets as more pleasant after positive primes.`;
-    } else if (effect > -10) {
-      return `No clear AMP effect detected (${effect}% difference). Prime valence did not systematically influence your judgments.`;
-    } else {
-      return `Reversed AMP effect (${effect}% difference). This unusual pattern may indicate contrast effects or strategic responding.`;
+  generateInterpretation: function(effect, lift, drop) {
+    if (effect === null) {
+      return 'One of the prime conditions produced no usable trials, so the ' +
+             'comparison cannot be made. No effect is reported rather than a ' +
+             'number computed from a missing condition.';
     }
+
+    let base;
+    if (effect > 20) {
+      base = `You showed a strong AMP effect (${effect}% difference). Positive primes significantly increased pleasant judgments compared to negative primes. This indicates clear affective priming.`;
+    } else if (effect > 10) {
+      base = `You showed a moderate AMP effect (${effect}% difference). Positive primes led to more pleasant judgments than negative primes.`;
+    } else if (effect > 0) {
+      base = `You showed a small AMP effect (${effect}% difference). There was a slight tendency to rate targets as more pleasant after positive primes.`;
+    } else if (effect > -10) {
+      base = `No clear AMP effect detected (${effect}% difference). Prime valence did not systematically influence your judgments.`;
+    } else {
+      base = `Reversed AMP effect (${effect}% difference). This unusual pattern may indicate contrast effects or strategic responding.`;
+    }
+
+    // The neutral baseline is the whole point of the third condition: it splits
+    // one ambiguous difference into two statements that can be read separately.
+    if (lift === null || drop === null) return base;
+
+    const side =
+      Math.abs(lift) > Math.abs(drop) * 1.5 ? ' Most of that came from the positive primes lifting the judgement.' :
+      Math.abs(drop) > Math.abs(lift) * 1.5 ? ' Most of that came from the negative primes lowering the judgement.' :
+      ' Both sides contributed about equally.';
+
+    return base +
+      ` Against the neutral baseline, positive primes moved judgments by ${lift}% ` +
+      `and negative primes by ${-drop}%.` + side;
   },
 
   /**

@@ -165,8 +165,17 @@ const IGNORE = /net::ERR|Failed to load resource|supabase|sheetjs|cdn\./i;
     ok('amp: we can read what it generates', r.generated.length >= 2, JSON.stringify(r.generated));
     ok('amp: the panel does not claim a neutral baseline it never runs',
        r.runsNeutral || !/neutral prime/i.test(r.slots), r.slots.slice(0, 200));
-    ok('amp: the slots name the condition it really compares',
-       /negative/i.test(r.slots) && /positive/i.test(r.slots), r.slots.slice(0, 200));
+    // The C slot must describe the baseline the code ACTUALLY runs, whichever
+    // that is. This used to hard-code "negative", because at the time there was
+    // no neutral condition and naming negative as the comparison was the honest
+    // description. A neutral condition was added on 2026-08-12, so the honest
+    // description changed - and a test pinned to the old wording would have
+    // reported the improvement as a regression. Derive it instead.
+    ok('amp: the C slot names the baseline the code really runs',
+       r.runsNeutral ? /neutral/i.test(r.slots) : /negative/i.test(r.slots),
+       'runsNeutral=' + r.runsNeutral + ' slots=' + r.slots.slice(0, 160));
+    ok('amp: the primed outcome slot names the positive prime',
+       /positive/i.test(r.slots), r.slots.slice(0, 200));
     await page.close();
   }
 

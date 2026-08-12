@@ -42,6 +42,11 @@ QUESTIONS____________________________/
 # Working conversation between Shir and Claude: reports, questions, her answers.
 # Local only - these are notes about the project, not part of the published site.
 CONVERSATIONS/
+# PARTICIPANT DATA. Weekly pull of the Supabase results tables. This repo is
+# PUBLIC - research data must never be published to it, however anonymous the
+# rows look. The script that writes this (TOOLS/weekly_supabase_backup.py) is
+# tracked; what it downloads is not.
+DATA_BACKUP/
 AGENTS/
 AUTO_CLAUDE_AGENTS/
 CGPT/

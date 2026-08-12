@@ -124,6 +124,42 @@ const ALL = [
     await page.close();
   }
 
+  console.log('\n[?edit= links straight to a builder]');
+  {
+    // Shir asked for links she could follow to see where a user changes a
+    // template. There were none: a builder took three clicks through the
+    // chooser and had no URL. index.html?edit=<type> now opens one directly.
+    for (const key of ['stroop', 'semantic', 'amp', 'number-priming', 'goal', 'masked']) {
+      const page = await browser.newPage();
+      await page.setCacheEnabled(false);
+      const errs = [];
+      page.on('pageerror', e => errs.push(e.message));
+      await page.evaluateOnNewDocument(() => { window.alert = function () {}; });
+      await page.goto(INDEX + '?edit=' + key, { waitUntil: 'networkidle2' });
+      await new Promise(r => setTimeout(r, 800));
+      const r = await page.evaluate(() => ({
+        fields: Array.from(document.querySelectorAll('input,select,textarea'))
+          .filter(e => e.offsetParent !== null).length,
+        sel: (document.getElementById('experimentSelect') || {}).value
+      }));
+      ok('?edit=' + key + ' opens an editable builder', r.fields >= 10 && r.sel === key,
+         'fields=' + r.fields + ' selected=' + r.sel);
+      ok('?edit=' + key + ': no page error', errs.length === 0, errs.join(' | '));
+      await page.close();
+    }
+
+    const page = await browser.newPage();
+    await page.setCacheEnabled(false);
+    const errs = [];
+    page.on('pageerror', e => errs.push(e.message));
+    await page.goto(INDEX + '?edit=not-a-real-experiment', { waitUntil: 'networkidle2' });
+    await new Promise(r => setTimeout(r, 600));
+    const opened = await page.evaluate(() => !!document.querySelector('[id^="ptk-builder"]'));
+    ok('an unknown ?edit= type opens nothing', opened === false);
+    ok('unknown type: no page error', errs.length === 0, errs.join(' | '));
+    await page.close();
+  }
+
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

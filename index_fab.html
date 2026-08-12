@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <!--
+  PREVIOUS VERSION ON GITHUB (before the ?edit= builder links, 2026-08-12):
+      https://github.com/shir-openu/PrimingToolbox/blob/0e13314/index.html
+-->
+<!--
   PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
       https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/index.html
 -->
@@ -3570,6 +3574,29 @@
       return true;
     }
 
+    // index.html?edit=<experiment type> opens that experiment's TEMPLATE
+    // BUILDER, where the stimuli, response keys and timing can be changed.
+    //
+    // Added 2026-08-12. Until now the builders could only be reached by three
+    // clicks through the Template Builder chooser, so there was no link anyone
+    // could be sent, and no way to answer "show me where a user changes this"
+    // with a URL. Same fall-through rule as ?open=: an unknown type is ignored
+    // quietly rather than opening the wrong builder.
+    function checkEditParam() {
+      const type = new URLSearchParams(window.location.search).get('edit');
+      if (!type) return false;
+      const sel = document.getElementById('experimentSelect');
+      if (!sel) return false;
+      const known = Array.from(sel.options).map(function (o) { return o.value; });
+      if (known.indexOf(type) === -1) {
+        console.warn('index.html: ?edit=' + type + ' is not an experiment on this build - ignoring.');
+        return false;
+      }
+      sel.value = type;
+      showTemplateBuilder();
+      return true;
+    }
+
     // Be a Participant function
     function showBeParticipant() {
       // Show a selection of experiments to try as a participant
@@ -3635,9 +3662,10 @@
         }
       }
 
-      // Not a participant link. Try the article's ?open= deep link, then the
-      // generic ?config= payload.
-      if (!claimed && !checkOpenParam()) {
+      // Not a participant link. Try ?edit= (open that experiment's Template
+      // Builder), then the article's ?open= deep link, then the generic
+      // ?config= payload.
+      if (!claimed && !checkEditParam() && !checkOpenParam()) {
         checkUrlConfig();
       }
     });

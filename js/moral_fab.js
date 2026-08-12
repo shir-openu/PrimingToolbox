@@ -189,7 +189,8 @@ window.MoralPriming = {
           '<p id="moral-item-text" style="color:#e5e7eb;line-height:1.75;max-width:520px;margin:24px auto;font-size:1.08rem;"></p>' +
           '<input id="moral-slider" type="range" min="0" max="100" value="50" ' +
                  'style="width:100%;max-width:440px;accent-color:#d41bb9;">' +
-          '<div id="moral-slider-value" style="color:#d41bb9;font-size:1.4rem;font-weight:700;margin-top:10px;">50</div>' +
+          '<div id="moral-slider-value" style="color:#d41bb9;font-size:1.4rem;font-weight:700;margin-top:10px;">—</div>' +
+          '<div id="moral-slider-hint" style="color:#9aa6b2;font-size:.82rem;margin-top:4px;">Move the slider to answer.</div>' +
           '<div style="margin-top:16px;">' +
             '<button class="btn" onclick="MoralPriming.submitItem()">Next</button>' +
           '</div>' +
@@ -209,8 +210,14 @@ window.MoralPriming = {
     document.body.appendChild(el);
 
     var slider = document.getElementById('moral-slider');
+    var self = this;
     slider.oninput = function () {
+      // This is the only evidence that an answer was actually given. Without it
+      // the reset-to-50 default was recorded as a deliberate midpoint choice.
+      self.state.sliderMoved = true;
       document.getElementById('moral-slider-value').textContent = slider.value;
+      var hint = document.getElementById('moral-slider-hint');
+      if (hint) { hint.textContent = ''; hint.style.color = '#9aa6b2'; }
     };
   },
 
@@ -330,7 +337,16 @@ window.MoralPriming = {
     document.getElementById('moral-item-text').textContent = item.text;
     var slider = document.getElementById('moral-slider');
     slider.value = 50;
-    document.getElementById('moral-slider-value').textContent = '50';
+    // The slider resets to the midpoint for every item, and submitItem simply
+    // read its value - so a participant who never touched it recorded 50, a
+    // number indistinguishable from someone who deliberately chose the exact
+    // middle. On a prosocial-intention scale the midpoint is a real answer, so
+    // this manufactured "neutral" responses out of no response at all, and the
+    // faster someone clicked through, the more of them there were.
+    this.state.sliderMoved = false;
+    document.getElementById('moral-slider-value').textContent = '—';
+    var hint = document.getElementById('moral-slider-hint');
+    if (hint) hint.textContent = 'Move the slider to answer.';
     this.state.itemOnset = performance.now();
   },
 
@@ -341,6 +357,17 @@ window.MoralPriming = {
     var items = this.data[block.itemKey];
     var item = items[this.state.itemIndex];
     if (!item) return;
+    // Refuse to record an answer nobody gave. Prompting is the right response
+    // rather than storing a flagged 50: the participant is still here and can
+    // simply answer, which is better data than a row marked unreliable.
+    if (!this.state.sliderMoved) {
+      var h = document.getElementById('moral-slider-hint');
+      if (h) {
+        h.textContent = 'Move the slider first - there is no default answer.';
+        h.style.color = '#ff8fa3';
+      }
+      return;
+    }
     var value = parseInt(document.getElementById('moral-slider').value, 10);
     var r = {
       block: this.state.blockIndex + 1,

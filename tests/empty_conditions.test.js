@@ -30,6 +30,8 @@ function ok(name, cond, extra) {
   if (cond) { pass++; console.log('  ok   ' + name); }
   else { fail++; console.log('  FAIL ' + name + (extra ? '  <<' + extra + '>>' : '')); }
 }
+const HDR = '\n[moral: an untouched slider is not an answer]';
+const HDR2 = '\n[repetition: the study phase is no longer discarded]';
 const IGNORE = /net::ERR|Failed to load resource|supabase|sheetjs|cdn\.|platform_events|PTA:/i;
 
 (async () => {
@@ -175,6 +177,74 @@ const IGNORE = /net::ERR|Failed to load resource|supabase|sheetjs|cdn\.|platform
        r.subEffect === '—' || r.subEffect === undefined || /—/.test(String(r.subEffect)),
        String(r.subEffect));
     ok('number priming does not throw', !r.npThrew, String(r.npThrew));
+    await p.close();
+  }
+
+  console.log(HDR);
+  {
+    // MORAL: the slider resets to the midpoint for every item, and submitItem
+    // simply read its value - so a participant who never touched it recorded a
+    // deliberate-looking 50. On a prosocial-intention scale the midpoint is a
+    // real answer, so this manufactured "neutral" responses out of no response
+    // at all, and the faster someone clicked through, the more of them.
+    const p = await open();
+    const r = await p.evaluate(() => {
+      const M = window.MoralPriming;
+      M.saveTrial = function () {};
+      M._after = function (fn) { return setTimeout(fn, 100000); };
+      M.state.phase = 'items';
+      M.state.blockIndex = 0;
+      M.state.itemIndex = 0;
+      M.state.blocks = [{ condition: 'moral', itemKey: 'itemsA' }];
+      M.state.results = [];
+      M.renderItem();
+      const readout = document.getElementById('moral-slider-value').textContent;
+      M.submitItem();
+      const afterUntouched = M.state.results.length;
+      const hint = document.getElementById('moral-slider-hint').textContent;
+      const s = document.getElementById('moral-slider');
+      s.value = '73';
+      s.dispatchEvent(new Event('input', { bubbles: true }));
+      M.submitItem();
+      return {
+        readout: readout, afterUntouched: afterUntouched, hint: hint,
+        afterMoved: M.state.results.length,
+        value: (M.state.results[0] || {}).value
+      };
+    });
+    ok('moral: the readout starts blank, not 50', r.readout === '—', r.readout);
+    ok('moral: an untouched slider records NOTHING', r.afterUntouched === 0, String(r.afterUntouched));
+    ok('moral: it says there is no default answer', /no default answer/i.test(r.hint), r.hint);
+    ok('moral: moving it then records', r.afterMoved === 1, String(r.afterMoved));
+    ok('moral: the value recorded is the one chosen', r.value === 73, String(r.value));
+    await p.close();
+  }
+
+  console.log(HDR2);
+  {
+    // REPETITION: state.studyRatings is filled in rate() and was written
+    // nowhere. The study phase IS the manipulation - it is what makes a word
+    // "studied" - and the pleasantness rating is the standard depth-of-encoding
+    // covariate. A completed fragment could be counted but never explained.
+    const p = await open();
+    const r = await p.evaluate(() => {
+      const R = window.RepetitionPriming;
+      const saved = [];
+      window.PTK.save = function (row) { saved.push(row); };
+      R.state.studyRatings = [{ word: 'TABLE', rating: 4, timedOut: false, rt: 812 }];
+      R.saveTrial({ trial: 1, studied: true, word: 'TABLE', fragment: 'TA_LE',
+                    answer: 'TABLE', completed: true, rt: 950 });
+      R.saveTrial({ trial: 2, studied: false, word: 'CHAIR', fragment: 'CH__R',
+                    answer: 'CHAIR', completed: true, rt: 1100 });
+      return saved;
+    });
+    ok('repetition: two rows saved', r.length === 2, String(r.length));
+    ok('repetition: the studied word carries its encoding rating',
+       r[0] && r[0].soa === 4, JSON.stringify(r[0] && r[0].soa));
+    ok('repetition: and how long that rating took',
+       r[0] && r[0].prime_duration === 812, JSON.stringify(r[0] && r[0].prime_duration));
+    ok('repetition: an unstudied word has no rating, not a fake one',
+       r[1] && r[1].soa === null, JSON.stringify(r[1] && r[1].soa));
     await p.close();
   }
 

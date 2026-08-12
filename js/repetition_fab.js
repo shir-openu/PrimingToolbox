@@ -380,6 +380,20 @@ window.RepetitionPriming = {
   },
 
   saveTrial: function (r) {
+    // The STUDY phase was collected and then thrown away. state.studyRatings is
+    // filled in rate() - the pleasantness judgement for every studied word,
+    // plus whether it timed out and how long it took - and nothing ever wrote
+    // it anywhere. That phase IS the manipulation in this paradigm: it is what
+    // makes a word "studied", and the rating is the standard depth-of-encoding
+    // covariate. Losing it means a completed fragment can be counted, but never
+    // explained.
+    //
+    // Attached to the test row for the same word, so each row carries its own
+    // encoding history instead of needing a second table.
+    var study = null;
+    for (var i = 0; i < this.state.studyRatings.length; i++) {
+      if (this.state.studyRatings[i].word === r.word) { study = this.state.studyRatings[i]; break; }
+    }
     PTK.save(PTK.row(this, this.spec(), {
       trial_number: r.trial,
       prime_type: r.studied ? 'studied' : 'unstudied',
@@ -389,7 +403,11 @@ window.RepetitionPriming = {
       congruent: r.studied,
       response: r.answer || null,
       correct: r.completed,
-      rt: Math.round(r.rt * 100) / 100
+      rt: Math.round(r.rt * 100) / 100,
+      // repurposed for the study phase: the rating given at encoding, and how
+      // long it took. null for an unstudied word, which never had one.
+      soa: study ? study.rating : null,
+      prime_duration: study ? Math.round(study.rt) : null
     }));
   },
 

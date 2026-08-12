@@ -173,9 +173,12 @@ window.NegativePriming = {
 
   /** Requirement 4: the legend follows the live letter set. */
   paintLegend: function () {
-    var keys = this.data.letters.join('   ');
-    var legend = document.getElementById('negative-keylegend');
-    if (legend) legend.innerHTML = 'Keys in use: <b>' + PTK.esc(keys) + '</b>';
+    // #negative-keylegend was looked up here and never existed - paintSetup
+    // creates #negative-keyhint and #negative-params, not a third element.
+    // The lookup was guarded so it failed silently, but the code read as
+    // though a key legend were being maintained when nothing was. Removed
+    // rather than given an element: the hint below is what participants
+    // actually see, and it already names every key.
     var hint = document.getElementById('negative-keyhint');
     if (hint) hint.textContent = 'Press ' + this.data.letters.join(', ');
     var params = document.getElementById('negative-params');

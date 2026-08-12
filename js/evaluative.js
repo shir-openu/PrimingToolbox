@@ -630,6 +630,8 @@ window.EvaluativeConditioning = {
   enableRatingScale: function(trial) {
     const ratingContainer = document.getElementById('rating-scale-container');
     ratingContainer.classList.add('active');
+    // Open the window for exactly one rating. See recordTestResponse.
+    this.state.awaitingRating = true;
 
     // Remove previous listeners
     const buttons = ratingContainer.querySelectorAll('.rating-button');
@@ -654,6 +656,23 @@ window.EvaluativeConditioning = {
    * @param {number} rating - Valence rating (1-7)
    */
   recordTestResponse: function(trial, rating) {
+    // ONE rating per trial. Without this, a second click on the scale recorded
+    // a second row - and not a harmless duplicate. state.currentTrial has
+    // already advanced, so the row is stamped with the NEXT trial's number
+    // while `trial` is still the previous one from the closure. Measured:
+    //   {trialNumber:1, csId:'cs1', rating:4}   the real response
+    //   {trialNumber:2, csId:'cs1', rating:6}   trial 2's slot, trial 1's shape
+    // In evaluative conditioning the entire measure is which shape was paired
+    // with which valence, so a rating attributed to the wrong shape does not
+    // add noise, it inverts the effect for that item.
+    //
+    // The scale was clickable at the time because the only guard was
+    // classList.remove('active') on a class no stylesheet defined - a dead
+    // hook. css/experiment.css now makes it real too, but the lock is what
+    // guarantees correctness; the CSS only saves the participant the click.
+    if (!this.state.awaitingRating) return;
+    this.state.awaitingRating = false;
+
     const rt = performance.now() - this.state.stimulusOnset;
 
     this.state.testResults.push({

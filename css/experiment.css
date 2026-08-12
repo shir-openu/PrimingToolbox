@@ -1468,3 +1468,29 @@
     flex-direction: column;
   }
 }
+
+/* =====================================================
+   Evaluative conditioning: the rating scale is OFF
+   between trials
+   =====================================================
+   js/evaluative.js has always signalled "stop accepting ratings" with
+   classList.remove('active') on #rating-scale-container - but no stylesheet
+   defined that class, so it was a dead hook. The buttons stayed fully visible
+   and fully clickable between trials, and a stray second click recorded a
+   second row: stamped with the NEXT trial's number while carrying the PREVIOUS
+   trial's shape. In this paradigm that inverts the effect for that item rather
+   than adding noise.
+   The lock in recordTestResponse is what guarantees correctness. This makes the
+   state visible, and stops the click reaching a button at all. */
+.rating-scale-container:not(.active) {
+  pointer-events: none;
+  opacity: 0.35;
+  filter: grayscale(1);
+  transition: opacity .18s ease, filter .18s ease;
+}
+.rating-scale-container.active {
+  pointer-events: auto;
+  opacity: 1;
+  filter: none;
+  transition: opacity .18s ease, filter .18s ease;
+}

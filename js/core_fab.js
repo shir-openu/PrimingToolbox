@@ -504,6 +504,114 @@ PTA.checkDuplicateParticipation = async function(tableName, experimentId, extern
 };
 
 /**
+ * Ask a participant for the ID their recruitment platform gave them, and
+ * refuse to start the experiment until they supply one that has not been used.
+ *
+ * This was the missing half of a half-built feature. checkDuplicateParticipation
+ * above has existed for months, engine_fab kept an externalId in its state and
+ * wrote external_id on every row, and there were two "Require External ID"
+ * checkboxes in the interface - one of them inside a builder screen that is
+ * unreachable. Nothing ever ASKED the participant, so external_id was null on
+ * every row ever collected and the duplicate check had nothing to compare.
+ *
+ * Whoever recruits through Prolific, MTurk or SONA is paying per completion,
+ * and without this the same person can take the study repeatedly and be paid
+ * each time.
+ *
+ * @param {Object} opts
+ * @param {string} opts.experimentId - user_experiment_id the link belongs to
+ * @param {string} [opts.table='experiment_results'] - table to check against
+ * @param {string} [opts.accent='#7b5cff'] - module colour
+ * @returns {Promise<string|null>} the ID, or null if the participant gave up
+ */
+PTA.collectExternalId = function (opts) {
+  opts = opts || {};
+  var table = opts.table || 'experiment_results';
+  var accent = opts.accent || '#7b5cff';
+
+  return new Promise(function (resolve) {
+    var wrap = document.createElement('div');
+    wrap.id = 'pta-external-id';
+    wrap.setAttribute('style', [
+      'position:fixed', 'inset:0', 'z-index:100000',
+      'background:rgba(9,12,20,.92)', 'display:flex',
+      'align-items:center', 'justify-content:center', 'padding:24px'
+    ].join(';'));
+
+    wrap.innerHTML =
+      '<div style="background:#141a26;border:1px solid ' + accent + '55;border-radius:12px;' +
+      'max-width:460px;width:100%;padding:26px 28px;color:#e8edf4;' +
+      'font:15px/1.6 system-ui,Segoe UI,Arial,sans-serif">' +
+        '<h2 style="margin:0 0 10px;font-size:19px;color:' + accent + '">Before you begin</h2>' +
+        '<p style="margin:0 0 16px">Please enter the participant ID given to you by the ' +
+        'platform you came from (for example your Prolific or MTurk ID). It is used only ' +
+        'to confirm your participation and to make sure nobody takes this study twice.</p>' +
+        '<input id="pta-ext-input" type="text" autocomplete="off" spellcheck="false" ' +
+        'style="width:100%;box-sizing:border-box;padding:11px 13px;border-radius:8px;' +
+        'border:1px solid #38445c;background:#0d121c;color:#e8edf4;font:inherit">' +
+        '<div id="pta-ext-msg" role="alert" style="min-height:20px;margin:9px 0 2px;' +
+        'font-size:13.5px;color:#ff9b9b"></div>' +
+        '<button id="pta-ext-go" style="width:100%;margin-top:8px;padding:11px 14px;' +
+        'border:0;border-radius:8px;background:' + accent + ';color:#fff;font:inherit;' +
+        'font-weight:600;cursor:pointer">Continue</button>' +
+      '</div>';
+
+    document.body.appendChild(wrap);
+
+    var input = wrap.querySelector('#pta-ext-input');
+    var msg = wrap.querySelector('#pta-ext-msg');
+    var go = wrap.querySelector('#pta-ext-go');
+    input.focus();
+
+    function fail(text) {
+      msg.textContent = text;
+      go.disabled = false;
+      go.textContent = 'Continue';
+    }
+
+    function submit() {
+      var id = (input.value || '').trim();
+      if (!id) return fail('Please enter your participant ID.');
+      if (id.length > 128) return fail('That ID is longer than any platform issues.');
+
+      go.disabled = true;
+      go.textContent = 'Checking...';
+      msg.textContent = '';
+
+      // No database, no gate. Refusing to start would strand a real participant
+      // over a problem that is not theirs, so record the ID and continue.
+      if (!PTA.supabase) {
+        wrap.remove();
+        return resolve(id);
+      }
+
+      PTA.checkDuplicateParticipation(table, opts.experimentId, id)
+        .then(function (r) {
+          if (r && r.isDuplicate) {
+            return fail('That ID has already completed this study. If you believe this ' +
+                        'is a mistake, contact the researcher who sent you the link.');
+          }
+          // r.error means the CHECK failed, not that the person is a duplicate.
+          // Let them through and let the researcher see it in the data.
+          if (r && r.error) console.warn('PTA: duplicate check unavailable', r.error);
+          wrap.remove();
+          resolve(id);
+        })
+        .catch(function (e) {
+          console.warn('PTA: duplicate check threw', e);
+          wrap.remove();
+          resolve(id);
+        });
+    }
+
+    go.addEventListener('click', submit);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); submit(); }
+    });
+  });
+};
+
+/**
  * Save a single trial to Supabase (fire-and-forget).
  *
  * Added in V2 (_fab) to fix the Stroop data-loss bug: js/stroop.js calls

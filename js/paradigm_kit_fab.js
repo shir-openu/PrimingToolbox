@@ -653,6 +653,27 @@ window.PTK = (function () {
     idCard.appendChild(labelled('Experiment ID', expRow,
       'Written to every row as user_experiment_id, and used as the row experiment_id so your rows group under the name you chose.'));
 
+    // Recruitment-platform ID. The switch existed in two places before this -
+    // one of them inside a builder screen nothing can reach - and neither was
+    // ever read, so external_id was null on every row ever collected. Here it
+    // reaches every kit paradigm at once, and PTK.checkUrlConfig acts on it.
+    var extRow = document.createElement('label');
+    extRow.style.cssText = 'display:flex;gap:9px;align-items:flex-start;margin-top:14px;cursor:pointer;';
+    var extBox = document.createElement('input');
+    extBox.type = 'checkbox';
+    extBox.id = spec.key + '-require-external-id';
+    extBox.checked = !!mod.requireExternalId;
+    extBox.style.cssText = 'width:17px;height:17px;margin-top:2px;flex:0 0 auto;';
+    extRow.appendChild(extBox);
+    var extText = document.createElement('span');
+    extText.style.cssText = 'font-size:.9rem;line-height:1.5;color:#cbd5e1;';
+    extText.innerHTML = 'Require a participant ID from the recruitment platform' +
+      '<span style="display:block;color:#8b97a8;font-size:.84rem">' +
+      'Prolific, MTurk or SONA. Participants are asked for it before the experiment ' +
+      'opens, and anyone whose ID already completed this study is turned away.</span>';
+    extRow.appendChild(extText);
+    idCard.appendChild(extRow);
+
     var statusEl = document.createElement('div');
     statusEl.style.cssText = 'font-size:.86rem;min-height:20px;color:#64748b;margin-top:4px;';
     statusEl.textContent = 'Connection not tested yet.';
@@ -846,6 +867,8 @@ window.PTK = (function () {
       // a nested stimulus shape to fold the table back into its real structure.
       // Runs for every path out of the builder - preview, link and A/S/M check -
       // so none of them can act on a stale stimulus set.
+      mod.requireExternalId = !!extBox.checked;
+
       if (typeof spec.afterApply === 'function') spec.afterApply(mod);
     }
 
@@ -871,6 +894,9 @@ window.PTK = (function () {
       if (!PTK.validateIdentity(emailIn.value, expIn.value)) return;
       applyToModule();
       var config = spec.toConfig(mod);
+      // Added here rather than in each spec.toConfig - there are ten of them,
+      // and a flag that only some paradigms honoured would be worse than none.
+      if (mod.requireExternalId) config.requireExternalId = true;
       PTK.showLinkModal(PTK.buildLink(spec.urlParam, config), accent);
     };
     actions.appendChild(link);
@@ -1090,6 +1116,23 @@ window.PTK = (function () {
 
       var layout = document.querySelector('.layout');
       if (layout) layout.style.display = 'none';
+
+      // If the experimenter asked for a recruitment-platform ID, ask for it
+      // BEFORE the experiment opens - afterwards the participant has already
+      // seen the stimuli, and turning them away then wastes their time and
+      // leaves a half-finished session in the data.
+      if (config.requireExternalId && window.PTA && PTA.collectExternalId) {
+        mod.requireExternalId = true;
+        PTA.collectExternalId({
+          experimentId: mod.userExperimentId,
+          accent: spec.accent
+        }).then(function (id) {
+          mod.externalId = id;
+          mod.open();
+        });
+        return true;
+      }
+
       mod.open();
       return true;
     } catch (e) {
@@ -1393,7 +1436,12 @@ window.PTK = (function () {
       participant_id: mod._participantId,
       language: 'en',
       experimenter_email: mod.experimenterEmail || null,
-      user_experiment_id: mod.userExperimentId || null
+      user_experiment_id: mod.userExperimentId || null,
+      // Collected by PTA.collectExternalId before the experiment opens, when
+      // the link asked for one. Null on every other run - which is what it was
+      // on every run ever recorded before that prompt existed, leaving
+      // checkDuplicateParticipation with nothing to compare.
+      external_id: mod.externalId || null
     };
     Object.keys(extra || {}).forEach(function (k) { row[k] = extra[k]; });
     return row;

@@ -19,22 +19,67 @@ async function newPage(browser) {
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
   page.__errors = errors;
-  // Supabase writes must never fire during a test run
+  // Supabase writes must never fire during a test run.
+  //
+  // This stub used to poll for PTA.saveToSupabase and, after 8 seconds, call
+  // clearInterval and say NOTHING. On a slow page load it therefore never
+  // installed, and the test then ran a full experiment against the real
+  // client - writing fabricated trials into the live research database with no
+  // indication anywhere that it had happened. A test that silently stops
+  // protecting you is worse than one that has no protection, because you stop
+  // looking.
+  //
+  // js/core_fab.js now refuses any write to the real project from an automated
+  // browser (PTA.isAutomated, via navigator.webdriver), so the database is safe
+  // even if this stub never runs. The flag below is the second line: if the
+  // stub gives up, the test SAYS so and fails, rather than quietly proceeding
+  // on the assumption that it worked.
   await page.evaluateOnNewDocument(() => {
     window.__saved = [];
+    window.__stubInstalled = false;
+    window.__stubGaveUp = false;
     const install = () => {
       if (window.PTA && PTA.saveToSupabase && !PTA.__patched) {
-        const o = PTA.saveToSupabase;
         PTA.saveToSupabase = d => { window.__saved.push(d); };
         PTA.__patched = true;
+        window.__stubInstalled = true;
         return true;
       }
       return false;
     };
     const iv = setInterval(() => { if (install()) clearInterval(iv); }, 30);
-    setTimeout(() => clearInterval(iv), 8000);
+    setTimeout(() => {
+      clearInterval(iv);
+      if (!window.__stubInstalled) {
+        window.__stubGaveUp = true;
+        console.error('TEST HARNESS: the Supabase stub never installed. ' +
+                      'PTA.isAutomated is the only thing standing between this run ' +
+                      'and the live database.');
+      }
+    }, 8000);
   });
   return page;
+}
+
+/**
+ * Assert the harness is actually protecting the database.
+ * Call after a page has finished a run, before trusting anything it produced.
+ */
+async function assertStubHeld(page, label) {
+  const state = await page.evaluate(() => ({
+    installed: window.__stubInstalled,
+    gaveUp: window.__stubGaveUp,
+    automated: !!(window.PTA && PTA.isAutomated && PTA.isAutomated())
+  }));
+  if (!state.installed && !state.automated) {
+    console.log('  FAIL ' + label + ': the save stub never installed AND the ' +
+                'automation guard is not active - this run may have written to the live database');
+    return false;
+  }
+  if (state.gaveUp) {
+    console.log('  note ' + label + ': the save stub gave up; the automation guard caught it');
+  }
+  return true;
 }
 
 (async () => {
@@ -53,6 +98,7 @@ async function newPage(browser) {
     await sleep(800);
     await page.evaluate(() => {
       NegativePriming.repetitions = 1;          // 8 pairs = 16 displays
+      NegativePriming.practiceTrials = 0;       // v2.0: scored block only
       NegativePriming.timing = { fixation_ms: 5, display_ms: 500, iti_ms: 5 };
       NegativePriming.open(); NegativePriming.start();
     });
@@ -93,6 +139,7 @@ async function newPage(browser) {
     await page.goto(INDEX, { waitUntil: 'networkidle2' });
     await sleep(800);
     await page.evaluate(() => {
+      MaskedLexical.practiceTrials = 0;         // v2.0: scored block only
       MaskedLexical.timing = { mask_ms: 5, prime_ms: 5, target_ms: 400, iti_ms: 5 };
       MaskedLexical.open(); MaskedLexical.start();
     });
@@ -130,7 +177,10 @@ async function newPage(browser) {
     const page = await newPage(browser);
     await page.goto(INDEX, { waitUntil: 'networkidle2' });
     await sleep(800);
-    await page.evaluate(() => { SyntacticPriming.open(); SyntacticPriming.start(); });
+    await page.evaluate(() => {
+      SyntacticPriming.practiceTrials = 0;      // v2.0: scored block only
+      SyntacticPriming.open(); SyntacticPriming.start();
+    });
     for (let i = 0; i < 200; i++) {
       await sleep(40);
       const state = await page.evaluate(() => {
@@ -158,7 +208,8 @@ async function newPage(browser) {
     check('reaches the results screen', r.done);
     check('recorded all 8 items (' + r.n + ')', r.n === 8, 'got ' + r.n);
     check('every item handed to save (' + r.saved + ')', r.saved === r.n);
-    check('reports a structure-reuse rate', /structure reuse/.test(r.body));
+    check('reports the D - C contrast (v2.0 replaced % reuse)',
+          /Syntactic priming effect/.test(r.body), r.body.slice(0, 120));
     check('choices are real structures', r.forms.every(f => ['do', 'po', 'active', 'passive'].includes(f)),
           JSON.stringify(r.forms));
     check('no page errors', page.__errors.length === 0, page.__errors[0]);
@@ -248,6 +299,24 @@ async function newPage(browser) {
     check(param + ': carries email and experiment id', r.email === 'lab@test.org' && r.expId === 'pilot_9',
           r.email + '/' + r.expId);
     check(param + ': builder UI hidden from participant', r.layoutHidden);
+    await assertStubHeld(page, param);
+    await page.close();
+  }
+
+  // The harness protects the live database, or the run does not count.
+  {
+    console.log('\n=== the harness itself ===');
+    const page = await newPage(browser);
+    await page.goto(INDEX, { waitUntil: 'networkidle2' });
+    await sleep(1200);
+    const guard = await page.evaluate(() => ({
+      automated: !!(window.PTA && PTA.isAutomated && PTA.isAutomated()),
+      realMarked: !!(window.PTA && PTA.supabase && PTA.supabase.__ptbxReal),
+      writeBlocked: !!(window.PTA && PTA.blockRealWrite && PTA.blockRealWrite(PTA.supabase))
+    }));
+    check('automation is detected', guard.automated, JSON.stringify(guard));
+    check('the real client is recognised as real', guard.realMarked, JSON.stringify(guard));
+    check('a write to the live project would be refused', guard.writeBlocked, JSON.stringify(guard));
     await page.close();
   }
 

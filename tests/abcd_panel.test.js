@@ -128,6 +128,48 @@ const IGNORE = /net::ERR|Failed to load resource|supabase|sheetjs|cdn\./i;
     await page.close();
   }
 
+  // ------------------------------------------------------------------
+  // A panel must not promise a condition the experiment does not run.
+  //
+  // AMP's panel said C was "how often that pictograph is called pleasant after
+  // a NEUTRAL prime". generateTrials uses primeTypes = ['positive','negative']
+  // and the reported effect is posProportion - negProportion, so no neutral
+  // trial is ever shown - the neutral images are defined and never used. The
+  // panel described a baseline that did not exist, in the panel whose entire
+  // job is to say what is being measured.
+  //
+  // This is the narrow, checkable form of that: if a module hard-codes the list
+  // of conditions it generates, the panel may not name one that is missing.
+  console.log('\n[no panel promises a condition the code never runs]');
+  {
+    const page = await browser.newPage();
+    await page.setCacheEnabled(false);
+    await page.goto(INDEX + '?open=amp', { waitUntil: 'networkidle2' });
+    const r = await page.evaluate(() => {
+      const panel = document.getElementById('amp-setup-abcd-fab');
+      const src = String(window.AMP && window.AMP.generateTrials);
+      const m = src.match(/primeTypes\s*=\s*\[([^\]]*)\]/);
+      const generated = m ? m[1].replace(/['"\s]/g, '').split(',').filter(Boolean) : [];
+      const text = panel ? panel.innerText : '';
+      return {
+        generated: generated,
+        runsNeutral: generated.indexOf('neutral') !== -1,
+        // the ABCD slots only - the footnotes are allowed to DISCUSS neutral,
+        // and one of them explains how to add it
+        slots: (function () {
+          const grid = panel && panel.querySelector('div[style*="auto-fit"]');
+          return grid ? Array.from(grid.children).map(c => c.innerText).join(' ') : '';
+        })()
+      };
+    });
+    ok('amp: we can read what it generates', r.generated.length >= 2, JSON.stringify(r.generated));
+    ok('amp: the panel does not claim a neutral baseline it never runs',
+       r.runsNeutral || !/neutral prime/i.test(r.slots), r.slots.slice(0, 200));
+    ok('amp: the slots name the condition it really compares',
+       /negative/i.test(r.slots) && /positive/i.test(r.slots), r.slots.slice(0, 200));
+    await page.close();
+  }
+
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

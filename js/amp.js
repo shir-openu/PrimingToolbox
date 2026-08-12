@@ -57,15 +57,36 @@ window.AMP = {
     abcd: {
       A: 'The affective image flashed before each pictograph.',
       B: 'The Chinese pictograph you judge as pleasant or unpleasant.',
-      C: 'How often that pictograph is called pleasant after a neutral prime.',
-      D: 'How often it is called pleasant after a positive or a negative prime.'
+      // C described a neutral-prime baseline this experiment does not run.
+      // generateTrials uses primeTypes = ['positive', 'negative'] and the result
+      // is posProportion - negProportion, so what is compared is two PRIMED
+      // conditions - exactly the situation flagged on the Stroop panel. The
+      // neutral images are defined in stimuli.primes.neutral and never used.
+      // Corrected to describe the contrast that actually happens; note 2 says
+      // how to make a real C.
+      C: 'How often that pictograph is called pleasant after a NEGATIVE prime - this experiment uses the negative condition as its comparison.',
+      D: 'How often it is called pleasant after a POSITIVE prime.'
     },
     characteristics: {
       association: 'Prime and judgement share one dimension - valence - so the prime can push the judgement either way.',
       secondariness: 'You are told in so many words to ignore the image and judge only the pictograph. The instruction to disregard A is part of the procedure.',
       modulation: 'The proportion of pleasant judgements shifts with the valence of the prime, although the pictograph is unfamiliar and carries no meaning of its own for you.'
     },
-    boundaryNote: 'The effect works by misattribution: the feeling A causes is read off as a property of B. Participants routinely insist they ignored the primes, and the shift appears anyway.'
+    boundaryNote: 'The effect works by misattribution: the feeling A causes is read off as a property of B. Participants routinely insist they ignored the primes, and the shift appears anyway. Like Stroop, this task compares two primed conditions rather than a primed one against a neutral baseline - note 2 says how to add one.',
+    footnotes: [
+      {
+        title: 'Why misattribution matters here.',
+        text: 'The pictograph is unfamiliar and carries no meaning for you, so there is nothing for the prime to interfere with. Whatever shifts the judgement has to be the feeling itself, read off as if it belonged to the character. That is what makes this a measure of affect rather than of knowledge.'
+      },
+      {
+        title: 'Adding a real baseline.',
+        text: 'This run compares positive primes against negative ones, so both conditions are primed and neither is C. Neutral images are already defined in this experiment (a blank square and a plain box) and are simply not used. Add them as a third condition and you can report two separate numbers - how much a positive prime lifts the judgement above neutral, and how much a negative one lowers it - instead of one difference that cannot tell you which side moved.'
+      },
+      {
+        title: 'Awareness is not the question.',
+        text: 'Participants are told to ignore the image, and most report that they did. The effect appears anyway. Whether they were aware of the prime is not part of the definition - what matters is that responding to it was never their task.'
+      }
+    ]
   },
 
 

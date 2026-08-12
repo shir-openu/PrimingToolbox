@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the trial chain could be stopped by closing the experiment, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/1d875d9/js/engine_fab.js
+ *
  *   before reaction times moved to a monotonic clock, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/engine_fab.js
  *
@@ -104,6 +107,34 @@ PTA.Engine = {
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   },
 
+  /**
+   * Every timer this engine starts, so every one can be stopped.
+   *
+   * The trial chain - fixation, prime, ISI, target, feedback, ITI - was
+   * scheduled with bare setTimeout and tracked nowhere, while reset() cleared
+   * only the response handler and the response window. Closing the experiment
+   * mid-trial therefore left callbacks that still fired: showTarget wrote into
+   * the hidden display and called listenForResponse, which RE-ATTACHED a
+   * keydown listener to a closed run, and the ITI callback started another
+   * trial against the freshly reset state.
+   *
+   * Every paradigm module gets this from PTK.timers. The engine cannot use it -
+   * engine_fab.js loads before paradigm_kit_fab.js, the same reason _esc lives
+   * here - so it keeps its own.
+   */
+  _timers: [],
+
+  _after: function(fn, ms) {
+    const id = setTimeout(fn, ms);
+    this._timers.push(id);
+    return id;
+  },
+
+  _clearTimers: function() {
+    this._timers.forEach(clearTimeout);
+    this._timers = [];
+  },
+
   // Current experiment configuration
   config: null,
 
@@ -141,6 +172,16 @@ PTA.Engine = {
    * @returns {Object} This engine instance (for chaining)
    */
   init: function(config) {
+    // A new experiment does not inherit the previous one's pending callbacks.
+    //
+    // index.html's startExperiment() calls init() directly and never resets
+    // first, and restartExperiment() only re-shows the setup screen. So
+    // pressing Start twice used to leave TWO trial chains running at once,
+    // both advancing trials and both writing rows, with nothing on screen to
+    // show it. Clearing here means the second start cancels the first, which
+    // is what starting an experiment should mean.
+    this._clearTimers();
+
     this.config = config;
     this.state = {
       isRunning: false,
@@ -357,7 +398,7 @@ PTA.Engine = {
     // Show fixation
     if (presentation.fixation_ms > 0) {
       this.showFixation();
-      setTimeout(() => {
+      this._after(() => {
         this.showStimulusSimultaneous(trial);
       }, presentation.fixation_ms);
     } else {
@@ -376,7 +417,7 @@ PTA.Engine = {
     // Show fixation
     if (presentation.fixation_ms > 0) {
       this.showFixation();
-      setTimeout(() => {
+      this._after(() => {
         this.showPrime(trial);
       }, presentation.fixation_ms);
     } else {
@@ -408,7 +449,7 @@ PTA.Engine = {
     }
 
     // After prime duration, show ISI or target
-    setTimeout(() => {
+    this._after(() => {
       if (presentation.ISI_ms > 0) {
         this.showISI(trial);
       } else {
@@ -429,7 +470,7 @@ PTA.Engine = {
       this.elements.stimulusDisplay.innerHTML = '';
     }
 
-    setTimeout(() => {
+    this._after(() => {
       this.showTarget(trial);
     }, presentation.ISI_ms);
   },
@@ -697,7 +738,10 @@ PTA.Engine = {
     // nothing.
     if (correct === null) {
       if (this.elements.stimulusDisplay) this.elements.stimulusDisplay.textContent = '';
-      setTimeout(function () { callback(); }, this.config.feedback.duration_ms || 500);
+      // tracked, like every other timer in the chain - this is the no-feedback
+      // branch and it was easy to miss because it uses `function` where the
+      // branch below uses an arrow
+      this._after(function () { callback(); }, this.config.feedback.duration_ms || 500);
       return;
     }
     if (this.elements.stimulusDisplay) {
@@ -711,7 +755,7 @@ PTA.Engine = {
       this.elements.stimulusDisplay.innerHTML = `<span class="${feedbackClass}">${PTA.Engine._esc(feedbackText)}</span>`;
     }
 
-    setTimeout(() => {
+    this._after(() => {
       callback();
     }, this.config.feedback.duration_ms || 500);
   },
@@ -731,7 +775,7 @@ PTA.Engine = {
       if (this.elements.stimulusDisplay) {
         this.elements.stimulusDisplay.innerHTML = '';
       }
-      setTimeout(() => {
+      this._after(() => {
         this.runTrial();
       }, iti);
     }
@@ -950,6 +994,10 @@ PTA.Engine = {
       externalId: null,
       startTime: null
     };
+
+    // Stop the trial chain. Without this the pending fixation/prime/ISI/
+    // target/feedback/ITI callback fires into a closed experiment.
+    this._clearTimers();
 
     if (this.responseHandler) {
       document.removeEventListener('keydown', this.responseHandler);

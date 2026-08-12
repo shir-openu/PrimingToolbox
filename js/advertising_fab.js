@@ -352,7 +352,25 @@ window.AdvertisingPriming = {
     }, this.timing.photo_ms);
   },
 
+  // One response per photo and per round.
+  //
+  // Both recorders are wired straight to button clicks and neither was guarded:
+  // a double-click - or a click on a second brand before the screen changed -
+  // pushed TWO rows for one item and advanced the index TWICE, so the next
+  // photo or round was skipped entirely. The brand choice is the dependent
+  // variable of this paradigm, so a duplicate there is not cosmetic, and a
+  // skipped round is missing data nobody would notice.
+  //
+  // The guard is IDENTITY, not a lock. A boolean released by the next render
+  // does not work here: recordChoice calls runRound synchronously, the next
+  // screen releases the lock inside that same call stack, and a second click in
+  // the same tick sails through - which is exactly what the first attempt at
+  // this did, and what its test caught. Asking "is this still the item on
+  // screen?" cannot be defeated by timing: once the index has moved, the stale
+  // photo or round is refused.
   recordExpression: function (photo, judged) {
+    var round = this.state.roundPlan[this.state.roundIndex];
+    if (!round || round.photos[this.state.photoIndex] !== photo) return;
     this._clearTimers();
     var self = this;
     this.state.expressionResults.push({
@@ -387,6 +405,7 @@ window.AdvertisingPriming = {
   },
 
   recordChoice: function (round, brand) {
+    if (this.state.roundPlan[this.state.roundIndex] !== round) return;
     var r = {
       round: this.state.roundIndex + 1,
       options: round.options.join(' | '),

@@ -381,6 +381,21 @@ window.MoralPriming = {
     this.state.results.push(r);
     this.saveTrial(r);
     this.state.itemIndex++;
+
+    // Clear it HERE, not only in renderItem.
+    //
+    // renderItem runs after the ITI, so between the click and that render the
+    // phase is still 'items' and sliderMoved is still true. A second click in
+    // that window passed both guards, read items[itemIndex] - which had just
+    // advanced - and recorded the NEXT item with the value the participant gave
+    // for this one, timed from this one's onset. Not a duplicate: an answer
+    // attributed to an item they were never shown.
+    //
+    // Clearing it here also reads correctly on its own terms. The slider has
+    // not been moved for the next item, because the next item has not been
+    // asked yet.
+    this.state.sliderMoved = false;
+
     this._after(function () {
       if (self.state.phase === 'items') self.renderItem();
     }, this.timing.iti_ms);

@@ -804,6 +804,25 @@ window.ScratchBuilder = (function () {
     var primes = uniq(rows.map(function (r) { return (r.prime || '').trim(); }));
     var targets = uniq(rows.map(function (r) { return (r.target || '').trim(); }));
 
+    // A BLANK PRIME IS A REAL DESIGN, not a mistake. Step 4's own help text
+    // offers "a neutral prime, a row of Xs, or no prime at all" as the baseline,
+    // and no prime at all is the cleanest C there is: identical timing, nothing
+    // shown. uniq() drops the empty string, so indexOf('') was -1 and every such
+    // row was silently discarded by the filter below.
+    //
+    // Silently is the bad part. `conditions` is collected from the rows BEFORE
+    // this filter, so the config went on advertising a "no-prime" condition
+    // while running zero no-prime trials - and the definition check, seeing a
+    // baseline condition, reported modulation satisfied. A design that claims a
+    // control condition it never runs is worse than one that has none.
+    //
+    // Keeping '' as a real entry makes the index resolve; the engine then
+    // renders an empty prime for the prime duration, which is exactly a blank
+    // interval of the right length.
+    if (rows.some(function (r) { return !(r.prime || '').trim(); }) && primes.indexOf('') === -1) {
+      primes.push('');
+    }
+
     var pairings = rows.map(function (r) {
       var pi = primes.indexOf((r.prime || '').trim());
       return {
@@ -881,6 +900,29 @@ window.ScratchBuilder = (function () {
     var unknown = uniq(cfg.trials.pairings.map(function (p) { return p.correctResponse; })
       .filter(function (r) { return r && labels.indexOf(r) === -1; }));
     if (unknown.length) bad.push('Some trials expect a correct answer that is not a response key: ' + unknown.join(', ') + '.');
+
+    // Nothing may vanish quietly. A row the author typed and the config did not
+    // keep is the failure mode that let a "no-prime" baseline be advertised and
+    // never run - the condition list is built from the rows, the trial list is
+    // built after filtering, and the two disagreed with nobody told.
+    var typed = S.rows.filter(function (r) {
+      return (r.prime || '').trim() || (r.target || '').trim() || (r.condition || '').trim();
+    }).length;
+    if (typed > cfg.trials.pairings.length) {
+      bad.push('You have ' + typed + ' trial rows but only ' +
+        cfg.trials.pairings.length + ' of them can run. A row is dropped when its ' +
+        'Target cell is empty; the Prime cell may be left blank on purpose, for a ' +
+        'no-prime baseline.');
+    }
+
+    // The same disagreement seen from the other side: a condition named in the
+    // table but present in no runnable trial.
+    var live = uniq(cfg.trials.pairings.map(function (p) { return p.condition; }));
+    var phantom = cfg.conditions.filter(function (c) { return live.indexOf(c) === -1; });
+    if (phantom.length) {
+      bad.push('These conditions are named but no trial actually runs them: ' +
+        phantom.join(', ') + '. The results would report a comparison that never happened.');
+    }
     return bad;
   }
 

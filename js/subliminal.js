@@ -2,6 +2,10 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the unrelated pairs were shuffled properly and the prime duration
+ *   was measured rather than assumed, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/da8061a/js/subliminal.js
+ *
  *   before the CSV cells were escaped, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/da8061a/js/subliminal.js
  *
@@ -388,8 +392,22 @@ window.Subliminal = {
       });
     });
 
-    // Unrelated pairs (shuffle targets)
-    const shuffledTargets = [...targets].sort(() => Math.random() - 0.5);
+    // Unrelated pairs (shuffle targets).
+    //
+    // NOT sort(() => Math.random() - 0.5). That is not a shuffle: a comparator
+    // that answers inconsistently makes the sort's own permutation show
+    // through, and elements come out near where they started. Measured over
+    // 50,000 shuffles of eight items, the first item stayed in place 22.2% of
+    // the time against a uniform 12.5%, and the bias differs by position
+    // (10.6% to 22.2%). Fisher-Yates gives 12.5-12.7% everywhere.
+    //
+    // This builds the UNRELATED pairs - the control condition. A shuffle that
+    // leaves items near their original index turns the re-pairing into
+    // something close to a fixed rotation, so the same "unrelated" pairs recur
+    // across participants and item-level quirks never average out. The effect
+    // this experiment measures is the difference between these pairs and the
+    // related ones.
+    const shuffledTargets = PTA.shuffleArray(targets);
     primes.forEach((prime, i) => {
       // Make sure it's not the same pair
       const target = shuffledTargets[i] === this.builderStimuli[i].target
@@ -538,11 +556,28 @@ window.Subliminal = {
     let frameCount = 0;
     const self = this;
 
+    // What the prime ACTUALLY did, not what was asked of it.
+    //
+    // The row saved for each trial carried prime_duration_ms = timing.prime,
+    // which is the requested 33 ms and is written whatever happened on screen.
+    // The number of frames comes from state.frameTime, estimated once at init
+    // by counting 60 frames; if that estimate never completed (the tab was
+    // hidden, the count was interrupted) it stays at the 16.67 ms default, and
+    // on a 120 Hz display the prime is then shown for 2 frames = 16.7 ms while
+    // the data says 33. In a subliminal paradigm the prime duration IS the
+    // independent variable - it is the difference between subliminal and
+    // visible - so the achieved value has to be recorded next to the intended
+    // one, and the analysis can drop trials where they disagree.
+    trial.primeFramesRequested = primeFrames;
+    trial.primeOnset = PTA.now();
+
     function waitFrames() {
       frameCount++;
       if (frameCount < primeFrames) {
         requestAnimationFrame(waitFrames);
       } else {
+        trial.primeActualMs = PTA.now() - trial.primeOnset;
+        trial.primeFramesShown = frameCount;
         // Immediately show backward mask (NO gap!)
         self.showBackwardMask(trial);
       }
@@ -639,7 +674,10 @@ window.Subliminal = {
         targetType: trial.targetType,
         response: response,
         correct: correct,
-        rt: rt
+        rt: rt,
+        // measured, not requested - see showPrime
+        primeActualMs: trial.primeActualMs != null ? trial.primeActualMs : null,
+        primeFramesShown: trial.primeFramesShown != null ? trial.primeFramesShown : null
       });
 
       this.state.awaitingResponse = false;
@@ -734,12 +772,25 @@ window.Subliminal = {
       const sawWord = this.state.awarenessTrials.filter(a => a.sawWord).length;
       const total = this.state.awarenessTrials.length;
       const awarenessRate = Math.round((sawWord / total) * 100);
+      // What this check can and cannot establish.
+      //
+      // EVERY awareness trial contains a prime - generateTrials builds them
+      // from wordPairs and there are no prime-absent catch trials. So there is
+      // no false-alarm rate to compare the hit rate against, and 50% is not a
+      // chance level, it is just a number. A participant who answers "no" to
+      // everything scores 0% and used to be told the prime "was subliminal",
+      // which the data cannot show: response bias and genuine non-detection
+      // produce exactly the same 0%.
+      //
+      // A high rate is still informative - people do not report seeing words
+      // they were not shown very often - so that warning stands. The reassuring
+      // half did not, and has been replaced by what the number actually means.
       awarenessEl.innerHTML = `
         <p><strong>Awareness Check:</strong></p>
-        <p>Reported seeing prime: ${sawWord} / ${total} (${awarenessRate}%)</p>
+        <p>Reported seeing the prime on ${sawWord} of ${total} trials (${awarenessRate}%).</p>
         ${awarenessRate > 50
-          ? '<p style="color: #ff4db8;">Note: High awareness rate may indicate prime was not fully subliminal.</p>'
-          : '<p style="color: #4ade80;">Low awareness suggests prime was subliminal.</p>'
+          ? '<p style="color: #ff4db8;">Participants reported seeing the prime on most trials, so it was probably visible. Treat this run as a priming experiment, but not a subliminal one.</p>'
+          : '<p style="color: #9aa6b2;">A low rate is consistent with the prime being subliminal, but does not establish it: every awareness trial in this design contains a prime, so there are no prime-absent trials to measure false alarms against. Answering "no" throughout produces this same number.</p>'
         }
       `;
       awarenessEl.style.display = 'block';
@@ -836,6 +887,14 @@ window.Subliminal = {
       correct: r.correct,
       rt: Math.round(r.rt * 100) / 100,
       prime_duration_ms: this.timing.prime,
+      // What the screen actually did. If prime_actual_ms is far from
+      // prime_duration_ms the frame-rate estimate was wrong and the trial was
+      // not shown for the duration the design asked for. Any column the table
+      // does not have is dropped by PTA.saveAllResults rather than costing the
+      // whole insert, so this is safe to add ahead of the migration.
+      prime_actual_ms: r.primeActualMs != null ? Math.round(r.primeActualMs * 100) / 100 : null,
+      prime_frames_shown: r.primeFramesShown != null ? r.primeFramesShown : null,
+      frame_rate_hz: this.state.frameRate,
       forward_mask_ms: this.timing.forwardMask,
       backward_mask_ms: this.timing.backwardMask,
       experimenter_email: this.experimenterEmail || null,

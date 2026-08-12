@@ -1,3 +1,7 @@
+/*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/paradigm_kit_fab.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Paradigm Kit (V2 _fab)
@@ -1189,12 +1193,71 @@ window.PTK = (function () {
     return row;
   };
 
+  // Every trial from the ten kit paradigms goes through here. PTA.saveToSupabase
+  // buffers its own failures and hands them to PTA.rescueUnsavedResults, so the
+  // normal path needs nothing extra. The else branch is the one that used to end
+  // in a console line: if core_fab.js never loaded there is no rescue path
+  // either, so the loss has to be reported here or not at all.
+  PTK._unsaved = [];
+
   PTK.save = function (row) {
     if (window.PTA && typeof PTA.saveToSupabase === 'function') {
       PTA.saveToSupabase(row);
-    } else {
-      console.error('PTK: PTA.saveToSupabase missing - trial NOT saved', row);
+      return;
     }
+    console.error('PTK: PTA.saveToSupabase missing - trial NOT saved', row);
+    PTK._unsaved.push(row);
+    if (PTK._unsavedTimer) clearTimeout(PTK._unsavedTimer);
+    PTK._unsavedTimer = setTimeout(PTK.warnUnsaved, 1800);
+  };
+
+  /**
+   * Say on screen that trials were lost, and offer them as a file.
+   * Only reachable when core_fab.js failed to load.
+   */
+  PTK.warnUnsaved = function () {
+    var rows = PTK._unsaved;
+    if (!rows.length || document.getElementById('ptk-unsaved-panel')) return;
+
+    var keys = [];
+    rows.forEach(function (r) {
+      Object.keys(r).forEach(function (k) { if (keys.indexOf(k) === -1) keys.push(k); });
+    });
+
+    var box = document.createElement('div');
+    box.id = 'ptk-unsaved-panel';
+    box.setAttribute('role', 'alert');
+    box.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99999;' +
+      'max-width:620px;width:calc(100% - 28px);background:#2a0d10;border:1px solid #e38b82;' +
+      'border-radius:12px;padding:16px 18px;color:#ffd9d4;font-family:"Segoe UI",Arial,sans-serif;' +
+      'line-height:1.55;box-shadow:0 12px 40px rgba(0,0,0,.6);';
+
+    var h = document.createElement('div');
+    h.style.cssText = 'font-weight:700;color:#ff8fa3;margin-bottom:6px;';
+    h.textContent = 'Your results were NOT saved.';
+    box.appendChild(h);
+
+    var p = document.createElement('div');
+    p.style.cssText = 'font-size:.93rem;margin-bottom:10px;';
+    p.textContent = 'The platform core script did not load, so these ' + rows.length +
+      ' trials exist only in this window. Download them before closing the page.';
+    box.appendChild(p);
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Download my data (' + rows.length + ' trials)';
+    btn.style.cssText = 'background:#e38b82;color:#2a0d10;border:none;border-radius:9px;' +
+      'padding:11px 22px;font-weight:700;cursor:pointer;font-family:inherit;font-size:.95rem;';
+    btn.onclick = function () {
+      PTK.exportCSV(keys, rows.map(function (r) {
+        return keys.map(function (k) { return r[k] == null ? '' : r[k]; });
+      }), 'PrimingToolbox_UNSAVED');
+      btn.textContent = 'Downloaded - check your Downloads folder';
+      btn.disabled = true;
+      btn.style.opacity = '.7';
+    };
+    box.appendChild(btn);
+    document.body.appendChild(box);
   };
 
   return PTK;

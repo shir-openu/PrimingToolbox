@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/evaluative.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/evaluative.js
@@ -789,20 +793,38 @@ window.EvaluativeConditioning = {
 
     const allData = [...learningData, ...testData];
 
+    // The fallback to experiment_results is the path that carries the rescue
+    // (local copy, visible warning, download button), so every route that fails
+    // the ec_results insert has to reach it. It previously did not: `catch` just
+    // logged, and PTA.supabase being null throws on the first line - which is
+    // the common case when the Supabase CDN script has not loaded, and meant the
+    // whole run was discarded without the fallback ever being tried.
+    let primaryFailed = null;
     try {
-      const { error } = await PTA.supabase
-        .from('ec_results')
-        .insert(allData);
-
-      if (error) {
-        console.error('EC: Error saving results', error);
-        // Fallback: try saving to experiment_results table
-        await PTA.saveAllResults('experiment_results', allData);
+      if (!PTA.supabase) {
+        primaryFailed = 'Supabase not initialized';
       } else {
-        console.log('EC: Results saved successfully');
+        const { error } = await PTA.supabase
+          .from('ec_results')
+          .insert(allData);
+        if (error) {
+          console.error('EC: Error saving results', error);
+          primaryFailed = (error && error.message) || String(error);
+        } else {
+          console.log('EC: Results saved successfully');
+        }
       }
     } catch (e) {
       console.error('EC: Exception saving results', e);
+      primaryFailed = (e && e.message) || String(e);
+    }
+
+    if (primaryFailed) {
+      await PTA.saveAllResults('experiment_results', allData, {
+        experimentName: 'Evaluative Conditioning',
+        host: document.getElementById('evaluative-results'),
+        reason: 'ec_results: ' + primaryFailed
+      });
     }
   },
 

@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/engine_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before the response-timeout double-fire fix
  * and the per-condition generic stats, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/engine_fab.js
@@ -803,7 +807,16 @@ PTA.Engine = {
       user_experiment_id: this.config.experimenter?.experiment_id
     }));
 
-    const { error } = await PTA.saveAllResults(tableName, dataToSave);
+    // A console.error was the whole of the old failure path, so a run that could
+    // not reach the database ended on a normal-looking results screen and was
+    // lost without anyone being told. saveAllResults now runs the rescue itself
+    // - local copy, visible warning, download button - and is told where this
+    // engine's results screen is so the warning lands there rather than in a
+    // floating overlay.
+    const { error } = await PTA.saveAllResults(tableName, dataToSave, {
+      experimentName: this.config.name,
+      host: this.elements && this.elements.resultsScreen
+    });
 
     if (error) {
       console.error('PTA Engine: Failed to save results', error);

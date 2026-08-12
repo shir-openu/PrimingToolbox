@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/number-priming.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/number-priming.js
@@ -707,17 +711,19 @@ window.NumberPriming = {
       user_experiment_id: this.userExperimentId || null
     }));
 
-    // Save using PTA core
-    dataToSave.forEach(trial => {
-      PTA.supabase.from('experiment_results').insert(trial)
-        .then(({ error }) => {
-          if (error) {
-            console.error('Error saving trial:', error);
-          }
-        });
+    // Was: one direct PTA.supabase insert per trial, with the error logged and
+    // dropped. Two problems. PTA.supabase is null whenever the Supabase CDN
+    // script has not loaded, so line one threw a TypeError and nothing was even
+    // attempted; and a failed insert was a console line, so the run was lost in
+    // silence. One batch through the shared helper fixes both: it checks for a
+    // client first, and a failure now reaches the rescue path (local copy,
+    // visible warning, download button) instead of the console.
+    PTA.saveAllResults('experiment_results', dataToSave, {
+      experimentName: 'Number Priming',
+      host: document.getElementById('number-priming-results')
+    }).then(res => {
+      if (!res.error) console.log('NumberPriming: Saved', dataToSave.length, 'trials');
     });
-
-    console.log('NumberPriming: Saved', dataToSave.length, 'trials');
   },
 
   /**
@@ -981,23 +987,15 @@ window.NumberPriming = {
     const statusEl = document.getElementById('np-connection-status');
     const statusText = statusEl ? statusEl.querySelector('.status-text') : null;
 
-    try {
-      if (window.PTA && PTA.supabase) {
-        if (statusEl) statusEl.classList.remove('error');
-        if (statusText) {
-          statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-        }
-      } else {
-        if (statusEl) statusEl.classList.add('error');
-        if (statusText) {
-          statusText.innerHTML = '<strong>Not Connected</strong> - Supabase not available';
-        }
-      }
-    } catch (error) {
+    // Was: report "Connected" whenever PTA.supabase was truthy. That object
+    // exists as soon as the CDN script loads and proves nothing about whether
+    // the database answers. PTA.paintConnectionStatus issues a real query.
+    if (window.PTA && PTA.paintConnectionStatus) {
+      await PTA.paintConnectionStatus(statusEl, statusText);
+    } else if (statusText) {
       if (statusEl) statusEl.classList.add('error');
-      if (statusText) {
-        statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
-      }
+      statusText.innerHTML = '<strong>Not connected</strong> - the platform core script ' +
+        'did not load, so nothing can be saved.';
     }
   },
 

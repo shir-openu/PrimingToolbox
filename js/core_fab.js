@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/core_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before encodeConfig/decodeConfig were made
  * UTF-8 safe, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/core_fab.js
@@ -247,13 +251,32 @@ PTA.saveTrialResult = async function(tableName, trialData) {
  * Save multiple trial results to Supabase in batch.
  * More efficient than saving trials individually.
  * @async
+ * Every failure route here also hands the rows to PTA.rescueUnsavedResults, so
+ * no caller can lose a run by ignoring the returned error - and most of them did.
+ * Six modules call this function and each one handled failure differently;
+ * five of them handled it by logging to the console and carrying on.
+ *
  * @param {string} tableName - Target database table name
  * @param {Object[]} trialsData - Array of trial data objects
+ * @param {Object} [rescueOpts] - passed to PTA.rescueUnsavedResults on failure
+ *   ({experimentName, host}); a caller that knows where its results screen is
+ *   should say so, otherwise the panel goes to a fixed overlay.
  * @returns {Promise<Object>} Result with data or error property
  */
-PTA.saveAllResults = async function(tableName, trialsData) {
+PTA.saveAllResults = async function(tableName, trialsData, rescueOpts) {
+  const rescue = (reason) => {
+    if (typeof PTA.rescueUnsavedResults !== 'function') return;
+    const o = Object.assign({}, rescueOpts || {});
+    o.reason = o.reason || reason;
+    if (!o.experimentName && trialsData && trialsData[0]) {
+      o.experimentName = trialsData[0].experiment_name || trialsData[0].experiment_id || '';
+    }
+    PTA.rescueUnsavedResults(trialsData, o);
+  };
+
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized');
+    rescue('Supabase not initialized');
     return { error: 'Supabase not initialized' };
   }
 
@@ -264,6 +287,7 @@ PTA.saveAllResults = async function(tableName, trialsData) {
 
     if (error) {
       console.error('PTA: Error saving results', error);
+      rescue((error && error.message) || String(error));
       return { error };
     }
 
@@ -271,6 +295,7 @@ PTA.saveAllResults = async function(tableName, trialsData) {
     return { data };
   } catch (e) {
     console.error('PTA: Exception saving results', e);
+    rescue((e && e.message) || String(e));
     return { error: e.message };
   }
 };
@@ -357,15 +382,72 @@ PTA.checkDuplicateParticipation = async function(tableName, experimentId, extern
 PTA.saveToSupabase = function(trialData, tableName) {
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized — trial not saved', trialData);
+    PTA._bufferFailedTrial(trialData, 'Supabase not initialized');
     return;
   }
   PTA.supabase
     .from(tableName || 'experiment_results')
     .insert(trialData)
-    .then(({ error }) => {
-      if (error) console.error('PTA: Error saving trial', error);
-    });
+    .then(
+      ({ error }) => {
+        if (error) {
+          console.error('PTA: Error saving trial', error);
+          PTA._bufferFailedTrial(trialData, (error && error.message) || String(error));
+        }
+      },
+      // Without this second callback a network-level throw became an unhandled
+      // rejection: nothing logged, nothing buffered, the trial simply gone.
+      (e) => {
+        console.error('PTA: Exception saving trial', e);
+        PTA._bufferFailedTrial(trialData, (e && e.message) || String(e));
+      }
+    );
 };
+
+/* ---- the per-trial failure buffer ------------------------------------- *
+ * saveToSupabase is fire-and-forget and is called once per trial, so a dead
+ * database produces one failure per trial. Rescuing each one separately would
+ * put forty panels on the screen and forty copies in localStorage. Failures are
+ * collected instead and handed over once, shortly after they stop arriving. */
+PTA._failedTrials = [];
+PTA._failedReason = '';
+PTA._failedTimer = null;
+
+PTA._bufferFailedTrial = function(trialData, reason) {
+  if (!trialData) return;
+  PTA._failedTrials.push(trialData);
+  if (reason && !PTA._failedReason) PTA._failedReason = reason;
+  if (PTA._failedTimer) clearTimeout(PTA._failedTimer);
+  PTA._failedTimer = setTimeout(PTA.flushFailedTrials, 1800);
+};
+
+/**
+ * Hand every buffered failed trial to the rescue path, as one batch.
+ * Safe to call directly - a module that knows its run has ended can flush
+ * immediately rather than waiting for the debounce.
+ */
+PTA.flushFailedTrials = function() {
+  if (PTA._failedTimer) { clearTimeout(PTA._failedTimer); PTA._failedTimer = null; }
+  if (!PTA._failedTrials.length) return;
+  const rows = PTA._failedTrials;
+  const reason = PTA._failedReason;
+  PTA._failedTrials = [];
+  PTA._failedReason = '';
+  if (typeof PTA.rescueUnsavedResults === 'function') {
+    PTA.rescueUnsavedResults(rows, {
+      experimentName: (rows[0] && (rows[0].experiment_name || rows[0].experiment_id)) || '',
+      reason: reason
+    });
+  }
+};
+
+// A tab closed mid-run would otherwise drop whatever is still in the buffer
+// without ever offering it. This at least writes the localStorage copy.
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('pagehide', function () {
+    if (PTA._failedTrials.length) PTA.flushFailedTrials();
+  });
+}
 
 /**
  * Test whether Supabase is actually reachable and the results table readable.
@@ -403,6 +485,71 @@ PTA.testSupabase = async function() {
   }
 };
 
+/**
+ * Paint an honest connection status into a builder's status indicator.
+ *
+ * Every paradigm wrote its own version of this and four of them got it wrong the
+ * same way: they checked that `PTA.supabase` was truthy and then reported
+ * "Connected - Data will be saved automatically". But `PTA.supabase` is just the
+ * client object; createClient() succeeds the moment the CDN script loads and
+ * never contacts the project. So the builder said data was safe while the
+ * database was unreachable - which on 2026-08-12 it was, for every experiment
+ * on the live site. Two of the four went further and reported "Connected" in the
+ * branch where PTA was missing entirely, i.e. exactly when saving is impossible.
+ *
+ * The only honest answer comes from a real query, which is what testSupabase
+ * does. One implementation, so the mistake cannot be made a fifth time.
+ *
+ * @param {HTMLElement} statusEl - wrapper, gets the `error` class
+ * @param {HTMLElement} [statusTextEl] - where the text goes; defaults to
+ *        statusEl.querySelector('.status-text') or statusEl itself
+ * @returns {Promise<boolean>} whether the database answered
+ */
+PTA.paintConnectionStatus = async function(statusEl, statusTextEl) {
+  const textEl = statusTextEl || (statusEl && statusEl.querySelector('.status-text')) || statusEl;
+  if (!textEl) return false;
+
+  const set = (isError, html) => {
+    if (statusEl) statusEl.classList[isError ? 'add' : 'remove']('error');
+    textEl.innerHTML = html;
+  };
+
+  set(false, 'Testing the connection...');
+
+  if (!window.PTA || !PTA.supabase) {
+    set(true, '<strong>Not connected</strong> - the database client did not load, so ' +
+      'nothing can be saved. Participants will be offered a download at the end instead.');
+    return false;
+  }
+
+  try {
+    const ok = await PTA.testSupabase();
+    if (ok) {
+      set(false, '<strong>Connected</strong> - Data will be saved automatically');
+      return true;
+    }
+    set(true, '<strong>Not connected</strong> - the results database did not answer, so ' +
+      'runs will NOT be stored on the server. Each participant will be shown a download ' +
+      'button at the end instead; collect those files.');
+    return false;
+  } catch (e) {
+    set(true, '<strong>Not connected</strong> - ' + PTA.escapeText(e && e.message ? e.message : String(e)));
+    return false;
+  }
+};
+
+/**
+ * Escape a string for safe use inside innerHTML.
+ * Error messages reach the status line and can contain markup.
+ * @param {string} s
+ * @returns {string}
+ */
+PTA.escapeText = function(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+};
+
 /* =====================================================
    Export Functions
    ===================================================== */
@@ -419,7 +566,18 @@ PTA.exportToCSV = function(data, filename) {
     return;
   }
 
-  const headers = Object.keys(data[0]);
+  // The union of every row's keys, not just the first row's. Rows are built
+  // per-trial and a later trial can carry a field the first one did not (a
+  // timeout row has no `key`, a practice row has no `condition`). Reading the
+  // header off data[0] silently dropped those columns from the download, which
+  // is data loss in the one file that exists to prevent data loss.
+  const headers = [];
+  const seen = Object.create(null);
+  for (const row of data) {
+    for (const k of Object.keys(row)) {
+      if (!seen[k]) { seen[k] = true; headers.push(k); }
+    }
+  }
   const csvRows = [headers.join(',')];
 
   for (const row of data) {
@@ -444,6 +602,163 @@ PTA.exportToCSV = function(data, filename) {
   link.click();
 
   URL.revokeObjectURL(url);
+};
+
+/* =====================================================
+   Rescue: what happens when the database cannot be reached
+   ===================================================== */
+
+/**
+ * Keep a run that could not be saved, and say so on screen.
+ *
+ * Until 2026-08-12 a failed save was a console.error and nothing else. The
+ * participant reached a normal results screen, the experimenter was never told,
+ * and the run was gone. That is not hypothetical: the Supabase project this
+ * platform points at stopped resolving in DNS, so on that day EVERY run on the
+ * live site was being discarded in silence while the screen looked healthy.
+ *
+ * A failed save is now three things instead of one:
+ *   1. a copy in localStorage, so closing the tab is not instantly fatal
+ *   2. a visible, unmissable panel saying the data is NOT on the server
+ *   3. a download button, which is the only copy that actually leaves the machine
+ *
+ * The download is offered rather than forced: a click-free download is blocked
+ * by browsers often enough that relying on it would recreate the silent failure.
+ *
+ * @param {Object[]} rows - the trial rows that failed to save
+ * @param {Object} [opts]
+ * @param {string} [opts.experimentName] - used in the filename and the message
+ * @param {string} [opts.reason] - what went wrong, for the stored copy
+ * @param {HTMLElement} [opts.host] - where to put the panel; defaults to a fixed overlay
+ * @returns {string|null} the localStorage key the copy was written under
+ */
+PTA._rescued = (typeof WeakSet !== 'undefined') ? new WeakSet() : null;
+
+PTA.rescueUnsavedResults = function(rows, opts) {
+  opts = opts || {};
+  if (!rows || !rows.length) return null;
+
+  // saveAllResults rescues centrally, and a caller may rescue the same array
+  // again with a better host. The array identity is the batch identity, so one
+  // failed run produces one stored copy and one panel however many callers ask.
+  if (PTA._rescued) {
+    if (PTA._rescued.has(rows)) return null;
+    PTA._rescued.add(rows);
+  }
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const safeName = String(opts.experimentName || 'experiment')
+    .replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'experiment';
+  const filename = 'PrimingToolbox_UNSAVED_' + safeName + '_' + stamp + '.csv';
+
+  /* 1. a copy that survives the results screen ---------------------------- */
+  let key = null;
+  try {
+    key = 'ptbx_unsaved_' + stamp;
+    localStorage.setItem(key, JSON.stringify({
+      savedAt: stamp,
+      experiment: opts.experimentName || '',
+      reason: String(opts.reason || ''),
+      rows: rows
+    }));
+    const idx = JSON.parse(localStorage.getItem('ptbx_unsaved_index') || '[]');
+    idx.push({ key: key, stamp: stamp, n: rows.length, experiment: opts.experimentName || '' });
+    localStorage.setItem('ptbx_unsaved_index', JSON.stringify(idx));
+  } catch (e) {
+    // Private mode, or the quota is full. The download below is then the only
+    // copy, which is exactly why the panel does not depend on this succeeding.
+    console.warn('PTA: could not keep a local copy of the unsaved run', e);
+    key = null;
+  }
+
+  /* 2 + 3. say it on screen, and give them the file ----------------------- */
+  // Built as DOM nodes, never as an HTML string: the experiment name comes from
+  // a ?config= URL and must not be able to inject markup into this panel.
+  try {
+    if (document.getElementById('pta-unsaved-panel')) return key;
+
+    const box = document.createElement('div');
+    box.id = 'pta-unsaved-panel';
+    box.setAttribute('role', 'alert');
+    box.style.cssText =
+      'background:rgba(153,15,35,.22);border:1px solid #e38b82;border-left:5px solid #e38b82;' +
+      'border-radius:12px;padding:16px 18px;margin:18px 0;font-family:"Segoe UI",Arial,sans-serif;' +
+      'color:#ffd9d4;line-height:1.55;';
+
+    const h = document.createElement('div');
+    h.style.cssText = 'font-weight:700;font-size:1.02rem;color:#ff8fa3;margin-bottom:6px;';
+    h.textContent = 'Your results were NOT saved to the database.';
+    box.appendChild(h);
+
+    const p = document.createElement('div');
+    p.style.cssText = 'font-size:.93rem;margin-bottom:10px;';
+    p.textContent = 'The server could not be reached, so these ' + rows.length +
+      ' trials exist only in this browser window. Download them now and send the file ' +
+      'to whoever gave you this link - closing this tab without downloading loses them.';
+    box.appendChild(p);
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Download my data (' + rows.length + ' trials)';
+    btn.style.cssText =
+      'background:#e38b82;color:#2a0d10;border:none;border-radius:9px;padding:11px 22px;' +
+      'font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;';
+    btn.addEventListener('click', function () {
+      PTA.exportToCSV(rows, filename);
+      btn.textContent = 'Downloaded - check your Downloads folder';
+      btn.disabled = true;
+      btn.style.opacity = '.7';
+      btn.style.cursor = 'default';
+    });
+    box.appendChild(btn);
+
+    const why = document.createElement('div');
+    why.style.cssText = 'font-size:.8rem;color:#c9a9a5;margin-top:10px;';
+    why.textContent = opts.reason ? 'Reason: ' + String(opts.reason) : '';
+    if (opts.reason) box.appendChild(why);
+
+    const host = opts.host && opts.host.appendChild ? opts.host : null;
+    if (host) {
+      host.insertBefore(box, host.firstChild);
+    } else {
+      box.style.cssText += 'position:fixed;top:14px;left:50%;transform:translateX(-50%);' +
+        'max-width:620px;width:calc(100% - 28px);z-index:99999;background:#2a0d10;box-shadow:0 12px 40px rgba(0,0,0,.6);';
+      document.body.appendChild(box);
+    }
+  } catch (e) {
+    console.error('PTA: could not show the unsaved-data panel', e);
+  }
+
+  return key;
+};
+
+/**
+ * Every run this browser failed to save, newest last.
+ * Recovery path for a run whose panel was closed or missed.
+ * @returns {Object[]} [{key, stamp, n, experiment}]
+ */
+PTA.listUnsavedResults = function() {
+  try {
+    return JSON.parse(localStorage.getItem('ptbx_unsaved_index') || '[]');
+  } catch (e) {
+    return [];
+  }
+};
+
+/**
+ * Download one stranded run by its key from PTA.listUnsavedResults().
+ * @param {string} key
+ * @returns {boolean} true if something was downloaded
+ */
+PTA.downloadUnsavedResults = function(key) {
+  try {
+    const blob = JSON.parse(localStorage.getItem(key) || 'null');
+    if (!blob || !blob.rows || !blob.rows.length) return false;
+    PTA.exportToCSV(blob.rows, 'PrimingToolbox_RECOVERED_' + key.replace('ptbx_unsaved_', '') + '.csv');
+    return true;
+  } catch (e) {
+    return false;
+  }
 };
 
 /**

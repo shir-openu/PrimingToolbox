@@ -39,6 +39,9 @@ _V1_ARCHIVE_STAGING/
 Auto-Claude/
 *.exe
 QUESTIONS____________________________/
+# Working conversation between Shir and Claude: reports, questions, her answers.
+# Local only - these are notes about the project, not part of the published site.
+CONVERSATIONS/
 AGENTS/
 AUTO_CLAUDE_AGENTS/
 CGPT/

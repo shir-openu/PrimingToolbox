@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/semantic.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/semantic.js
@@ -619,7 +623,13 @@ window.Semantic = {
 
     // Save using PTA core if available
     if (window.PTA && PTA.saveAllResults) {
-      PTA.saveAllResults('experiment_results', dataToSave)
+      // The host tells the rescue path where to put its warning when the save
+      // fails, so it lands on this experiment's results screen rather than in a
+      // floating overlay over it.
+      PTA.saveAllResults('experiment_results', dataToSave, {
+        experimentName: 'Semantic Priming',
+        host: document.getElementById('semantic-results')
+      })
         .then(result => {
           if (result.error) {
             console.error('Error saving semantic priming results:', result.error);
@@ -628,8 +638,18 @@ window.Semantic = {
           }
         });
     } else {
-      console.log('PTA not available, results not saved to database');
-      console.log('Results:', dataToSave);
+      // core_fab.js did not load, so there is no rescue path either and this is
+      // the only place the loss can be reported. Say it on screen, not just here.
+      console.error('PTA not available - results NOT saved', dataToSave);
+      const host = document.getElementById('semantic-results');
+      if (host) {
+        const warn = document.createElement('div');
+        warn.style.cssText = 'background:#2a0d10;border:1px solid #e38b82;border-radius:10px;' +
+          'padding:12px 14px;margin:12px 0;color:#ffd9d4;font-size:.92rem;';
+        warn.textContent = 'These ' + dataToSave.length + ' trials were not saved: the platform ' +
+          'core script did not load. Use the CSV export button before closing this page.';
+        host.insertBefore(warn, host.firstChild);
+      }
     }
   },
 
@@ -922,24 +942,15 @@ window.Semantic = {
     const statusEl = document.getElementById('semantic-connection-status');
     const statusText = statusEl ? statusEl.querySelector('.status-text') : null;
 
-    try {
-      if (window.PTA && PTA.supabase) {
-        // Simple connection test
-        const { error } = await PTA.supabase.from('experiment_results').select('id').limit(1);
-        if (!error) {
-          if (statusEl) statusEl.classList.remove('error');
-          if (statusText) statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-        } else {
-          if (statusEl) statusEl.classList.add('error');
-          if (statusText) statusText.innerHTML = '<strong>Connection Failed</strong> - ' + error.message;
-        }
-      } else {
-        if (statusEl) statusEl.classList.remove('error');
-        if (statusText) statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-      }
-    } catch (error) {
+    // This one did issue a real query, but its else branch - PTA or the client
+    // missing, i.e. the case where saving is impossible - cleared the error
+    // class and reported "Connected - Data will be saved automatically".
+    if (window.PTA && PTA.paintConnectionStatus) {
+      await PTA.paintConnectionStatus(statusEl, statusText);
+    } else if (statusText) {
       if (statusEl) statusEl.classList.add('error');
-      if (statusText) statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
+      statusText.innerHTML = '<strong>Not connected</strong> - the platform core script ' +
+        'did not load, so nothing can be saved.';
     }
   },
 

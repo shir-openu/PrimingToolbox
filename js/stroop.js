@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/stroop.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/stroop.js
@@ -830,21 +834,21 @@ window.Stroop = {
    */
   testConnection: async function() {
     const statusEl = document.getElementById('connection-status');
+    if (!statusEl) return;                       // was an unguarded .querySelector
     const statusText = statusEl.querySelector('.status-text');
 
     try {
-      if (window.PTA && PTA.testSupabase) {
-        const success = await PTA.testSupabase();
-        if (success) {
-          statusEl.classList.remove('error');
-          statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-        } else {
-          statusEl.classList.add('error');
-          statusText.innerHTML = '<strong>Connection Failed</strong> - Check your internet connection';
-        }
+      // Was: "Connection Failed - Check your internet connection", which sent
+      // people to look at their wifi when the failure is at the other end, and
+      // an else branch that claimed "Connected" when nothing had been tested.
+      // PTA.paintConnectionStatus is the single implementation for all five
+      // builders that show this indicator.
+      if (window.PTA && PTA.paintConnectionStatus) {
+        await PTA.paintConnectionStatus(statusEl, statusText);
       } else {
-        statusEl.classList.remove('error');
-        statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
+        statusEl.classList.add('error');
+        statusText.innerHTML = '<strong>Not connected</strong> - the platform core script ' +
+          'did not load, so nothing can be saved.';
       }
     } catch (error) {
       statusEl.classList.add('error');

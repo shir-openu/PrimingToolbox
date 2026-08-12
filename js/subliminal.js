@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/subliminal.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/subliminal.js
@@ -762,7 +766,10 @@ window.Subliminal = {
       timestamp: new Date().toISOString()
     }));
 
-    PTA.saveAllResults('subliminal_results', dataToSave)
+    PTA.saveAllResults('subliminal_results', dataToSave, {
+      experimentName: 'Subliminal Priming',
+      host: document.getElementById('subliminal-results')
+    })
       .then(result => {
         if (result.error) {
           console.error('Subliminal: Error saving results', result.error);
@@ -1077,23 +1084,15 @@ window.Subliminal = {
     const statusEl = document.getElementById('subliminal-connection-status');
     const statusText = statusEl?.querySelector('.status-text');
 
-    try {
-      if (window.PTA && PTA.supabase) {
-        statusEl?.classList.remove('error');
-        if (statusText) {
-          statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-        }
-      } else {
-        statusEl?.classList.add('error');
-        if (statusText) {
-          statusText.innerHTML = '<strong>Not Connected</strong> - Check Supabase configuration';
-        }
-      }
-    } catch (error) {
+    // Was: report "Connected" whenever PTA.supabase was truthy. That object
+    // exists as soon as the CDN script loads and proves nothing about whether
+    // the database answers. PTA.paintConnectionStatus issues a real query.
+    if (window.PTA && PTA.paintConnectionStatus) {
+      await PTA.paintConnectionStatus(statusEl, statusText);
+    } else if (statusText) {
       statusEl?.classList.add('error');
-      if (statusText) {
-        statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
-      }
+      statusText.innerHTML = '<strong>Not connected</strong> - the platform core script ' +
+        'did not load, so nothing can be saved.';
     }
   },
 

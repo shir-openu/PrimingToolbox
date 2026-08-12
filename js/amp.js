@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/amp.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
  * panel on its setup screen, 2026-08-11):
  *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/amp.js
@@ -639,7 +643,10 @@ window.AMP = {
       external_id: this.externalId || null
     }));
 
-    PTA.saveAllResults('experiment_results', trialsData).then(result => {
+    PTA.saveAllResults('experiment_results', trialsData, {
+      experimentName: 'AMP (Affect Misattribution)',
+      host: document.getElementById('amp-results')
+    }).then(result => {
       if (result.error) {
         console.error('AMP: Error saving results', result.error);
       } else {
@@ -1100,17 +1107,15 @@ window.AMP = {
 
     const statusText = statusEl.querySelector('.status-text');
 
-    try {
-      if (window.PTA && PTA.supabase) {
-        statusEl.classList.remove('error');
-        statusText.innerHTML = '<strong>Connected</strong> - Data will be saved automatically';
-      } else {
-        statusEl.classList.add('error');
-        statusText.innerHTML = '<strong>Not Connected</strong> - Check configuration';
-      }
-    } catch (error) {
+    // Was: report "Connected" whenever PTA.supabase was truthy. That object
+    // exists as soon as the CDN script loads and proves nothing about whether
+    // the database answers. PTA.paintConnectionStatus issues a real query.
+    if (window.PTA && PTA.paintConnectionStatus) {
+      await PTA.paintConnectionStatus(statusEl, statusText);
+    } else if (statusText) {
       statusEl.classList.add('error');
-      statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
+      statusText.innerHTML = '<strong>Not connected</strong> - the platform core script ' +
+        'did not load, so nothing can be saved.';
     }
   }
 };

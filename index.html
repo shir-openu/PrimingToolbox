@@ -63,6 +63,16 @@
 
   <title>PrimingToolbox</title>
 
+  <!-- An empty data: icon, so the browser stops asking for /favicon.ico.
+       The site ships no favicon, so every visit logged
+           Failed to load resource: the server responded with a status of 404
+       to the console. Harmless in itself, but that message carries no URL, so a
+       deployment check cannot tell it apart from a REAL missing file - it would
+       have to ignore every 404 in the console, which is exactly the kind of
+       blanket filter that hides the next genuine one. Cheaper to stop making
+       the request than to teach every tool to overlook it. -->
+  <link rel="icon" href="data:,">
+
   <!-- External Libraries -->
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

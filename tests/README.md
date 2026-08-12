@@ -41,6 +41,44 @@ There is deliberately **no total check count in this file**. The previous
 version carried one — "99 checks" — and it was wrong within days. `run_all.js`
 prints the number, and a number it prints cannot rot.
 
+## Checking the DEPLOYED site
+
+```
+node tests/live_check.js                       the live GitHub Pages site
+node tests/live_check.js https://other/host/   somewhere else
+```
+
+Every test above drives `index.html` from `file://`. Participants load
+`https://`, where the origin, CORS and mixed-content rules differ and where the
+files come from whatever GitHub Pages last built rather than from disk. A fix
+can be committed, pushed, green locally, and still not be what a participant is
+running.
+
+It is deliberately **not** named `*.test.js`, so `run_all.js` does not pick it
+up: it needs the network and the live database, and a suite that fails when the
+wifi drops is a suite people stop trusting.
+
+For *what* is deployed rather than whether it works, ask GitHub directly:
+
+```
+gh api repos/shir-openu/PrimingToolbox/pages/builds/latest
+```
+
+which returns the commit Pages actually built.
+
+Two ways of checking deployment that do **not** work, both learned on
+2026-08-12:
+
+- **Fetching the page and looking for an element id or a script string.**
+  WebFetch converts HTML to markdown, so visible text survives and ids and
+  `<script>` contents vanish. It reported three of that day's fixes as missing
+  while a fourth *from the same commit* was found. When a measurement
+  contradicts itself, suspect the measurement.
+- **Padding a payload with one repeated Hebrew letter** to force a `+` into the
+  base64. A run of the same two bytes tiles into groups that can never be 62, so
+  the payload comes out with no `+` and the check passes having tested nothing.
+  Cycle a varied alphabet instead.
+
 ## What each file covers
 
 | file | what it protects |

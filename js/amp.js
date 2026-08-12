@@ -1,15 +1,15 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/amp.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/amp.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before this paradigm carried the ABCD
- * panel on its setup screen, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/amp.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/amp.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/amp.js
+ *
+ *   before this paradigm carried the ABCD panel on its setup screen, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/amp.js
  */
 /**
  * =====================================================

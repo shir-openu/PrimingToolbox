@@ -1,3 +1,10 @@
+/*
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the experimenter-layer event logging, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/timeline_fab.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Interactive Trial Timeline (V2 _fab)
@@ -484,6 +491,21 @@ const TimelinePlanner = (function () {
 
   function persist() {
     localStorage.setItem(STORE_KEY, JSON.stringify(asObject()));
+
+    // T and U in the DHSS proposal: early timeline adoption, and how intensely
+    // it is used. Every mutator in this file calls persist(), so this is the
+    // one place that sees every edit. Until 2026-08-12 the timeline state went
+    // to localStorage and stopped there, which meant the variable the whole
+    // research question turns on was never recorded anywhere.
+    //
+    // Debounced: dragging a block fires persist() on every mouse move, and a
+    // drag is one edit, not two hundred.
+    if (window.PTA && PTA.logEvent) {
+      clearTimeout(persist._t);
+      persist._t = setTimeout(function () {
+        PTA.logEvent('timeline_edit', { phases: (asObject().phases || []).length });
+      }, 400);
+    }
   }
 
   function flash(msg) {

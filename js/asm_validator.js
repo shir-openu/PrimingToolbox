@@ -1,7 +1,9 @@
 /*
- * PREVIOUS VERSION ON GITHUB (before {type, items} stimulus sets stopped
- * contributing the literal string "text" to both stimulus lists, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/asm_validator.js
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before {type, items} stimulus sets stopped contributing the literal string "text" to both stimulus lists, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/asm_validator.js
  */
 /**
  * asm_validator.js -- design-time check of the three priming characteristics.

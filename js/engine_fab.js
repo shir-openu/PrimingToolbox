@@ -2,21 +2,20 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the experimenter-layer event logging, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/engine_fab.js
+ *
  *   before the schema-drift fix, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/0783ff2/js/engine_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/engine_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/engine_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before the response-timeout double-fire fix
- * and the per-condition generic stats, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/engine_fab.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/engine_fab.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/engine_fab.js
+ *
+ *   before the response-timeout double-fire fix and the per-condition generic stats, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/engine_fab.js
  */
 /**
  * =====================================================
@@ -754,6 +753,18 @@ PTA.Engine = {
     this.state.isRunning = false;
 
     console.log('PTA Engine: Experiment completed');
+    // C in the DHSS proposal: participant completions across an experimenter's
+    // published experiments. Derivable from experiment_results too, but an
+    // explicit event also distinguishes a completed run from an abandoned one,
+    // which the results table cannot.
+    if (PTA.logEvent) {
+      PTA.logEvent('participant_completed', {
+        experimentType: this.config.experiment_type || this.config.type || 'generic',
+        email: (this.config.experimenter && this.config.experimenter.email) || null,
+        userExperimentId: (this.config.experimenter && this.config.experimenter.experiment_id) || null,
+        trials: this.state.results.length
+      });
+    }
     console.log('Results:', this.state.results);
 
     // Hide trial screen, show results

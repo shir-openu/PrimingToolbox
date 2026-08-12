@@ -1,3 +1,10 @@
+/*
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the experimenter-layer event logging, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/scratch_builder_fab.js
+ */
 /**
  * =====================================================
  * PrimingToolbox - Build From Scratch (V2 _fab)
@@ -127,6 +134,23 @@ window.ScratchBuilder = (function () {
 
   function persist() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* private mode */ }
+
+    // E in the DHSS proposal: experiments created, DRAFTS INCLUDED. This is the
+    // only place a from-scratch design is ever written down, so it is where a
+    // draft becomes countable. Debounced hard - persist() runs on every
+    // keystroke, and a design is one draft however many characters it took.
+    if (window.PTA && PTA.logEvent) {
+      clearTimeout(persist._t);
+      persist._t = setTimeout(function () {
+        PTA.logEvent('draft_saved', {
+          experimentType: 'scratch-' + MODE,
+          email: S.email || null,
+          userExperimentId: S.expId || null,
+          rows: (S.rows || []).length,
+          named: !!(S.name || '').trim()
+        });
+      }, 3000);
+    }
   }
 
   function restore() {
@@ -1002,6 +1026,10 @@ window.ScratchBuilder = (function () {
     var preview = Object.assign({}, cfg);
     preview.data = { save_to_supabase: false, table_name: 'experiment_results' };
     preview.name = cfg.name + ' (preview)';
+    if (window.PTA && PTA.logEvent) {
+      PTA.logEvent('preview_run', { experimentType: 'scratch-' + MODE, email: S.email || null,
+                                    userExperimentId: S.expId || null });
+    }
     say('Opening your experiment in a new tab. Nothing is saved from a preview.', 'ok');
     window.open(indexUrl() + '?config=' + encode(preview), '_blank');
   }
@@ -1010,6 +1038,20 @@ window.ScratchBuilder = (function () {
     var cfg = readyToShare();
     if (!cfg) return;
     if (window.PTK && PTK.validateIdentity && !PTK.validateIdentity(S.email, S.expId)) return;
+
+    // P in the DHSS proposal: an experiment becomes PUBLISHED the moment its
+    // participant link exists. The kit paradigms count this in PTK.buildLink;
+    // this page builds its link itself, so it counts it here.
+    if (window.PTA && PTA.logEvent) {
+      PTA.logEvent('link_generated', {
+        experimentType: 'scratch-' + MODE,
+        email: S.email || null,
+        userExperimentId: S.expId || null,
+        trials: cfg.trials.pairings.length,
+        conditions: cfg.conditions.length,
+        declaredAbcd: !!cfg.abcd
+      });
+    }
 
     var link = indexUrl() + '?config=' + encode(cfg);
     if (window.PTK && PTK.showLinkModal) PTK.showLinkModal(link, C.teal);

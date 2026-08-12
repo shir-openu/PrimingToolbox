@@ -4,13 +4,6 @@
  *
  *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/stroop.js
- */
-/*
- * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
- * line here, so any earlier state can be recovered if something goes wrong.
- *
- *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
- *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/stroop.js
  *
  *   before a failed database save stopped being a console line, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/stroop.js

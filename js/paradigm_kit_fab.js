@@ -4,66 +4,21 @@
  *
  *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/paradigm_kit_fab.js
- */
-/*
- * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
- * line here, so any earlier state can be recovered if something goes wrong.
  *
- *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
- *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/paradigm_kit_fab.js
+ *   before the experimenter-layer event logging, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/paradigm_kit_fab.js
  *
  *   before the full-codebase read of 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/paradigm_kit_fab.js
  *
  *   before a failed database save stopped being a console line, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/paradigm_kit_fab.js
- */
-/**
- * =====================================================
- * PrimingToolbox - Paradigm Kit (V2 _fab)
- * =====================================================
  *
- * NEW FILE, 2026-08-10.
+ *   ===================================================== PrimingToolbox - Paradigm Kit (V2 _fab) ===================================================== NEW FILE, 2026-08-10. PREVIOUS VERSION ON GITHUB (before the ABCD panel was split out of paintSetup into abcdPanel/injectAbcd, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/paradigm_kit_fab.js
  *
- * PREVIOUS VERSION ON GITHUB (before the ABCD panel was split out of
- * paintSetup into abcdPanel/injectAbcd, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/e090bd3/js/paradigm_kit_fab.js
- *
- * PREVIOUS VERSION ON GITHUB (first published version, before the shared
- * scrambled-sentence prime phase was added for goal / money / moral priming):
- *     https://github.com/shir-openu/PrimingToolbox/blob/57eef45/js/paradigm_kit_fab.js
- *
- * WHY THIS FILE EXISTS
- * --------------------
- * A review of every script in the repo produced a 28-point contract describing
- * what a paradigm module must provide to match the mature modules (stroop.js,
- * subliminal.js, semantic.js). The four newer modules - negative_fab.js,
- * masked_fab.js, syntactic_fab.js, repetition_fab.js - satisfied roughly half
- * of it. They were strong exactly where the mature modules are weak (tracked
- * timers, double-entry locks, scoped response windows) and absent exactly where
- * the platform's value lives:
- *
- *     no Template Builder          no stimulus editing
- *     no timing controls in UI     no stimuli carried in the participant link
- *     no exportXLSX                no generateExperimentId
- *     no testConnection            no link modal and no link validation
- *     no progress bar              no generated interpretation
- *     no ABCD panel                no A/S/M design object for the validator
- *     no practice block
- *
- * Writing those into each module separately would be ~2,000 lines of near
- * duplicate code, and would leave the six mature modules still missing the same
- * things. So the missing surface lives here once, generically, and a paradigm
- * opts in by declaring a small spec. The mature modules can adopt it later
- * without being rewritten.
- *
- * DELIBERATELY NOT A `const` AT TOP LEVEL. js/engine.js was silently discarded
- * by the browser for years because it re-declared `const PTA`, which core.js
- * had already declared - a SyntaxError throws away the whole file. Everything
- * here hangs off a single property assignment on window.
- *
- * @module PTK
- * @requires PTA (js/core_fab.js)
+ *   first published version, before the shared scrambled-sentence prime phase was added for goal / money / moral priming
+ *   https://github.com/shir-openu/PrimingToolbox/blob/57eef45/js/paradigm_kit_fab.js
  */
 window.PTK = (function () {
   'use strict';
@@ -201,6 +156,16 @@ window.PTK = (function () {
   };
 
   PTK.buildLink = function (urlParam, config) {
+    // P in the DHSS proposal: experiments PUBLISHED. Generating the participant
+    // link is the moment an experiment stops being a draft, so this is where
+    // publication is counted.
+    if (window.PTA && PTA.logEvent) {
+      PTA.logEvent('link_generated', {
+        experimentType: urlParam,
+        email: (config && config.experimenterEmail) || null,
+        userExperimentId: (config && config.userExperimentId) || null
+      });
+    }
     return window.location.href.split('?')[0] + '?' + urlParam + '=' + PTK.encode(config);
   };
 
@@ -603,6 +568,17 @@ window.PTK = (function () {
    */
   PTK.openBuilder = function (mod, spec) {
     PTK.closeBuilder(spec);
+    // Experimenter layer (DHSS proposal). Opening a builder is the start of
+    // "time in editor" - U - and the heartbeat is what turns it into a duration
+    // rather than a single click. Stopped in PTK.closeBuilder.
+    if (window.PTA && PTA.logEvent) {
+      PTA.logEvent('builder_opened', {
+        experimentType: spec.key,
+        email: mod.experimenterEmail || null,
+        userExperimentId: mod.userExperimentId || null
+      });
+      PTA.startEditorHeartbeat('builder', { experimentType: spec.key });
+    }
     var accent = spec.accent || '#ff4db8';
     var idBase = 'ptk-builder-' + spec.key;
 
@@ -890,6 +866,7 @@ window.PTK = (function () {
   PTK.closeBuilder = function (spec) {
     var el = document.getElementById('ptk-builder-' + spec.key);
     if (el) el.remove();
+    if (window.PTA && PTA.stopEditorHeartbeat) PTA.stopEditorHeartbeat();
   };
 
   /* ===================================================================

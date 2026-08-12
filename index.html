@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <!--
+  PREVIOUS VERSION ON GITHUB (before the experimenter-layer event logging, 2026-08-12):
+      https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/index.html
+-->
+<!--
   PREVIOUS VERSION ON GITHUB (before the ?edit= builder links, 2026-08-12):
       https://github.com/shir-openu/PrimingToolbox/blob/0e13314/index.html
 -->
@@ -2725,6 +2729,9 @@
     // Initialize on load
     document.addEventListener('DOMContentLoaded', function() {
       PTA.initSupabase();
+      // D and R in the DHSS proposal: active days, and returns after >= 14
+      // days. One event per page load is all either needs.
+      if (PTA.logEvent) PTA.logEvent('session_start', { page: 'index' });
     });
 
     // Current experiment config (V2: on window so TimelinePlanner can read/write it)

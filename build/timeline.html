@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!--
+  PREVIOUS VERSION ON GITHUB (before the experimenter-layer event logging, 2026-08-12):
+      https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/build/timeline.html
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -79,6 +83,14 @@
     // built the editor bar by the time this runs.
     document.addEventListener('DOMContentLoaded', function () {
       ScratchBuilder.mount({ host: 'sb-root', mode: 'timeline' });
+      // T in the DHSS proposal: this page IS the visual timeline representation
+      // whose adoption the research question is about. Arriving here is the
+      // opt-in; timeline_edit events are what make the adoption "active".
+      if (window.PTA && PTA.logEvent) {
+        PTA.logEvent('session_start', { page: 'build/timeline' });
+        PTA.logEvent('timeline_opened', { editor: 'build-page' });
+        PTA.startEditorHeartbeat('timeline', { page: 'build/timeline' });
+      }
 
       // The editor bar is built for the landing page and carries two controls
       // that mean nothing here: "Load from selected" reads the Quick Settings

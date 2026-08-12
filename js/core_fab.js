@@ -2,21 +2,20 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the experimenter-layer event logging, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/core_fab.js
+ *
  *   before the schema-drift fix, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/0783ff2/js/core_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/core_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
- *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/core_fab.js
- */
-/*
- * PREVIOUS VERSION ON GITHUB (before encodeConfig/decodeConfig were made
- * UTF-8 safe, 2026-08-11):
- *     https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/core_fab.js
+ *
+ *   before the full-codebase read of 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/core_fab.js
+ *
+ *   before a failed database save stopped being a console line, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/core_fab.js
+ *
+ *   before encodeConfig/decodeConfig were made UTF-8 safe, 2026-08-11
+ *   https://github.com/shir-openu/PrimingToolbox/blob/87e1f20/js/core_fab.js
  */
 /**
  * =====================================================
@@ -701,6 +700,153 @@ PTA.exportToCSV = function(data, filename) {
   link.click();
 
   URL.revokeObjectURL(url);
+};
+
+/* =====================================================
+   The experimenter layer and the meta layer  (DHSS proposal)
+   ===================================================== */
+
+/**
+ * Event logging for the two layers the platform never recorded.
+ *
+ * The DHSS proposal describes three layers of use and asks whether early,
+ * active adoption of the visual timeline predicts experimenter persistence.
+ * Until 2026-08-12 only the participant layer existed as data: trial rows in
+ * experiment_results. Everything the research question is actually about -
+ * whether someone opened the timeline, how much they edited it, how many
+ * experiments they created, how many they published, how many days they came
+ * back - happened entirely in the browser and was never written down. The
+ * timeline kept its state in localStorage and nothing else.
+ *
+ * Of the proposal's eight variables z = (T,U,E,P,D,R,C,X), seven did not exist
+ * anywhere. This supplies them. See sql/create_platform_events_table.sql for
+ * the table and for the view that assembles z per experimenter.
+ *
+ * Design rules, because this is telemetry and not results:
+ *   - fire and forget; a logging failure must never interrupt an experiment
+ *   - never routed through the rescue path: a lost event is a lost event, and
+ *     showing a participant a red panel because a heartbeat failed would be
+ *     absurd
+ *   - nothing personal. The key identifies a BROWSER, not a person. The only
+ *     personal field is the email the experimenter types themselves, which is
+ *     already stored beside their results.
+ */
+
+PTA.EVENT_TYPES = [
+  'session_start',          // D: active days.  R: returns
+  'builder_opened',         // engagement
+  'timeline_opened',        // T, with timeline_edit
+  'timeline_edit',          // T: >=1 edit in the first session.  U: edit count
+  'editor_heartbeat',       // U: time in editor, one every 15s while open
+  'draft_saved',            // E: experiments created, drafts included
+  'link_generated',         // P: experiments published
+  'preview_run',            // engagement
+  'participant_completed'   // C: cross-check against experiment_results
+];
+
+/**
+ * A stable id for this browser, so activity before an email is typed still
+ * belongs to one person and joins up the moment the email appears.
+ * @returns {string}
+ */
+PTA.experimenterKey = function() {
+  try {
+    let k = localStorage.getItem('ptbx_experimenter_key');
+    if (!k) {
+      k = 'ek_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 11);
+      localStorage.setItem('ptbx_experimenter_key', k);
+    }
+    return k;
+  } catch (e) {
+    // Private mode: fall back to a per-page id. The session still logs
+    // coherently, it just cannot be linked to an earlier visit.
+    if (!PTA._volatileKey) {
+      PTA._volatileKey = 'ek_vol_' + Math.random().toString(36).slice(2, 11);
+    }
+    return PTA._volatileKey;
+  }
+};
+
+/** One id per page load. @returns {string} */
+PTA.sessionId = function() {
+  if (!PTA._sessionId) {
+    PTA._sessionId = 'sx_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 9);
+  }
+  return PTA._sessionId;
+};
+
+/**
+ * Record one platform event.
+ *
+ * @param {string} type - one of PTA.EVENT_TYPES
+ * @param {Object} [detail] - {experimentType, userExperimentId, email, ...rest}
+ *        Anything else in `detail` is kept as JSON in the payload column.
+ */
+PTA.logEvent = function(type, detail) {
+  detail = detail || {};
+  if (PTA.EVENT_TYPES.indexOf(type) === -1) {
+    console.warn('PTA.logEvent: unknown event type "' + type + '"');
+  }
+
+  const known = ['experimentType', 'userExperimentId', 'email'];
+  const payload = {};
+  Object.keys(detail).forEach(k => {
+    if (known.indexOf(k) === -1) payload[k] = detail[k];
+  });
+
+  let language = null, timezone = null;
+  try {
+    language = navigator.language || null;
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch (e) { /* old browser: the covariate is simply missing */ }
+
+  const row = {
+    experimenter_key: PTA.experimenterKey(),
+    experimenter_email: detail.email || null,
+    session_id: PTA.sessionId(),
+    event_type: type,
+    experiment_type: detail.experimentType || null,
+    user_experiment_id: detail.userExperimentId || null,
+    payload: Object.keys(payload).length ? payload : null,
+    client_ts: new Date().toISOString(),
+    client_language: language,
+    client_timezone: timezone
+  };
+
+  if (!PTA.supabase) return;                 // nothing to send to; drop it
+  try {
+    PTA.supabase.from('platform_events').insert(row).then(
+      ({ error }) => {
+        // A missing table means the SQL has not been run yet. Say so once, not
+        // once per event, or the console fills up and hides everything else.
+        if (error && !PTA._eventWarned) {
+          PTA._eventWarned = true;
+          console.warn('PTA: platform_events not available (' +
+            ((error && error.message) || error) +
+            '). Run sql/create_platform_events_table.sql. ' +
+            'Experimenter-layer analytics are not being recorded until then.');
+        }
+      },
+      () => { /* network: telemetry is never worth surfacing */ }
+    );
+  } catch (e) { /* same */ }
+};
+
+/**
+ * Start the editor heartbeat: one event every 15 seconds while an editor is
+ * open, which is what turns "opened the timeline" into "spent time in it"
+ * (U in the proposal). Idempotent; stop it with PTA.stopEditorHeartbeat().
+ * @param {string} what - e.g. 'timeline', 'builder'
+ * @param {Object} [detail]
+ */
+PTA.startEditorHeartbeat = function(what, detail) {
+  if (PTA._heartbeat) return;
+  const d = Object.assign({ editor: what }, detail || {});
+  PTA._heartbeat = setInterval(() => PTA.logEvent('editor_heartbeat', d), 15000);
+};
+
+PTA.stopEditorHeartbeat = function() {
+  if (PTA._heartbeat) { clearInterval(PTA._heartbeat); PTA._heartbeat = null; }
 };
 
 /* =====================================================

@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!--
+  PREVIOUS VERSION ON GITHUB (before the experimenter-layer event logging, 2026-08-12):
+      https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/build/from-scratch.html
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -64,6 +68,13 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       ScratchBuilder.mount({ host: 'sb-root', mode: 'full' });
+      // The comparison arm for the timeline research question: building from
+      // scratch WITHOUT the visual timeline. Same session logging, no
+      // timeline_opened - which is exactly what makes T meaningful.
+      if (window.PTA && PTA.logEvent) {
+        PTA.logEvent('session_start', { page: 'build/from-scratch' });
+        PTA.startEditorHeartbeat('builder', { page: 'build/from-scratch' });
+      }
     });
   </script>
 

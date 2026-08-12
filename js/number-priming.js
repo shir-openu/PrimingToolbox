@@ -653,11 +653,14 @@ window.NumberPriming = {
     const congruentResults = validResults.filter(r => r.congruent);
     const incongruentResults = validResults.filter(r => !r.congruent);
 
-    const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b.rt, 0) / arr.length) : 0;
+    // NULL, not 0, when a condition has no usable trials - otherwise an
+    // empty condition subtracts as a real number and the screen reports a
+    // full-sized effect nothing measured. See PTA.meanRT.
+    const avg = arr => PTA.meanRT(arr);
 
     const congruentRT = avg(congruentResults);
     const incongruentRT = avg(incongruentResults);
-    const primingEffect = incongruentRT - congruentRT;
+    const primingEffect = PTA.diffOrNull(incongruentRT, congruentRT);
 
     // Calculate accuracy
     const totalTrials = this.state.results.length;
@@ -671,11 +674,14 @@ window.NumberPriming = {
     const accuracyEl = document.getElementById('np-accuracy');
     const explanationEl = document.getElementById('np-explanation');
 
-    if (congruentRTEl) congruentRTEl.textContent = congruentRT + ' ms';
-    if (incongruentRTEl) incongruentRTEl.textContent = incongruentRT + ' ms';
+    // An em dash for a mean that does not exist, and no colour verdict on it:
+    // green-for-positive on a missing effect would be a claim about nothing.
+    if (congruentRTEl) congruentRTEl.textContent = PTA.showMean(congruentRT, ' ms');
+    if (incongruentRTEl) incongruentRTEl.textContent = PTA.showMean(incongruentRT, ' ms');
     if (primingEffectEl) {
-      primingEffectEl.textContent = primingEffect + ' ms';
-      primingEffectEl.style.color = primingEffect > 0 ? '#4ade80' : '#fbbf24';
+      primingEffectEl.textContent = PTA.showMean(primingEffect, ' ms');
+      primingEffectEl.style.color = primingEffect == null ? '#9aa6b2'
+                                  : (primingEffect > 0 ? '#4ade80' : '#fbbf24');
     }
     if (accuracyEl) accuracyEl.textContent = accuracy + '%';
 

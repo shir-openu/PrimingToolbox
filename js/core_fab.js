@@ -200,6 +200,56 @@ PTA.mean = function(arr) {
 };
 
 /**
+ * Mean reaction time over a set of trial rows, or NULL when there are none.
+ *
+ * Five modules each carried their own version of this:
+ *     const avg = arr => arr.length ? Math.round(...) : 0;
+ * and an empty condition therefore came back as 0 ms rather than "no data".
+ * The results screens then subtract one mean from the other, so a condition
+ * with no usable trials produced a full-sized fabricated effect. In semantic
+ * priming, no correct related trials gave 600 - 0 = 600 and the screen
+ * announced "a robust semantic priming effect of 600ms. Related word pairs
+ * (0ms) were recognized significantly faster" - a confident, specific,
+ * completely invented finding, and 0 ms is not a reaction time anyone has ever
+ * produced.
+ *
+ * null is the honest answer, and it forces every caller to decide what to do
+ * about it instead of silently arithmetic-ing on a number that means "nothing
+ * happened here".
+ *
+ * @param {Object[]} rows - trial rows
+ * @param {string} [key='rt'] - the field holding the reaction time
+ * @returns {number|null} rounded mean, or null when there is nothing to average
+ */
+PTA.meanRT = function(rows, key) {
+  key = key || 'rt';
+  if (!rows || !rows.length) return null;
+  const values = rows.map(r => r && r[key]).filter(v => typeof v === 'number' && isFinite(v));
+  if (!values.length) return null;
+  return Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+};
+
+/**
+ * The difference between two means, or null if either is missing.
+ * @param {number|null} a
+ * @param {number|null} b
+ * @returns {number|null} a - b
+ */
+PTA.diffOrNull = function(a, b) {
+  return (a == null || b == null) ? null : a - b;
+};
+
+/**
+ * A mean for display: the number, or an em dash when there is no data.
+ * @param {number|null} v
+ * @param {string} [unit='']
+ * @returns {string}
+ */
+PTA.showMean = function(v, unit) {
+  return v == null ? '—' : (v + (unit || ''));
+};
+
+/**
  * Calculate population standard deviation.
  * @param {number[]} arr - Array of numbers
  * @returns {number} Standard deviation, or 0 for empty array

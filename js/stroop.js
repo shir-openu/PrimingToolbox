@@ -467,19 +467,29 @@ window.Stroop = {
     const lang2Congruent = lang2Results.filter(r => r.congruent);
     const lang2Incongruent = lang2Results.filter(r => !r.congruent);
 
-    const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b.rt, 0) / arr.length) : 0;
+    // NULL, not 0, when a condition has no usable trials - otherwise an
+    // empty condition subtracts as a real number and the screen reports a
+    // full-sized effect nothing measured. See PTA.meanRT.
+    const avg = arr => PTA.meanRT(arr);
 
     const lang1AvgRT = avg(lang1Results);
     const lang2AvgRT = avg(lang2Results);
-    const stroop1 = avg(lang1Incongruent) - avg(lang1Congruent);
-    const stroop2 = avg(lang2Incongruent) - avg(lang2Congruent);
+    // A language with no usable congruent OR incongruent trials has no Stroop
+    // effect to report. It used to produce one anyway, by treating the missing
+    // side as 0 ms - which then fed the language-dominance comparison, so one
+    // empty cell could decide which language the platform called dominant.
+    const stroop1 = PTA.diffOrNull(avg(lang1Incongruent), avg(lang1Congruent));
+    const stroop2 = PTA.diffOrNull(avg(lang2Incongruent), avg(lang2Congruent));
 
     document.getElementById('lang1-name').textContent = this.data.languageNames[this.state.lang1];
     document.getElementById('lang2-name').textContent = this.data.languageNames[this.state.lang2];
     document.getElementById('lang1-rt').textContent = lang1AvgRT;
     document.getElementById('lang2-rt').textContent = lang2AvgRT;
-    document.getElementById('stroop-effect1').textContent = stroop1;
-    document.getElementById('stroop-effect2').textContent = stroop2;
+    // A language with no usable trials on one side has no Stroop effect to
+    // report. It used to show one anyway, built from a missing mean treated
+    // as 0 ms - and that number then fed the language-dominance comparison.
+    document.getElementById('stroop-effect1').textContent = PTA.showMean(stroop1);
+    document.getElementById('stroop-effect2').textContent = PTA.showMean(stroop2);
 
     // Determine dominance
     const dominant = stroop1 > stroop2 ? this.state.lang1 : this.state.lang2;

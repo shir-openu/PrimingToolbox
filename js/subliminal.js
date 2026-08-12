@@ -697,20 +697,25 @@ window.Subliminal = {
     const relatedResults = correctResults.filter(r => r.relation === 'related');
     const unrelatedResults = correctResults.filter(r => r.relation === 'unrelated');
 
-    const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b.rt, 0) / arr.length) : 0;
+    // NULL, not 0, when a condition has no usable trials - otherwise an
+    // empty condition subtracts as a real number and the screen reports a
+    // full-sized effect nothing measured. See PTA.meanRT.
+    const avg = arr => PTA.meanRT(arr);
 
     const relatedRT = avg(relatedResults);
     const unrelatedRT = avg(unrelatedResults);
-    const primingEffect = unrelatedRT - relatedRT;
+    const primingEffect = PTA.diffOrNull(unrelatedRT, relatedRT);
 
     const accuracy = this.state.results.length > 0
       ? Math.round((correctResults.length / this.state.results.length) * 100)
       : 0;
 
     // Display results
-    document.getElementById('subliminal-related-rt').textContent = relatedRT + ' ms';
-    document.getElementById('subliminal-unrelated-rt').textContent = unrelatedRT + ' ms';
-    document.getElementById('subliminal-priming-effect').textContent = primingEffect + ' ms';
+    // PTA.showMean prints an em dash for a missing mean. Plain concatenation
+    // rendered the honest null as the string "null ms".
+    document.getElementById('subliminal-related-rt').textContent = PTA.showMean(relatedRT, ' ms');
+    document.getElementById('subliminal-unrelated-rt').textContent = PTA.showMean(unrelatedRT, ' ms');
+    document.getElementById('subliminal-priming-effect').textContent = PTA.showMean(primingEffect, ' ms');
     document.getElementById('subliminal-accuracy').textContent = accuracy + '%';
 
     // Awareness summary

@@ -556,12 +556,18 @@ window.Semantic = {
     const unrelatedResults = correctResults.filter(r => r.condition === 'unrelated');
     const nonwordResults = correctResults.filter(r => r.condition === 'nonword');
 
-    const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b.rt, 0) / arr.length) : 0;
+    // NULL, not 0, when a condition has no usable trials. The old helper
+    // returned 0, so an empty condition subtracted as a real number: with no
+    // correct related trials this computed 600 - 0 = 600 and the screen
+    // announced a robust 600 ms priming effect with "related pairs (0ms)
+    // recognized significantly faster". A confident, specific, entirely
+    // fabricated finding - and 0 ms is not a reaction time.
+    const avg = arr => PTA.meanRT(arr);
 
     const relatedRT = avg(relatedResults);
     const unrelatedRT = avg(unrelatedResults);
     const nonwordRT = avg(nonwordResults);
-    const primingEffect = unrelatedRT - relatedRT;
+    const primingEffect = PTA.diffOrNull(unrelatedRT, relatedRT);
 
     // Calculate accuracy
     const totalTrials = this.state.results.length;
@@ -569,10 +575,10 @@ window.Semantic = {
     const accuracy = Math.round((correctTrials / totalTrials) * 100);
 
     // Update display
-    document.getElementById('semantic-related-rt').textContent = relatedRT;
-    document.getElementById('semantic-unrelated-rt').textContent = unrelatedRT;
-    document.getElementById('semantic-nonword-rt').textContent = nonwordRT;
-    document.getElementById('semantic-priming-effect').textContent = primingEffect;
+    document.getElementById('semantic-related-rt').textContent = PTA.showMean(relatedRT);
+    document.getElementById('semantic-unrelated-rt').textContent = PTA.showMean(unrelatedRT);
+    document.getElementById('semantic-nonword-rt').textContent = PTA.showMean(nonwordRT);
+    document.getElementById('semantic-priming-effect').textContent = PTA.showMean(primingEffect);
     document.getElementById('semantic-accuracy').textContent = accuracy + '%';
 
     // Generate explanation
@@ -592,6 +598,20 @@ window.Semantic = {
    * @returns {string} Explanation text
    */
   generateExplanation: function(relatedRT, unrelatedRT, primingEffect) {
+    // Refuse to interpret what was never measured. Every branch below reads a
+    // difference between two means, and a missing mean used to arrive as 0 -
+    // which sailed straight into "a robust semantic priming effect".
+    if (primingEffect == null || relatedRT == null || unrelatedRT == null) {
+      const missing = [];
+      if (relatedRT == null) missing.push('related');
+      if (unrelatedRT == null) missing.push('unrelated');
+      return 'No priming effect can be reported: there were no usable trials in the ' +
+        missing.join(' or ') + ' condition' + (missing.length > 1 ? 's' : '') + '. ' +
+        'A trial counts only if it was answered correctly and within the response window, ' +
+        'so this usually means the responses were wrong, too slow, or the condition was ' +
+        'never run. Nothing is wrong with the data that IS here - there is simply nothing ' +
+        'to compare it against.';
+    }
     if (primingEffect > 30) {
       return `You showed a robust semantic priming effect of ${primingEffect}ms. ` +
         `Related word pairs (${relatedRT}ms) were recognized significantly faster than ` +

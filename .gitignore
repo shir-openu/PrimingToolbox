@@ -66,3 +66,9 @@ QUESTIONS*/
 *.tif
 *.jpg
 nul
+
+# Personal application documents. This repository is public - GitHub Pages
+# serves it - and these carry a home address, a phone number and referee
+# details. *.docx and *.pdf above already cover the rendered files, but not
+# the HTML masters they are built from.
+POST_DOC_APPLICATION/

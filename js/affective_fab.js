@@ -206,6 +206,12 @@ window.Affective = {
     // mid-trial left them running into a hidden overlay.
     this._clearTimers();
     clearTimeout(this._timeout);
+    // The practice-finished "press a key to begin" listener, if the participant
+    // left before pressing it. See runTrial.
+    if (this._practiceGo) {
+      document.removeEventListener('keydown', this._practiceGo);
+      this._practiceGo = null;
+    }
     const ov = document.getElementById('affective-overlay');
     if (ov) ov.style.display = 'none';
     this.state.awaitingResponse = false;
@@ -278,12 +284,21 @@ window.Affective = {
         stimEl.style.fontSize = '1.05rem';
         stimEl.innerHTML = 'Practice finished.<br>Press <b>' +
           String(this.responseKeys.positive).toUpperCase() + '</b> to begin the real trials.';
+        // Stored on the module, not just in this closure. It used to be a
+        // local const, so close() had no way to reach it: leave at the
+        // practice-finished screen and the listener stayed on `document`
+        // forever. Pressing that key later - on the landing page, in another
+        // experiment - started a scored block inside a hidden overlay, writing
+        // trials nobody was looking at.
+        if (self._practiceGo) document.removeEventListener('keydown', self._practiceGo);
         const go = function (e) {
           if ((e.key || '').toLowerCase() !== self.responseKeys.positive) return;
           document.removeEventListener('keydown', go);
+          self._practiceGo = null;
           stimEl.style.fontSize = '3rem';
           self.beginScored();
         };
+        self._practiceGo = go;
         document.addEventListener('keydown', go);
         return;
       }

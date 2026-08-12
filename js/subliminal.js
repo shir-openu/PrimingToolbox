@@ -714,7 +714,14 @@ window.Subliminal = {
     document.getElementById('subliminal-accuracy').textContent = accuracy + '%';
 
     // Awareness summary
-    const awarenessEl = document.getElementById('subliminal-awareness-summary');
+    // #subliminal-awareness-summary exists only in the untracked standalone
+    // subliminal.html. On index.html - the page every participant actually
+    // uses - it is null, so this whole block was skipped and the awareness
+    // check never reported anything. That check is the ONLY evidence that a
+    // run was subliminal rather than merely fast, so losing it silently
+    // removes the claim the paradigm rests on.
+    const awarenessEl = document.getElementById('subliminal-awareness-summary')
+                     || document.getElementById('subliminal-explanation');
     if (awarenessEl && this.state.awarenessTrials.length > 0) {
       const sawWord = this.state.awarenessTrials.filter(a => a.sawWord).length;
       const total = this.state.awarenessTrials.length;
@@ -744,7 +751,12 @@ window.Subliminal = {
    * @param {number} accuracy - Overall accuracy percentage
    */
   generateInterpretation: function(primingEffect, accuracy) {
-    const interpretEl = document.getElementById('subliminal-interpretation');
+    // Same story: #subliminal-interpretation is in the standalone page only.
+    // On the live page this returned null and the plain-language reading of
+    // the result - the part that tells a student what their number MEANS -
+    // was written nowhere at all.
+    const interpretEl = document.getElementById('subliminal-interpretation')
+                     || document.getElementById('subliminal-explanation');
     if (!interpretEl) return;
 
     let interpretation = '';
@@ -769,7 +781,21 @@ window.Subliminal = {
       interpretation += ` Note: Overall accuracy was ${accuracy}%, which is relatively low and may affect the reliability of the priming effect estimate.`;
     }
 
-    interpretEl.textContent = interpretation;
+    // On index.html both this and the awareness summary fall back to the same
+    // element, #subliminal-explanation. Assigning textContent here would wipe
+    // the awareness summary that showResults just wrote - and the awareness
+    // check is the evidence the whole paradigm rests on, so it must not be the
+    // thing that gets overwritten. Append instead.
+    const para = document.createElement('p');
+    para.style.margin = '10px 0 0';
+    para.textContent = interpretation;
+    if (interpretEl.querySelector('p')) {
+      interpretEl.appendChild(para);
+    } else {
+      interpretEl.textContent = '';
+      interpretEl.appendChild(para);
+    }
+    interpretEl.style.display = 'block';
   },
 
   /**

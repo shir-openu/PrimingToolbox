@@ -102,22 +102,117 @@ function check(name, cond, detail) {
     const nCond = Object.keys(conds).length;
     check('at least two conditions ' + JSON.stringify(conds), nCond >= 2);
 
-    // participant-link round trip: encode via openBuilder's config shape, then decode
+    // Participant-link round trip THROUGH THE PRODUCT'S OWN ENCODER.
+    //
+    // This used to build the payload with its own btoa(unescape(...)) and
+    // decode it with its own atob(escape(...)) - so it tested that JavaScript's
+    // btoa and atob are inverses, which they are, and never touched PTK.encode
+    // or PTK.decode at all. It would have passed with the product's encoder
+    // completely broken, and it did: the participant link died silently on any
+    // payload containing a "+" until 2026-08-12, and this test said fine
+    // throughout.
+    //
+    // Now it uses PTK.encode / PTK.decode, and pushes the result through
+    // URLSearchParams, which is where the "+" was being eaten.
     const roundTrip = await page.evaluate((g, param, tmpl) => {
-      const cfg = { template: tmpl, experimenterEmail: 'a@b.c', userExperimentId: 'x1' };
-      const enc = btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
-      const dec = JSON.parse(decodeURIComponent(escape(atob(enc))));
-      return dec.template === tmpl && dec.userExperimentId === 'x1';
-    }, m.global, m.param, m.tmpl);
-    check('participant config encodes and decodes', roundTrip);
+      const cfg = {
+        template: tmpl,
+        experimenterEmail: 'a@b.c',
+        userExperimentId: 'x1',
+        // Hebrew, because non-ASCII is what makes "+" appear in base64 - and
+        // because these stimuli are the platform's actual use case.
+        note: 'אדום ירוק ~ a?b'
+      };
+      // Whether base64 emits a "+" depends on the exact bytes, and for two of
+      // the four paradigms this payload happened to produce none - so the test
+      // passed while quietly skipping the case it exists to cover. Lengthen the
+      // note until the encoder really does emit one. Deterministic: the same
+      // paradigm always gets the same note.
+      //
+      // The added characters must VARY. Repeating one Hebrew letter does not
+      // work: "ם" is D7 9D, and a run of D7 9D D7 9D... tiles into only two
+      // distinct base64 groups, neither of which is 62 - so the search ran to
+      // its limit and found nothing. Cycling an alphabet moves the bytes.
+      const FILL = 'אבגדהוזחטיכלמנסעפצקרשת0123456789~?&= ';
+      for (var i = 0; i < 200 && PTK.encode(cfg).indexOf('+') === -1; i++) {
+        cfg.note += FILL.charAt(i % FILL.length);
+      }
+      // PTK.buildLink, not a URL assembled here. Building the link ourselves
+      // would test PTK.encode and PTK.decode while leaving the actual bug
+      // untouched: the "+" was eaten by how buildLink put the payload INTO the
+      // query string, not by the encoder. A test that skips the step where the
+      // bug lives is the reason this one passed for months.
+      const link = PTK.buildLink(param, cfg);
+      const back = new URLSearchParams(link.split('?')[1]).get(param);
 
-    // checkUrlConfig must reject a link that is not its own
-    const rejects = await page.evaluate(g => {
+      // A corrupted payload makes atob THROW, and an exception here kills the
+      // whole harness and takes the other forty checks with it. Catch it, so a
+      // broken link is reported as one failing check with its reason attached.
+      let dec = null, threw = null;
+      try { dec = PTK.decode(back); } catch (e) { threw = String(e.message || e); }
+
+      // and prove the payload really is the awkward kind - otherwise the test
+      // could pass by never producing a "+" at all
+      const raw = PTK.encode(cfg);
+      return {
+        usedProductEncoder: typeof PTK.encode === 'function' && typeof PTK.decode === 'function',
+        usedProductLinkBuilder: typeof PTK.buildLink === 'function',
+        payloadHasPlus: raw.indexOf('+') !== -1,
+        threw: threw,
+        survived: !threw && !!dec && dec.template === tmpl && dec.userExperimentId === 'x1' &&
+                  dec.note === cfg.note
+      };
+    }, m.global, m.param, m.tmpl);
+    check('the link is built by the product, not by the test',
+          roundTrip.usedProductLinkBuilder, JSON.stringify(roundTrip));
+    check('the payload really contains an awkward base64 character',
+          roundTrip.payloadHasPlus, JSON.stringify(roundTrip));
+    check('a participant link survives being a URL',
+          roundTrip.usedProductEncoder && roundTrip.survived, JSON.stringify(roundTrip));
+
+    // checkUrlConfig must reject a link that BELONGS TO ANOTHER PARADIGM.
+    //
+    // This used to call checkUrlConfig() on a page with no query string at all,
+    // so it only proved "no param means false". A module that greedily claimed
+    // every link it saw would have passed. Present a real, well-formed link
+    // belonging to a different paradigm and require it to be declined.
+    const foreignParam = m.param === 'masked' ? 'negative' : 'masked';
+    const foreignTmpl = m.param === 'masked' ? 'negative-priming' : 'masked-lexical';
+    const foreignPayload = await page.evaluate((tmpl) =>
+      PTK.encode({ template: tmpl, experimenterEmail: 'other@lab.org', userExperimentId: 'not-mine' }),
+      foreignTmpl);
+
+    const foreignPage = await browser.newPage();
+    await foreignPage.goto(INDEX + '?' + foreignParam + '=' + encodeURIComponent(foreignPayload),
+                           { waitUntil: 'networkidle2', timeout: 60000 });
+    await new Promise(r => setTimeout(r, 600));
+    const rejects = await foreignPage.evaluate(g => {
       const o = window[g];
-      const saved = window.location.search;
-      try { return o.checkUrlConfig() === false; } catch (e) { return 'threw: ' + e.message; }
+      try {
+        return { claimed: o.checkUrlConfig(), participant: !!o.isParticipantMode };
+      } catch (e) {
+        return { threw: e.message };
+      }
     }, m.global);
-    check('checkUrlConfig returns false without its own param', rejects === true, String(rejects));
+    check('declines a well-formed link belonging to another paradigm',
+          rejects.claimed === false && rejects.participant === false, JSON.stringify(rejects));
+
+    // and it must still claim its OWN
+    const ownPayload = await page.evaluate((tmpl) =>
+      PTK.encode({ template: tmpl, experimenterEmail: 'mine@lab.org', userExperimentId: 'mine-1' }),
+      m.tmpl);
+    await foreignPage.goto(INDEX + '?' + m.param + '=' + encodeURIComponent(ownPayload),
+                           { waitUntil: 'networkidle2', timeout: 60000 });
+    await new Promise(r => setTimeout(r, 600));
+    const claimsOwn = await foreignPage.evaluate(g => {
+      const o = window[g];
+      try {
+        return { claimed: o.checkUrlConfig(), expId: o.userExperimentId };
+      } catch (e) { return { threw: e.message }; }
+    }, m.global);
+    check('claims its own link', claimsOwn.claimed === true && claimsOwn.expId === 'mine-1',
+          JSON.stringify(claimsOwn));
+    await foreignPage.close();
 
     // saveTrial must actually reach PTA.saveToSupabase
     const saves = await page.evaluate(g => {

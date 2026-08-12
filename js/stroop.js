@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the builder examples were escaped like the rest of the file, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/stroop.js
+ *
  *   before the CSV cells were escaped, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/da8061a/js/stroop.js
  *
@@ -837,16 +840,26 @@ window.Stroop = {
     const first = this.builderStimuli[0];
     const second = this.builderStimuli[1];
 
+    // Escaped, like everything else built from builderStimuli in this file.
+    // renderStimulusTable already ran every one of these values through
+    // PTK.esc; these two lines were the only place in stroop.js that did not,
+    // so a colour name or word containing a quote or an angle bracket broke the
+    // example - the value goes into a style ATTRIBUTE here, which is the easier
+    // of the two to break out of. Reachable only from the builder, by whoever
+    // is typing the stimuli, so this is robustness rather than a way in: a
+    // participant link cannot set builderStimuli.
+    const esc = PTK.esc;
+
     // Congruent example: first word in first color
     const congruentEl = document.getElementById('example-congruent');
     if (congruentEl) {
-      congruentEl.innerHTML = '"<span style="color: ' + first.color + '">' + first.wordLang1 + '</span>" in ' + first.id + ' ink';
+      congruentEl.innerHTML = '"<span style="color: ' + esc(first.color) + '">' + esc(first.wordLang1) + '</span>" in ' + esc(first.id) + ' ink';
     }
 
     // Incongruent example: first word in second color
     const incongruentEl = document.getElementById('example-incongruent');
     if (incongruentEl) {
-      incongruentEl.innerHTML = '"<span style="color: ' + second.color + '">' + first.wordLang1 + '</span>" in ' + second.id + ' ink';
+      incongruentEl.innerHTML = '"<span style="color: ' + esc(second.color) + '">' + esc(first.wordLang1) + '</span>" in ' + esc(second.id) + ' ink';
     }
   },
 
@@ -915,7 +928,9 @@ window.Stroop = {
       }
     } catch (error) {
       statusEl.classList.add('error');
-      statusText.innerHTML = '<strong>Error</strong> - ' + error.message;
+      // escaped: the message comes back from the network layer, and this line
+      // writes it into the page as HTML
+      statusText.innerHTML = '<strong>Error</strong> - ' + PTK.esc(error && error.message);
     }
   },
 

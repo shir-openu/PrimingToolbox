@@ -801,21 +801,26 @@ PTA.Engine = {
       const congruentResults = correctResults.filter(r => r.congruent === true);
       const incongruentResults = correctResults.filter(r => r.congruent === false);
 
-      const congruentRT = PTA.mean(congruentResults.map(r => r.rt));
-      const incongruentRT = PTA.mean(incongruentResults.map(r => r.rt));
-      const stroopEffect = incongruentRT - congruentRT;
+      // PTA.mean returns 0 for an empty array, and these two were unguarded.
+      // A participant with no CORRECT congruent trials scored congruentRT = 0,
+      // and the Stroop effect became incongruentRT - 0 - the entire reaction
+      // time reported as the size of the interference effect. A real Stroop
+      // effect is 50-100 ms; this produced 850.
+      const congruentRT = PTA.meanOrNull(congruentResults.map(r => r.rt));
+      const incongruentRT = PTA.meanOrNull(incongruentResults.map(r => r.rt));
+      const stroopEffect = PTA.diffOrNull(incongruentRT, congruentRT);
 
       const correctTrials = results.filter(r => r.correct === true).length;
       const totalTrials = results.length;
-      const errorRate = ((totalTrials - correctTrials) / totalTrials) * 100;
 
       stats = {
-        meanRT: PTA.mean(correctResults.map(r => r.rt)),
+        meanRT: PTA.meanOrNull(correctResults.map(r => r.rt)),
         congruentRT: congruentRT,
         incongruentRT: incongruentRT,
         stroopEffect: stroopEffect,
-        accuracy: (correctTrials / totalTrials) * 100,
-        errorRate: errorRate,
+        // zero trials made these NaN, which prints as "NaN" on the screen
+        accuracy: PTA.pctOrNull(correctTrials, totalTrials),
+        errorRate: PTA.pctOrNull(totalTrials - correctTrials, totalTrials),
         totalTrials: totalTrials
       };
     } else {
@@ -853,10 +858,10 @@ PTA.Engine = {
       });
 
       stats = {
-        meanRT: PTA.mean(rts),
-        medianRT: PTA.median(rts),
-        accuracy: (correctTrials / totalTrials) * 100,
-        errorRate: ((totalTrials - correctTrials) / totalTrials) * 100,
+        meanRT: PTA.meanOrNull(rts),
+        medianRT: rts.length ? PTA.median(rts) : null,
+        accuracy: PTA.pctOrNull(correctTrials, totalTrials),
+        errorRate: PTA.pctOrNull(totalTrials - correctTrials, totalTrials),
         totalTrials: totalTrials,
         conditions: conditions
       };

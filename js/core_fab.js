@@ -195,12 +195,50 @@ PTA.shuffleArray = function(array) {
 
 /**
  * Calculate arithmetic mean of numeric array.
+ *
+ * RETURNS 0 FOR AN EMPTY ARRAY, which is a lie whenever the result is going to
+ * be subtracted from another mean or shown to a participant: it turns "no data"
+ * into a real-looking measurement. Prefer PTA.meanOrNull below. This is kept
+ * because callers that already guard with `arr.length ? ... : null` depend on
+ * it, and PTA.stdDev uses it internally on arrays it has just built.
+ *
  * @param {number[]} arr - Array of numbers
  * @returns {number} Mean value, or 0 for empty array
  */
 PTA.mean = function(arr) {
   if (arr.length === 0) return 0;
   return arr.reduce((a, b) => a + b, 0) / arr.length;
+};
+
+/**
+ * Arithmetic mean of a numeric array, or NULL when there is nothing to average.
+ *
+ * PTA.meanRT does this for arrays of trial ROWS and rounds to whole
+ * milliseconds. This one takes plain numbers and does not round, because
+ * ratings are not milliseconds - an evaluative-conditioning scale runs 1 to 7
+ * and wants two decimals.
+ *
+ * @param {number[]} values
+ * @returns {number|null}
+ */
+PTA.meanOrNull = function(values) {
+  if (!values || !values.length) return null;
+  const nums = values.filter(v => typeof v === 'number' && isFinite(v));
+  if (!nums.length) return null;
+  return nums.reduce((a, b) => a + b, 0) / nums.length;
+};
+
+/**
+ * A percentage, or null when the denominator is zero.
+ * (count / total) * 100 with total = 0 is NaN, and NaN.toFixed(1) prints "NaN"
+ * on the results screen.
+ * @param {number} count
+ * @param {number} total
+ * @returns {number|null}
+ */
+PTA.pctOrNull = function(count, total) {
+  if (!total) return null;
+  return (count / total) * 100;
 };
 
 /**

@@ -743,20 +743,21 @@ window.EvaluativeConditioning = {
       .filter(r => r.pairedValence === 'negative')
       .map(r => r.rating);
 
-    const avgPositive = positiveRatings.length > 0
-      ? positiveRatings.reduce((a, b) => a + b, 0) / positiveRatings.length
-      : 0;
-
-    const avgNegative = negativeRatings.length > 0
-      ? negativeRatings.reduce((a, b) => a + b, 0) / negativeRatings.length
-      : 0;
-
-    const ecEffect = avgPositive - avgNegative;
+    // A condition with no trials has no mean rating. It used to fall back to 0,
+    // and 0 IS NOT ON THE SCALE - this scale runs 1 to params.ratingScale. So a
+    // participant with no negatively-paired trials got
+    // ecEffect = avgPositive - 0 = avgPositive, and the screen announced a
+    // "Strong evaluative conditioning effect" whose entire size was the
+    // positive mean, against a comparison rating nobody could have given.
+    const avgPositive = PTA.meanOrNull(positiveRatings);
+    const avgNegative = PTA.meanOrNull(negativeRatings);
+    const ecEffect = PTA.diffOrNull(avgPositive, avgNegative);
+    const show2 = v => (v === null ? '—' : v.toFixed(2));
 
     // Update results display
-    document.getElementById('result-positive-avg').textContent = avgPositive.toFixed(2);
-    document.getElementById('result-negative-avg').textContent = avgNegative.toFixed(2);
-    document.getElementById('result-ec-effect').textContent = ecEffect.toFixed(2);
+    document.getElementById('result-positive-avg').textContent = show2(avgPositive);
+    document.getElementById('result-negative-avg').textContent = show2(avgNegative);
+    document.getElementById('result-ec-effect').textContent = show2(ecEffect);
 
     // Generate explanation
     const explanation = this.generateExplanation(avgPositive, avgNegative, ecEffect);
@@ -774,6 +775,12 @@ window.EvaluativeConditioning = {
    * @returns {string} Explanation text
    */
   generateExplanation: function(avgPositive, avgNegative, ecEffect) {
+    if (ecEffect === null || avgPositive === null || avgNegative === null) {
+      const missing = avgPositive === null ? 'positively-paired' : 'negatively-paired';
+      return `No effect can be reported: there were no usable ${missing} trials, ` +
+             `so there is nothing to compare against. A missing condition is not ` +
+             `a rating of zero - this scale does not go that low.`;
+    }
     if (ecEffect > 1) {
       return `Strong evaluative conditioning effect observed. Stimuli paired with positive images/words ` +
         `were rated significantly more pleasant (${avgPositive.toFixed(1)}) than those paired with ` +

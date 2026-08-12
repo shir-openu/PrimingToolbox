@@ -235,6 +235,53 @@ async function newPage(browser) {
     await page.close();
   }
 
+  /* ---------------------------------------------------------------- */
+  console.log('\n[no module bails out before the rescue can run]');
+  {
+    // The first version of the rescue path was unreachable in four modules.
+    // Each of them opened saveResults with `if (!window.PTA || !PTA.supabase)
+    // { console.log(...); return; }` - so the one case the rescue exists for,
+    // no client at all, returned before reaching it. Found by reading the code,
+    // not by any test, which is why this test exists.
+    const MODULES = [
+      ['amp', 'AMP', 'results'],
+      ['subliminal', 'Subliminal', 'results'],
+      ['number-priming', 'NumberPriming', 'results'],
+      ['evaluative', 'EvaluativeConditioning', 'testResults']
+    ];
+    for (const [key, global, resultsKey] of MODULES) {
+      const page = await newPage(browser);
+      await page.goto(INDEX + '?open=' + key, { waitUntil: 'networkidle2' });
+      await page.evaluate(() => { localStorage.removeItem('ptbx_unsaved_index'); });
+      const r = await page.evaluate(async (g, rk) => {
+        PTA.supabase = null;                       // the exact case that used to bail
+        const m = window[g];
+        if (!m || typeof m.saveResults !== 'function') return { missing: true };
+        // give the module a run to save
+        m.state[rk] = [{ trial: 1, rt: 400, response: 'a' }, { trial: 2, rt: 420, response: 'b' }];
+        if (rk === 'testResults') m.state.learningResults = [];
+        try { await m.saveResults(); } catch (e) { return { threw: e.message }; }
+        await new Promise(res => setTimeout(res, 2400));
+        const idx = JSON.parse(localStorage.getItem('ptbx_unsaved_index') || '[]');
+        return {
+          missing: false,
+          panel: !!document.getElementById('pta-unsaved-panel'),
+          stored: idx.length,
+          rows: idx.length ? (JSON.parse(localStorage.getItem(idx[idx.length - 1].key) || '{}').rows || []).length : 0
+        };
+      }, global, resultsKey);
+
+      if (r.missing) ok(key + ': has a saveResults', false);
+      else if (r.threw) ok(key + ': saveResults does not throw with no client', false, r.threw);
+      else {
+        ok(key + ': the run reaches the rescue instead of bailing', r.stored >= 1, 'stored=' + r.stored);
+        ok(key + ': the participant is shown the warning', r.panel);
+        ok(key + ': every row is kept', r.rows >= 2, 'rows=' + r.rows);
+      }
+      await page.close();
+    }
+  }
+
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

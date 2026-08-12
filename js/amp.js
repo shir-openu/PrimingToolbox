@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/amp.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/amp.js
  */
@@ -620,8 +624,12 @@ window.AMP = {
    * @async
    */
   saveResults: function() {
-    if (!window.PTA || !PTA.supabase) {
-      console.warn('AMP: Supabase not available');
+    // Was `if (!window.PTA || !PTA.supabase) return`, which abandoned the run
+    // before saveAllResults could rescue it - and a missing client is exactly
+    // the case the rescue exists for. Only a missing PTA leaves nothing to
+    // rescue with; a missing client is a failure to be handled.
+    if (!window.PTA || typeof PTA.saveAllResults !== 'function') {
+      console.error('AMP: platform core not loaded - results NOT saved', this.state.results);
       return;
     }
 

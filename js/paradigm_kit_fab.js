@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/paradigm_kit_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/paradigm_kit_fab.js
  */
@@ -886,12 +890,64 @@ window.PTK = (function () {
    * a link that carries only an email means the builder edits never reach the
    * participant and the Template Builder is decorative.
    */
+  /**
+   * Strip HTML-significant characters out of every string in a decoded config.
+   *
+   * This is the taint boundary. Everything below this line came out of a URL a
+   * stranger can hand a participant, and it goes on to be written into
+   * mod.data / mod.responseKeys - which each paradigm's spec() then
+   * concatenates into its `example` and `keyLegend` HTML strings, which
+   * paintSetup assigns to innerHTML. Those spec strings are DELIBERATE markup
+   * (divs, colours, arrows), so paintSetup cannot escape them wholesale; and
+   * asking ten modules to remember PTK.esc at every interpolation is a rule
+   * that will be broken by the eleventh. masked_fab was already breaking it.
+   *
+   * So the fix is here instead. Three characters are removed and no others:
+   *   <  >   cannot open or close a tag
+   *   "      cannot break out of an attribute (every spec writes its HTML
+   *          attributes double-quoted, inside single-quoted JS strings)
+   * Apostrophes and ampersands are deliberately KEPT: neither can inject on
+   * its own here, and stripping them would quietly mangle real stimuli -
+   * DON'T, L'EAU, R&D. Sanitising has to stay narrow enough that an
+   * experimenter never notices it on legitimate input, or it becomes the bug.
+   *
+   * @param {*} node - anything from the decoded config
+   * @param {number} [depth]
+   * @returns {*} the same shape with its strings made inert
+   */
+  PTK.sanitizeConfigValue = function (node, depth) {
+    depth = depth || 0;
+    if (depth > 6) return null;
+    if (typeof node === 'string') {
+      var clean = node.replace(/[<>"]/g, '');
+      if (clean !== node) {
+        console.warn('PTK: markup characters removed from a value in the participant link');
+      }
+      return clean;
+    }
+    if (typeof node === 'number' || typeof node === 'boolean' || node == null) return node;
+    if (Array.isArray(node)) {
+      return node.map(function (v) { return PTK.sanitizeConfigValue(v, depth + 1); });
+    }
+    if (typeof node === 'object') {
+      var out = {};
+      Object.keys(node).forEach(function (k) {
+        out[k] = PTK.sanitizeConfigValue(node[k], depth + 1);
+      });
+      return out;
+    }
+    return null;
+  };
+
   PTK.checkUrlConfig = function (mod, spec) {
     var raw = new URLSearchParams(window.location.search).get(spec.urlParam);
     if (!raw) return false;
     try {
       var config = PTK.decode(raw);
       if (config.template !== spec.template) return false;
+
+      // Everything past this point is attacker-controlled. See sanitizeConfigValue.
+      config = PTK.sanitizeConfigValue(config);
 
       mod.isParticipantMode = true;
       mod.experimenterEmail = config.experimenterEmail || '';

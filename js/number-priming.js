@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/number-priming.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/number-priming.js
  */
@@ -684,8 +688,11 @@ window.NumberPriming = {
    * Includes all trial data with priming mode and timing parameters.
    */
   saveResults: function() {
-    if (!window.PTA || !PTA.supabase) {
-      console.log('NumberPriming: Supabase not available, skipping save');
+    // Was `if (!window.PTA || !PTA.supabase) return` - "skipping save" was
+    // literally true and silently so. A missing client is the case the rescue
+    // path exists for, so it must fall through to saveAllResults, not bail.
+    if (!window.PTA || typeof PTA.saveAllResults !== 'function') {
+      console.error('NumberPriming: platform core not loaded - results NOT saved', this.state.results);
       return;
     }
 

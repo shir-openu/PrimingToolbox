@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/core_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/core_fab.js
  */
@@ -371,11 +375,21 @@ PTA.checkDuplicateParticipation = async function(tableName, experimentId, extern
 
 /**
  * Save a single trial to Supabase (fire-and-forget).
+ *
  * Added in V2 (_fab) to fix the Stroop data-loss bug: js/stroop.js calls
  * PTA.saveToSupabase(trialData) per trial, but the function was never defined,
- * so Stroop results were silently discarded. Number Priming already inserts
- * directly via PTA.supabase.from(...).insert(...); this gives every module the
- * same path through one shared helper.
+ * so Stroop results were silently discarded.
+ *
+ * The repo has two save paths, not one. This is the PER-TRIAL path (stroop.js,
+ * affective_fab.js, social_fab.js, and every PTK paradigm through PTK.save);
+ * PTA.saveAllResults is the END-OF-RUN batch path (the engine, semantic, amp,
+ * subliminal, evaluative, number-priming). Both funnel their failures into
+ * PTA.rescueUnsavedResults, which is the property that matters.
+ *
+ * (This block used to say Number Priming "already inserts directly via
+ * PTA.supabase.from(...).insert(...)". It did, and that was the bug: the direct
+ * insert threw when the client was null and dropped every failure to the
+ * console. It batches through saveAllResults since 02cecb1.)
  * @param {Object} trialData - Trial row to insert
  * @param {string} [tableName='experiment_results'] - Target table
  */
@@ -452,14 +466,26 @@ if (typeof window !== 'undefined' && window.addEventListener) {
 /**
  * Test whether Supabase is actually reachable and the results table readable.
  *
- * Added 2026-08-10. js/stroop.js:762 and js/semantic.js have always called
- * PTA.testSupabase, but no such function existed anywhere in the repo. The call
- * sites guard with `if (window.PTA && PTA.testSupabase)`, so the guard simply
- * fell through to the success branch and the builder reported
- * "Connected - Data will be saved automatically" unconditionally, whether or not
- * anything could be saved. That is the same class of silent data loss the
- * Stroop save bug caused, one layer up: the experimenter is told their data is
- * safe with no evidence that it is.
+ * Added 2026-08-10. stroop.js's builder connection test called PTA.testSupabase
+ * behind `if (window.PTA && PTA.testSupabase)`, but no such function existed
+ * anywhere in the repo, so the guard fell through to the else branch and the
+ * builder reported "Connected - Data will be saved automatically"
+ * unconditionally, whether or not anything could be saved. That is the same
+ * class of silent data loss the Stroop save bug caused, one layer up: the
+ * experimenter is told their data is safe with no evidence that it is.
+ *
+ * Since 02cecb1 no module calls this directly. All five builders go through
+ * PTA.paintConnectionStatus, which calls it and paints the answer, so there is
+ * one implementation of "is the database actually there" instead of five.
+ *
+ * KNOWN LIMIT, worth stating: this proves a SELECT on `experiment_results`
+ * succeeded. It does not prove an INSERT would, and it does not touch the other
+ * tables (ec_results, subliminal_results). Under the anon policies in
+ * sql/create_experiment_results_table.sql a readable table is normally a
+ * writable one, but a policy change could make this report a false green. A
+ * true write test is not implementable from the client: PostgREST runs each
+ * request in its own server-side transaction, so a probe insert could not be
+ * rolled back, and anon has no DELETE policy to clean it up afterwards.
  *
  * @async
  * @returns {Promise<boolean>} true only when a real query succeeded
@@ -582,18 +608,25 @@ PTA.exportToCSV = function(data, filename) {
 
   for (const row of data) {
     const values = headers.map(header => {
-      const val = row[header];
-      // Escape quotes and wrap in quotes if contains comma
-      if (typeof val === 'string' && (val.includes(',') || val.includes('"'))) {
-        return '"' + val.replace(/"/g, '""') + '"';
-      }
-      return val ?? '';
+      // Quote for commas, quotes AND line breaks. A newline inside an unquoted
+      // field splits one row into two, silently, and every column after it
+      // shifts. Not reachable from the app's own single-line inputs, but this
+      // function is also fed rows read straight back out of Supabase
+      // (index.html downloadData), whose text columns nothing constrains - and
+      // it is the exporter the rescue path hands a failed run to, i.e. the last
+      // copy of data that would otherwise be lost.
+      const s = row[header] == null ? '' : String(row[header]);
+      return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
     });
     csvRows.push(values.join(','));
   }
 
   const csvContent = csvRows.join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  // Leading BOM. Without it Excel opens the file as the local ANSI codepage and
+  // every Hebrew, Arabic, Russian and Chinese stimulus arrives as mojibake -
+  // and this platform ships stimulus sets in all four. Every other exporter in
+  // the repo already writes one; this one, the shared helper, did not.
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement('a');

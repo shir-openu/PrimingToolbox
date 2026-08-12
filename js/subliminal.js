@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/subliminal.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/subliminal.js
  */
@@ -479,7 +483,12 @@ window.Subliminal = {
    */
   showForwardMask: function(trial) {
     const stimulus = document.getElementById('subliminal-stimulus');
-    stimulus.innerHTML = '<span class="subliminal-mask">' + this.data.defaultMask + '</span>';
+    // Was innerHTML with the value concatenated in. trial.prime, trial.target
+    // and data.defaultMask all originate in builderStimuli/data, which
+    // checkUrlConfig overwrites WHOLESALE from the ?exp= link with no
+    // validation - so a crafted link ran script on a page holding the anon
+    // key. PTK.showText uses textContent, which never parses HTML.
+    PTK.showText(stimulus, this.data.defaultMask, 'subliminal-mask');
 
     this._after(() => {
       this.showPrime(trial);
@@ -493,7 +502,12 @@ window.Subliminal = {
    */
   showPrime: function(trial) {
     const stimulus = document.getElementById('subliminal-stimulus');
-    stimulus.innerHTML = '<span class="subliminal-prime">' + trial.prime + '</span>';
+    // Was innerHTML with the value concatenated in. trial.prime, trial.target
+    // and data.defaultMask all originate in builderStimuli/data, which
+    // checkUrlConfig overwrites WHOLESALE from the ?exp= link with no
+    // validation - so a crafted link ran script on a page holding the anon
+    // key. PTK.showText uses textContent, which never parses HTML.
+    PTK.showText(stimulus, trial.prime, 'subliminal-prime');
 
     // Use frame-accurate timing for prime
     const primeFrames = Math.max(1, Math.round(this.timing.prime / this.state.frameTime));
@@ -520,7 +534,12 @@ window.Subliminal = {
    */
   showBackwardMask: function(trial) {
     const stimulus = document.getElementById('subliminal-stimulus');
-    stimulus.innerHTML = '<span class="subliminal-mask">' + this.data.defaultMask + '</span>';
+    // Was innerHTML with the value concatenated in. trial.prime, trial.target
+    // and data.defaultMask all originate in builderStimuli/data, which
+    // checkUrlConfig overwrites WHOLESALE from the ?exp= link with no
+    // validation - so a crafted link ran script on a page holding the anon
+    // key. PTK.showText uses textContent, which never parses HTML.
+    PTK.showText(stimulus, this.data.defaultMask, 'subliminal-mask');
 
     this._after(() => {
       this.showTarget(trial);
@@ -548,7 +567,7 @@ window.Subliminal = {
       this.state.currentTrialIsAwareness = true;
     } else {
       // Regular lexical decision trial
-      stimulus.innerHTML = '<span class="subliminal-target">' + trial.target + '</span>';
+      PTK.showText(stimulus, trial.target, 'subliminal-target');
       this.state.targetOnset = performance.now();
       this.state.awaitingResponse = true;
       this.state.currentTrialIsAwareness = false;
@@ -738,8 +757,11 @@ window.Subliminal = {
    * @async
    */
   saveResults: function() {
-    if (!window.PTA || !PTA.supabase) {
-      console.log('Subliminal: Supabase not available, skipping save');
+    // Was `if (!window.PTA || !PTA.supabase) return` - "skipping save" was
+    // literally true and silently so. A missing client is the case the rescue
+    // path exists for, so it must fall through to saveAllResults, not bail.
+    if (!window.PTA || typeof PTA.saveAllResults !== 'function') {
+      console.error('Subliminal: platform core not loaded - results NOT saved', this.state.results);
       return;
     }
 

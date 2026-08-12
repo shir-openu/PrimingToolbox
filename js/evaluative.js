@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/evaluative.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/evaluative.js
  */
@@ -487,11 +491,23 @@ window.EvaluativeConditioning = {
    * @returns {string} HTML string
    */
   renderStimulus: function(stim, type) {
+    // stim.content, stim.color, stim.src and stim.label were interpolated raw
+    // into innerHTML, and checkUrlConfig fills exactly those fields wholesale
+    // from the ?ec= participant link (config.cs -> {label, color},
+    // config.positiveUS/negativeUS -> {content, color}). A crafted link ran
+    // arbitrary script on a page holding the Supabase anon key. Same class as
+    // the holes closed in stroop, semantic, number-priming and amp on
+    // 2026-08-10; this module was missed.
+    const esc = (window.PTK && PTK.esc) ? PTK.esc : function (s) {
+      return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
     if (stim.type === 'word') {
       const color = stim.color || '#ffffff';
-      return `<span class="stimulus-word" style="color: ${color}; font-size: 2.5rem; font-weight: bold;">${stim.content}</span>`;
+      return `<span class="stimulus-word" style="color: ${esc(color)}; font-size: 2.5rem; font-weight: bold;">${esc(stim.content)}</span>`;
     } else if (stim.type === 'image' && stim.src) {
-      return `<img src="${stim.src}" alt="${stim.label}" class="stimulus-image" style="max-width: 200px; max-height: 200px;">`;
+      return `<img src="${esc(stim.src)}" alt="${esc(stim.label)}" class="stimulus-image" style="max-width: 200px; max-height: 200px;">`;
     } else {
       // Default: colored shape
       const color = stim.color || '#808080';
@@ -501,11 +517,11 @@ window.EvaluativeConditioning = {
       return `
         <div class="stimulus-shape" style="
           width: ${size}; height: ${size};
-          background: ${color};
+          background: ${esc(color)};
           border-radius: ${borderRadius};
           display: flex; align-items: center; justify-content: center;
           font-size: 1rem; color: #fff;
-        ">${stim.label || ''}</div>
+        ">${esc(stim.label || '')}</div>
       `;
     }
   },
@@ -747,8 +763,14 @@ window.EvaluativeConditioning = {
    * @async
    */
   saveResults: async function() {
-    if (!window.PTA || !PTA.supabase) {
-      console.warn('EC: Supabase not available');
+    // This guard used to read `if (!window.PTA || !PTA.supabase) return`, which
+    // made the rescue path below unreachable in precisely the case it was
+    // written for: no client at all (the Supabase CDN script blocked or
+    // offline). The run was abandoned before anything could offer it as a file.
+    // A missing PTA.supabase is now a failure to be rescued, not a reason to
+    // give up; only a missing PTA itself leaves nothing to rescue with.
+    if (!window.PTA || typeof PTA.saveAllResults !== 'function') {
+      console.error('EC: platform core not loaded - results NOT saved', this.state.testResults);
       return;
     }
 

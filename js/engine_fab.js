@@ -1,4 +1,8 @@
 /*
+ * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
+ *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/engine_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before a failed database save stopped being a console line, 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/934c0b5/js/engine_fab.js
  */
@@ -68,6 +72,26 @@
 const PTA = window.PTA || {};
 
 PTA.Engine = {
+  /**
+   * Escape a value for interpolation into innerHTML.
+   *
+   * Every string this engine displays arrives inside a ?config= participant
+   * link, so all of it is attacker-controlled. This lived inside renderStimulus
+   * until 2026-08-12, which meant the two other functions that write config
+   * data into innerHTML - renderSimultaneousStimulus and showFeedback - could
+   * not reach it and escaped nothing. One escaper on the engine, so a new
+   * render branch cannot quietly be written without one.
+   *
+   * Not PTK.esc: engine_fab.js loads before paradigm_kit_fab.js.
+   * @param {*} s
+   * @returns {string}
+   */
+  _esc: function(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  },
+
   // Current experiment configuration
   config: null,
 
@@ -444,13 +468,17 @@ PTA.Engine = {
     // Escaped rather than rebuilt with DOM APIs because this function returns
     // an HTML STRING and its callers assign it to innerHTML; changing the
     // contract would mean touching every call site. Escaping closes the hole
-    // without that risk. Local helper, not PTK.esc, because engine_fab.js is
+    // without that risk. Own helper, not PTK.esc, because engine_fab.js is
     // loaded before paradigm_kit_fab.js.
-    var esc = function (s) {
-      return String(s == null ? '' : s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    };
+    //
+    // 2026-08-12: the helper used to be declared HERE, local to this function,
+    // and the comment above claimed the hole was closed "on the path every
+    // generic link takes". It was not. renderSimultaneousStimulus is that same
+    // path whenever presentation.mode is 'simultaneous', and showFeedback is
+    // reached on every trial when feedback is on; neither could see a helper
+    // scoped to this function, and neither escaped anything. Hoisted to the
+    // engine so there is one escaper and no branch can quietly miss it.
+    var esc = PTA.Engine._esc;
     switch (type) {
       case 'text':
         return `<span>${esc(stimulus)}</span>`;
@@ -470,19 +498,22 @@ PTA.Engine = {
    * @returns {string} HTML string for combined stimulus
    */
   renderSimultaneousStimulus: function(trial) {
+    // Every value below comes from the trial list, which is built from the
+    // ?config= link. Same hole as renderStimulus, same fix - see the note there.
+    const esc = PTA.Engine._esc;
     // Check if this is a Stroop trial
     if (this.config.type === 'stroop' && trial.inkHex && trial.word) {
       // Stroop: word displayed in ink color
-      return `<span style="color: ${trial.inkHex}; font-size: 4rem; font-weight: bold;">${trial.word}</span>`;
+      return `<span style="color: ${esc(trial.inkHex)}; font-size: 4rem; font-weight: bold;">${esc(trial.word)}</span>`;
     } else if (this.config.primes && this.config.primes.type === 'text' && this.config.targets.type === 'color') {
       // Text displayed in a color (classic Stroop)
-      return `<span style="color: ${trial.target};">${trial.prime}</span>`;
+      return `<span style="color: ${esc(trial.target)};">${esc(trial.prime)}</span>`;
     } else if (this.config.primes && this.config.primes.type === 'color' && this.config.targets.type === 'text') {
       // Color with text overlay
-      return `<span style="color: ${trial.prime};">${trial.target}</span>`;
+      return `<span style="color: ${esc(trial.prime)};">${esc(trial.target)}</span>`;
     } else {
       // Default: show both
-      return `<span>${trial.prime || ''}</span><br><span>${trial.target || ''}</span>`;
+      return `<span>${esc(trial.prime || '')}</span><br><span>${esc(trial.target || '')}</span>`;
     }
   },
 
@@ -576,7 +607,14 @@ PTA.Engine = {
    */
   recordResponse: function(trial, response) {
     const rt = Date.now() - trial.targetOnset;
-    const correct = trial.correctResponse ? (response === trial.correctResponse) : null;
+    // Absence, not truthiness. A trial row whose Correct column the author left
+    // empty arrives here with correctResponse null (scratch_builder_fab.js), and
+    // a hand-written config can omit the field entirely. `correct` is then null,
+    // meaning "this trial has no right answer" - which is a legitimate design,
+    // not a wrong response. Everything downstream has to honour that: see
+    // showFeedback, which used to call such a trial Incorrect.
+    const hasCorrectAnswer = !(trial.correctResponse == null || trial.correctResponse === '');
+    const correct = hasCorrectAnswer ? (response === trial.correctResponse) : null;
 
     // Build result object based on experiment type
     let result;
@@ -625,10 +663,26 @@ PTA.Engine = {
    * @param {Function} callback - Function to call after feedback duration
    */
   showFeedback: function(correct, callback) {
+    // correct === null means the trial has no right answer (the Correct column
+    // was left empty). Saying "Incorrect" to a participant who did nothing wrong
+    // is worse than saying nothing, and it fired on EVERY trial of any design
+    // built without correct answers - a rating task, or a free-choice task.
+    // Wait out the feedback interval so trial pacing is unchanged, and show
+    // nothing.
+    if (correct === null) {
+      if (this.elements.stimulusDisplay) this.elements.stimulusDisplay.textContent = '';
+      setTimeout(function () { callback(); }, this.config.feedback.duration_ms || 500);
+      return;
+    }
     if (this.elements.stimulusDisplay) {
+      // correct_text / incorrect_text arrive in the same ?config= link as the
+      // stimuli, so they are attacker-controlled and were interpolated raw:
+      // a link with feedback.show true and correct_text set to an <img onerror>
+      // executed on the first correct trial. feedbackClass is built from fixed
+      // literals here and needs no escaping.
       const feedbackText = correct ? (this.config.feedback.correct_text || 'Correct') : (this.config.feedback.incorrect_text || 'Incorrect');
       const feedbackClass = correct ? 'feedback correct' : 'feedback incorrect';
-      this.elements.stimulusDisplay.innerHTML = `<span class="${feedbackClass}">${feedbackText}</span>`;
+      this.elements.stimulusDisplay.innerHTML = `<span class="${feedbackClass}">${PTA.Engine._esc(feedbackText)}</span>`;
     }
 
     setTimeout(() => {
@@ -740,7 +794,11 @@ PTA.Engine = {
       };
     } else {
       // Generic stats
-      const rts = results.filter(r => r.rt && r.correct !== false).map(r => r.rt);
+      // r.response != null excludes the timeout rows. A trial the participant
+      // never answered records rt = the full response window and correct = null
+      // whenever the design has no right answer, so `correct !== false` let it
+      // through and a non-response was averaged in as if it were a reaction.
+      const rts = results.filter(r => r.rt && r.response != null && r.correct !== false).map(r => r.rt);
       const correctTrials = results.filter(r => r.correct === true).length;
       const totalTrials = results.length;
 
@@ -756,7 +814,7 @@ PTA.Engine = {
         const b = byCondition[c];
         b.n++;
         if (r.correct === true) b.correct++;
-        if (r.rt && r.correct !== false) b.rts.push(r.rt);
+        if (r.rt && r.response != null && r.correct !== false) b.rts.push(r.rt);   // same exclusion as the overall mean
       });
       const conditions = Object.keys(byCondition).map(c => {
         const b = byCondition[c];

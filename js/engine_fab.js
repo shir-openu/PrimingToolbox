@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before reaction times moved to a monotonic clock, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/engine_fab.js
+ *
  *   before an empty Stroop condition stopped being reported as a measurement, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/75330f8/js/engine_fab.js
  *
@@ -295,6 +298,9 @@ PTA.Engine = {
     }
 
     this.state.isRunning = true;
+    // Date.now() on purpose: this records WHEN the session happened and is
+    // never subtracted from anything. A wall-clock timestamp is what is wanted
+    // here. Reaction times use PTA.now() instead - see PTA.now.
     this.state.startTime = Date.now();
     this.state.currentTrial = 0;
     this.state.results = [];
@@ -438,8 +444,9 @@ PTA.Engine = {
       this.elements.stimulusDisplay.innerHTML = this.renderStimulus(trial.target, this.config.targets.type);
     }
 
-    // Start listening for response
-    trial.targetOnset = Date.now();
+    // Start listening for response. PTA.now, not Date.now - see PTA.now: the
+    // wall clock can step mid-trial and this is one half of a subtraction.
+    trial.targetOnset = PTA.now();
     this.listenForResponse(trial);
   },
 
@@ -456,7 +463,7 @@ PTA.Engine = {
     }
 
     // Start listening for response
-    trial.targetOnset = Date.now();
+    trial.targetOnset = PTA.now();
     this.listenForResponse(trial);
   },
 
@@ -615,7 +622,9 @@ PTA.Engine = {
    * @param {string|null} response - Response value or null if timeout
    */
   recordResponse: function(trial, response) {
-    const rt = Date.now() - trial.targetOnset;
+    // Both ends of this subtraction must come from the SAME clock, so this
+    // moved together with the two targetOnset assignments above.
+    const rt = PTA.now() - trial.targetOnset;
     // Absence, not truthiness. A trial row whose Correct column the author left
     // empty arrives here with correctResponse null (scratch_builder_fab.js), and
     // a hand-written config can omit the field entirely. `correct` is then null,

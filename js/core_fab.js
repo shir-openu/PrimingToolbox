@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before reaction times moved to a monotonic clock, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/core_fab.js
+ *
  *   before the participant ID prompt, the honest-mean helpers and one CSV rule, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/8d65163/js/core_fab.js
  *
@@ -865,6 +868,30 @@ PTA.escapeText = function(s) {
 /* =====================================================
    Export Functions
    ===================================================== */
+
+/**
+ * The clock reaction times are measured on.
+ *
+ * performance.now() is MONOTONIC: it counts from when the page loaded and
+ * nothing can move it. Date.now() reads the wall clock, which an NTP
+ * correction, a daylight-saving change or the participant fixing their system
+ * time can step forwards or backwards mid-session. A backwards step during a
+ * trial produces a negative reaction time; a forwards step produces one of
+ * several thousand milliseconds. Neither is detectable afterwards from the data
+ * - they look like an inattentive participant.
+ *
+ * Sixteen of the paradigm modules already used performance.now(). The shared
+ * engine - the one that runs Template Builder and timeline participant links -
+ * used Date.now(), so reaction times from that path were not the same kind of
+ * measurement as the rest of the platform.
+ *
+ * @returns {number} milliseconds on a monotonic clock
+ */
+PTA.now = function() {
+  return (typeof performance !== 'undefined' && performance.now)
+    ? performance.now()
+    : Date.now();
+};
 
 /**
  * One CSV cell, quoted and escaped to the actual CSV rules.

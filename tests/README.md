@@ -72,6 +72,35 @@ prints the number, and a number it prints cannot rot.
 | `timing_settings` | timing settings survive from where they are set to where they are used |
 | `zero_is_not_a_measurement` | a missing condition is never reported as 0 ms, 0.00 on a 1-7 scale, or NaN |
 
+## Audited and found clean (2026-08-12)
+
+Recorded so nobody spends a day re-checking. Each of these was swept across
+every module in js/, not sampled:
+
+- **Effect direction.** Every module computes its effect as
+  (expected-larger minus expected-smaller), so a positive number always means
+  the predicted effect occurred: incongruent minus congruent for Stroop and
+  number priming, unrelated minus related for semantic and subliminal and
+  masked, studied minus unstudied for repetition, money minus neutral for money
+  priming. `negative_fab` is the one that reads backwards at a glance and it is
+  right: ignored-repetition minus control, and it says in the interface that a
+  positive number is a cost, not a benefit.
+- **Column mapping.** Every key the modules send maps to a real column in
+  `experiment_results`; nothing is silently dropped by the PGRST204 retry.
+- **Shuffle bounds.** All eight inline Fisher-Yates loops use the descending
+  loop with the `(i + 1)` bound. Only `subliminal.js` was broken, and it used
+  `sort()` rather than a loop.
+- **Swallowed errors.** No empty `catch {}` anywhere. The three catches that
+  carry only a comment each have a documented fallback.
+- **HTML injection routes.** No `insertAdjacentHTML`, no `outerHTML`
+  assignment, no `document.write`, no `setAttribute` of an `on*` handler.
+  `timeline_fab.js` interpolates `p.label`/`p.letter`, but those are hard-coded
+  phase names and `applyTimelinePlan` copies the plan INTO the config rather
+  than the reverse, so a participant link cannot reach them.
+- **Elapsed time.** No module computes an elapsed time from `Date.now()`.
+  `evaluative.js` and `core_fab.js` use both clocks, correctly:
+  `performance.now()` for elapsed, `Date.now()` only for timestamps and ids.
+
 ## Why the regression file exists
 
 `paradigms_regression.test.js` reproduces defects by their *original trigger*

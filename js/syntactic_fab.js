@@ -598,7 +598,7 @@ window.SyntacticPriming = {
     PTK.openBuilder(this, this.builderSpec());
   },
 
-  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+  closeBuilder: function () { PTK.closeBuilder(this.spec(), this); },   // `this` so afterApply runs: closing must leave the module runnable
 
   /**
    * The builder edits a flattened view of data.items, because the nested

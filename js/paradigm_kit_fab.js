@@ -607,7 +607,21 @@ window.PTK = (function () {
     var x = document.createElement('button');
     x.className = 'btn btn-secondary';
     x.textContent = 'Close';
-    x.onclick = function () { PTK.closeBuilder(spec); };
+    // Closing is a FOURTH way out of the builder, and until 2026-08-12 it was
+    // the only one that did not run afterApply.
+    //
+    // goal_fab, money_fab and social_fab flatten their stimuli in place when the
+    // builder opens - {words:[5], embedded} becomes {wordsText, embedded} so the
+    // table can edit them as text. afterApply is what rebuilds the array, and it
+    // ran only from applyToModule, i.e. only on Preview, Generate link and Check
+    // design. Press Close instead and the module was left holding the flattened
+    // shape: verified, data.achievementItems[0] came back with keys
+    // ['wordsText','embedded'] and no `words` at all. The next run then reaches
+    // PTK.scrambledPhase and shuffles undefined.
+    //
+    // Abandoning a builder is the most ordinary thing a user does, and it left
+    // the experiment broken until the page was reloaded.
+    x.onclick = function () { PTK.closeBuilder(spec, mod); };
     head.appendChild(x);
     panel.appendChild(head);
 
@@ -960,7 +974,24 @@ window.PTK = (function () {
     return marked;
   };
 
-  PTK.closeBuilder = function (spec) {
+  /**
+   * Close a builder, and leave the module in a runnable state.
+   *
+   * @param {Object} spec
+   * @param {Object} [mod] - when given, spec.afterApply is run so a module that
+   *        flattened its own stimuli for editing gets them rebuilt. Every exit
+   *        from the builder must do this; Close was the one that did not.
+   */
+  PTK.closeBuilder = function (spec, mod) {
+    if (mod && typeof spec.afterApply === 'function') {
+      try {
+        spec.afterApply(mod);
+      } catch (e) {
+        // Better a logged failure than a half-closed builder: the overlay still
+        // goes away, and the module is no worse off than before this existed.
+        console.error(spec.key + ': afterApply failed on close', e);
+      }
+    }
     var el = document.getElementById('ptk-builder-' + spec.key);
     if (el) el.remove();
     if (window.PTA && PTA.stopEditorHeartbeat) PTA.stopEditorHeartbeat();

@@ -534,7 +534,7 @@ window.AdvertisingPriming = {
     PTK.openBuilder(this, this.spec());
   },
 
-  closeBuilder: function () { PTK.closeBuilder(this.spec()); },
+  closeBuilder: function () { PTK.closeBuilder(this.spec(), this); },   // `this` so afterApply runs: closing must leave the module runnable
 
   checkUrlConfig: function () {
     this.ensureOverlay();

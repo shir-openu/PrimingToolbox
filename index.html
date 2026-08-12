@@ -2385,8 +2385,15 @@
           <span class="np-fixation">+</span>
         </div>
 
-        <div class="response-hint">
-          Press <strong>E</strong> = Smaller than 5, <strong>I</strong> = Larger than 5
+        <!-- Filled by NumberPriming.renderResponseKeys from the keys the task
+             actually listens for. It used to be static text reading
+             "Press E = Smaller than 5, I = Larger than 5" while the handler
+             accepted only ArrowLeft/ArrowRight - and this hint is what is on
+             screen DURING the trials, when the setup instructions are gone.
+             The keys are configurable in the builder too, so no fixed text
+             could have been right. -->
+        <div class="response-hint" id="np-response-hint">
+          Press <strong>&larr;</strong> = Smaller than 5, <strong>&rarr;</strong> = Larger than 5
         </div>
       </div>
 
@@ -2603,8 +2610,11 @@
           <span class="subliminal-fixation">+</span>
         </div>
 
-        <div class="response-hint">
-          Press <strong>F</strong> = Nonword, <strong>J</strong> = Word
+        <!-- Was static text reading "Press F = Nonword, J = Word" while
+             handleKeydown accepts only arrowleft/arrowright. F and J did
+             nothing at all, on the hint shown DURING the trials. -->
+        <div class="response-hint" id="subliminal-response-hint">
+          Press <strong>&larr; LEFT</strong> = Nonword, <strong>&rarr; RIGHT</strong> = Word
         </div>
       </div>
 

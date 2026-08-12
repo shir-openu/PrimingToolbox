@@ -315,6 +315,26 @@ window.NumberPriming = {
         <span class="label" style="color: #4ade80;">Larger than ${ref}</span>
       </div>
     `;
+
+    // The hint shown DURING the trials, once the setup screen is gone. It was
+    // static text naming E and I while this task has only ever accepted
+    // ArrowLeft/ArrowRight - so a participant who glanced down mid-run was told
+    // to press keys that do nothing, and every trial they tried timed out.
+    // Built from the same two variables as the legend above, so it cannot drift
+    // again and it follows the keys an experimenter chooses in the builder.
+    const hint = document.getElementById('np-response-hint');
+    if (hint) {
+      hint.textContent = '';
+      const add = (keyText, label) => {
+        const k = document.createElement('strong');
+        k.textContent = keyText;
+        hint.appendChild(document.createTextNode(hint.childNodes.length ? ',  ' : 'Press '));
+        hint.appendChild(k);
+        hint.appendChild(document.createTextNode(' = ' + label));
+      };
+      add(displaySmaller, 'Smaller than ' + ref);
+      add(displayLarger, 'Larger than ' + ref);
+    }
   },
 
   /**

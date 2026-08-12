@@ -111,6 +111,9 @@
         </div>
       </div>
       <button onclick="loadOverview()">Refresh Stats</button>
+      <!-- filled by loadOtherTables(): the two paradigms that do not write to
+           experiment_results, and whether this page can actually read them -->
+      <div id="other-tables" style="margin-top:16px;"></div>
     </div>
 
     <!-- Search by Email -->
@@ -188,6 +191,66 @@
       document.getElementById('total-participants').textContent = uniqueParticipants;
       document.getElementById('total-experiments').textContent = uniqueExperiments;
       document.getElementById('today-trials').textContent = todayTrials.length;
+
+      loadOtherTables();
+    }
+
+    /**
+     * Evaluative conditioning and subliminal priming do not write to
+     * experiment_results - they have tables of their own, and this page used to
+     * query neither. Someone could run an evaluative-conditioning study, have
+     * every trial stored correctly, and see nothing here at all.
+     *
+     * The awkward part is that "empty" and "not readable" look identical.
+     * Both tables have row-level security on with an INSERT policy and no
+     * SELECT policy, and PostgREST answers a blocked read with an empty list
+     * and status 200 - not an error. So a count of 0 cannot be reported as
+     * "no data" without saying what else it might mean.
+     *
+     * sql/allow_reading_ec_and_subliminal.sql adds the missing policies. It is
+     * deliberately not applied: it widens who can read data rather than storing
+     * more, so it is a decision rather than a fix.
+     */
+    async function loadOtherTables() {
+      const box = document.getElementById('other-tables');
+      if (!box) return;
+
+      const TABLES = [
+        { name: 'ec_results',         label: 'Evaluative Conditioning' },
+        { name: 'subliminal_results', label: 'Subliminal Priming' }
+      ];
+
+      const rows = [];
+      for (const t of TABLES) {
+        let text, colour;
+        try {
+          const { data, error } = await db.from(t.name).select('participant_id');
+          if (error) {
+            text = 'could not be read - ' + error.message;
+            colour = '#990f23';
+          } else if (data.length === 0) {
+            text = '0 rows. This table has no SELECT policy for the anon key, '
+                 + 'so it reads as empty whether it is empty or not.';
+            colour = '#a35b00';
+          } else {
+            const people = new Set(data.map(d => d.participant_id)).size;
+            text = data.length + ' rows, ' + people + ' participants.';
+            colour = '#1a7a33';
+          }
+        } catch (e) {
+          text = 'could not be read - ' + e.message;
+          colour = '#990f23';
+        }
+        rows.push('<p style="margin:4px 0;color:' + colour + '"><strong>' +
+                  t.label + '</strong> (' + t.name + '): ' + text + '</p>');
+      }
+
+      box.innerHTML = '<h3 style="margin-bottom:6px;">The other two result tables</h3>' +
+                      rows.join('') +
+                      '<p style="margin-top:8px;color:#9aa6b2;font-size:.9rem;">' +
+                      'These two paradigms store their trials separately from ' +
+                      'experiment_results. Until they have a read policy, this page ' +
+                      'cannot tell an empty table from an unreadable one.</p>';
     }
 
     // Find experiments by email

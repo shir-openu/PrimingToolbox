@@ -21,15 +21,56 @@
 
         statusEl.textContent = 'Fetching all data...';
 
-        const { data, error } = await supabase
-          .from('experiment_results')
-          .select('*')
-          .order('created_at', { ascending: false });
+        // All three result tables, not just one. Evaluative conditioning writes
+        // to ec_results and subliminal priming to subliminal_results, and this
+        // page used to pull neither - so a study in either paradigm downloaded
+        // as an empty file with nothing to say it had been left out.
+        //
+        // Both of those tables have row-level security on with an INSERT policy
+        // and no SELECT policy, and PostgREST answers a blocked read with an
+        // empty list and status 200, not an error. A count of 0 therefore
+        // cannot be reported as "no data" - hence the note carried in the file
+        // itself, so whoever opens the JSON later is not misled by it.
+        // sql/allow_reading_ec_and_subliminal.sql adds the missing policies.
+        const TABLES = ['experiment_results', 'ec_results', 'subliminal_results'];
+        const NO_READ_POLICY = { ec_results: true, subliminal_results: true };
 
-        if (error) throw error;
+        const payload = { exported_at: new Date().toISOString(), tables: {} };
+        let total = 0;
+
+        for (const table of TABLES) {
+          const { data, error } = await supabase
+            .from(table)
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          if (error) {
+            payload.tables[table] = { error: error.message, rows: [] };
+            continue;
+          }
+
+          const entry = { rows: data, row_count: data.length };
+          if (data.length === 0 && NO_READ_POLICY[table]) {
+            entry.note = 'Empty. This table has no SELECT policy for the anon key, '
+                       + 'so it reads as empty whether it is empty or not.';
+          }
+          payload.tables[table] = entry;
+          total += data.length;
+        }
+
+        // NOTE: the downloaded file's SHAPE HAS CHANGED. It used to be a bare
+        // array of experiment_results rows; it is now
+        //     { exported_at, tables: { <name>: { rows, row_count, note? } } }
+        // because a bare array has nowhere to say which tables were included or
+        // that one of them could not be read. Anything that consumed the old
+        // array needs payload.tables.experiment_results.rows instead.
+        const data = payload.tables.experiment_results.rows;
+        if (payload.tables.experiment_results.error) {
+          throw new Error(payload.tables.experiment_results.error);
+        }
 
         // Create JSON file for download
-        const jsonData = JSON.stringify(data, null, 2);
+        const jsonData = JSON.stringify(payload, null, 2);
         const blob = new Blob([jsonData], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
 
@@ -38,7 +79,16 @@
         a.download = 'supabase_data.json';
         a.click();
 
-        statusEl.innerHTML = '<span style="color: #4ade80;">Done! Downloaded ' + data.length + ' rows.</span><br><br>' +
+        const summary = TABLES.map(function (t) {
+          const e = payload.tables[t];
+          return t + ': ' + (e.error ? 'could not be read (' + e.error + ')'
+                                     : e.row_count + ' rows' + (e.note ? ' *' : ''));
+        }).join('<br>');
+
+        statusEl.innerHTML = '<span style="color: #4ade80;">Done! Downloaded ' + total + ' rows across ' +
+          TABLES.length + ' tables.</span><br><br>' + summary + '<br>' +
+          '<span style="color:#fbbf24;font-size:.9rem;">* reads as empty whether it is empty or not - ' +
+          'no SELECT policy for the anon key</span><br><br>' +
           'Move <strong>supabase_data.json</strong> from Downloads to:<br>' +
           '<code style="background:#333;padding:5px;">D:\\Dropbox\\Research\\PRIMING_TOOLBOX\\</code><br><br>' +
           'Claude can now read your data!';

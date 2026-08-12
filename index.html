@@ -3545,17 +3545,55 @@
         return;
       }
 
-      const { data, error } = await PTA.fetchExperimenterData('experiment_results', email, expId);
+      // All three result tables. Evaluative conditioning writes to ec_results
+      // and subliminal priming to subliminal_results; this asked
+      // experiment_results alone, so anyone who ran either of those paradigms
+      // was told "Found 0 trials from your experiment" - a confident sentence,
+      // wrong, and with nothing to suggest the data was somewhere else.
+      //
+      // ec_results and subliminal_results have row-level security on with an
+      // INSERT policy and no SELECT policy. PostgREST answers a blocked read
+      // with an empty list and status 200, not an error, so a zero from those
+      // two cannot be reported as "nothing there" without saying what else it
+      // might mean. sql/allow_reading_ec_and_subliminal.sql adds the policies.
+      const TABLES = ['experiment_results', 'ec_results', 'subliminal_results'];
+      const NO_READ_POLICY = { ec_results: true, subliminal_results: true };
 
-      if (error) {
-        alert('Error fetching data: ' + error.message);
+      const rows = [];
+      const failures = [];
+      let blockedEmpty = false;
+
+      for (const table of TABLES) {
+        const { data, error } = await PTA.fetchExperimenterData(table, email, expId);
+        if (error) {
+          // One table being unreachable must not lose the others.
+          failures.push(table + ': ' + error.message);
+          continue;
+        }
+        if (data && data.length) {
+          data.forEach(r => rows.push(Object.assign({ source_table: table }, r)));
+        } else if (NO_READ_POLICY[table]) {
+          blockedEmpty = true;
+        }
+      }
+
+      if (!rows.length && failures.length === TABLES.length) {
+        alert('Error fetching data: ' + failures.join(' | '));
         return;
       }
 
-      retrievedData = data;
+      retrievedData = rows;
 
-      document.getElementById('dataResultsMessage').textContent =
-        `Found ${data.length} trials from your experiment.`;
+      let message = `Found ${rows.length} trials from your experiment.`;
+      if (blockedEmpty) {
+        message += ' Evaluative conditioning and subliminal priming store their'
+                 + ' trials in separate tables that this key cannot read, so'
+                 + ' they would show as zero even if they hold data.';
+      }
+      if (failures.length) {
+        message += ' Could not read: ' + failures.join('; ') + '.';
+      }
+      document.getElementById('dataResultsMessage').textContent = message;
       document.getElementById('dataResultsContainer').style.display = 'block';
     }
 

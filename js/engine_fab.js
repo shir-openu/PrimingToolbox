@@ -1,4 +1,11 @@
 /*
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the schema-drift fix, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/0783ff2/js/engine_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/engine_fab.js
  */
@@ -629,7 +636,11 @@ PTA.Engine = {
         correct_response: trial.correctResponse,
         correct: correct,
         rt: rt,
-        timestamp: new Date().toISOString()
+        // `timestamp` is not a column on experiment_results and never was, so
+        // PostgREST rejected the whole insert. sql/add_missing_columns.sql adds
+        // it as trial_timestamp - `timestamp` itself is an SQL reserved word and
+        // would need quoting everywhere it is touched.
+        trial_timestamp: new Date().toISOString()
       };
     } else {
       result = {
@@ -640,7 +651,11 @@ PTA.Engine = {
         response: response,
         correct: correct,
         rt: rt,
-        timestamp: new Date().toISOString()
+        // `timestamp` is not a column on experiment_results and never was, so
+        // PostgREST rejected the whole insert. sql/add_missing_columns.sql adds
+        // it as trial_timestamp - `timestamp` itself is an SQL reserved word and
+        // would need quoting everywhere it is touched.
+        trial_timestamp: new Date().toISOString()
       };
     }
 

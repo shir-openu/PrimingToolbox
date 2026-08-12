@@ -1,4 +1,11 @@
 /*
+ * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
+ * line here, so any earlier state can be recovered if something goes wrong.
+ *
+ *   before the schema-drift fix, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/0783ff2/js/core_fab.js
+ */
+/*
  * PREVIOUS VERSION ON GITHUB (before the full-codebase read of 2026-08-12):
  *     https://github.com/shir-openu/PrimingToolbox/blob/02cecb1/js/core_fab.js
  */
@@ -284,24 +291,83 @@ PTA.saveAllResults = async function(tableName, trialsData, rescueOpts) {
     return { error: 'Supabase not initialized' };
   }
 
-  try {
-    const { data, error } = await PTA.supabase
-      .from(tableName)
-      .insert(trialsData);
+  // A column the table does not have makes PostgREST reject the WHOLE insert
+  // (PGRST204), so one unrecognised field loses the entire run. That is not
+  // hypothetical: with the database healthy and reachable, PTA.Engine's save
+  // failed every time because it sends `experiment_name` and `timestamp`, and
+  // experiment_results has neither - so the generic engine, which is the path
+  // every participant link and every Build-From-Scratch design takes, had
+  // never once stored a row. The paradigm modules write different column sets
+  // and were unaffected, which is why the table still filled up and nobody
+  // noticed.
+  //
+  // Losing a run over a column name is the wrong trade. PostgREST names the
+  // offending column, so drop that one and try again, and keep the list so the
+  // loss is visible rather than silent. The proper fix is still to add the
+  // columns (sql/add_missing_columns.sql); this makes the platform survive
+  // until that is run, and survive the next schema drift after it.
+  const dropped = [];
+  let rows = trialsData;
 
-    if (error) {
+  for (let attempt = 0; attempt < 8; attempt++) {
+    try {
+      const { data, error } = await PTA.supabase
+        .from(tableName)
+        .insert(rows);
+
+      if (!error) {
+        if (dropped.length) {
+          console.warn('PTA: saved ' + rows.length + ' trials, but ' + tableName +
+            ' has no column for: ' + dropped.join(', ') +
+            ' - those values were NOT stored. Run sql/add_missing_columns.sql.');
+        } else {
+          console.log('PTA: Saved', rows.length, 'trials');
+        }
+        return { data, droppedColumns: dropped };
+      }
+
+      const missing = PTA.missingColumnFrom(error);
+      if (missing && !dropped.includes(missing)) {
+        dropped.push(missing);
+        rows = rows.map(row => {
+          const copy = Object.assign({}, row);
+          delete copy[missing];
+          return copy;
+        });
+        continue;                       // same rows, one column lighter
+      }
+
       console.error('PTA: Error saving results', error);
       rescue((error && error.message) || String(error));
-      return { error };
+      return { error, droppedColumns: dropped };
+    } catch (e) {
+      console.error('PTA: Exception saving results', e);
+      rescue((e && e.message) || String(e));
+      return { error: e.message, droppedColumns: dropped };
     }
-
-    console.log('PTA: Saved', trialsData.length, 'trials');
-    return { data };
-  } catch (e) {
-    console.error('PTA: Exception saving results', e);
-    rescue((e && e.message) || String(e));
-    return { error: e.message };
   }
+
+  const giveUp = 'too many unknown columns: ' + dropped.join(', ');
+  console.error('PTA: ' + giveUp);
+  rescue(giveUp);
+  return { error: giveUp, droppedColumns: dropped };
+};
+
+/**
+ * The column name out of a PostgREST "schema cache" error, or null.
+ *
+ * PGRST204 reads: Could not find the 'experiment_name' column of
+ * 'experiment_results' in the schema cache
+ *
+ * @param {Object} error - a supabase-js error
+ * @returns {string|null}
+ */
+PTA.missingColumnFrom = function(error) {
+  if (!error) return null;
+  if (error.code && error.code !== 'PGRST204') return null;
+  const msg = String(error.message || '');
+  const m = msg.match(/Could not find the '([^']+)' column/);
+  return m ? m[1] : null;
 };
 
 /**

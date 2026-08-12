@@ -81,6 +81,10 @@ PTA.initSupabase = function() {
   }
   if (typeof supabase !== 'undefined') {
     PTA.supabase = supabase.createClient(PTA.config.supabaseUrl, PTA.config.supabaseKey);
+    // Marked so the automation guard can tell the REAL client from a test stub.
+    // A stub must keep working exactly as before; only the real project is
+    // protected. See PTA.isAutomated.
+    try { PTA.supabase.__ptbxReal = true; } catch (e) { /* frozen client */ }
     console.log('PTA: Supabase initialized');
     return true;
   } else {
@@ -340,6 +344,17 @@ PTA.saveAllResults = async function(tableName, trialsData, rescueOpts) {
     return { error: 'Supabase not initialized' };
   }
 
+  // A test must never write results to the real project. The older harness
+  // stubs saveToSupabase by polling and gives up after 8 seconds in silence,
+  // so a slow page load meant a full run of fabricated trials landing in the
+  // research data with nothing said. Loud, because a silently skipped save is
+  // the exact failure this whole session has been about.
+  if (PTA.blockRealWrite(PTA.supabase)) {
+    console.warn('PTA: automated browser - refusing to write ' + trialsData.length +
+                 ' rows to the live project. Set window.__PTBX_ALLOW_TELEMETRY to override.');
+    return { error: 'blocked: automated browser', blocked: true };
+  }
+
   // A column the table does not have makes PostgREST reject the WHOLE insert
   // (PGRST204), so one unrecognised field loses the entire run. That is not
   // hypothetical: with the database healthy and reachable, PTA.Engine's save
@@ -509,6 +524,13 @@ PTA.checkDuplicateParticipation = async function(tableName, experimentId, extern
  * @param {string} [tableName='experiment_results'] - Target table
  */
 PTA.saveToSupabase = function(trialData, tableName) {
+  if (PTA.blockRealWrite(PTA.supabase)) {
+    if (!PTA._automationNotedTrial) {
+      PTA._automationNotedTrial = true;
+      console.warn('PTA: automated browser - trials are not being written to the live project.');
+    }
+    return;
+  }
   if (!PTA.supabase) {
     console.error('PTA: Supabase not initialized — trial not saved', trialData);
     PTA._bufferFailedTrial(trialData, 'Supabase not initialized');
@@ -782,6 +804,50 @@ PTA.exportToCSV = function(data, filename) {
  *     already stored beside their results.
  */
 
+/**
+ * Is this an automated browser, rather than a person?
+ *
+ * Added 2026-08-12 after finding 2,032 rows of my own test traffic in
+ * platform_events. The event logging went in that morning; the existing test
+ * harnesses stub PTA.saveToSupabase but knew nothing about a telemetry path
+ * that did not exist when they were written, so every page load in every test
+ * run wrote a session_start to the live project. Running the suite polluted the
+ * research data, and running it more often polluted it faster.
+ *
+ * The older harness has the same hazard from the other direction: its stub
+ * polls for PTA.saveToSupabase and gives up after 8 seconds SILENTLY, so a slow
+ * load meant a full experiment writing real trials to the real database with
+ * nothing reporting it.
+ *
+ * navigator.webdriver is true in Puppeteer, Selenium and Playwright, and false
+ * in every browser a participant will ever use. That makes it the right switch:
+ * a test cannot forget to set it, and a new test file gets the protection
+ * without knowing this function exists.
+ *
+ * Only the REAL client is protected. A test that installs its own stub is
+ * testing behaviour, not writing to Shir's project, and must be left alone.
+ *
+ * @returns {boolean}
+ */
+PTA.isAutomated = function() {
+  try {
+    if (window.__PTBX_ALLOW_TELEMETRY) return false;   // a test that means it
+    if (window.__PTBX_NO_TELEMETRY) return true;       // explicit opt-out
+    return !!(navigator && navigator.webdriver);
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * True when a write would reach the real project from an automated browser.
+ * @param {Object} client
+ * @returns {boolean}
+ */
+PTA.blockRealWrite = function(client) {
+  return !!(client && client.__ptbxReal && PTA.isAutomated());
+};
+
 PTA.EVENT_TYPES = [
   'session_start',          // D: active days.  R: returns
   'builder_opened',         // engagement
@@ -864,6 +930,13 @@ PTA.logEvent = function(type, detail) {
   };
 
   if (!PTA.supabase) return;                 // nothing to send to; drop it
+  if (PTA.blockRealWrite(PTA.supabase)) {    // a test run: never touch the real project
+    if (!PTA._automationNoted) {
+      PTA._automationNoted = true;
+      console.log('PTA: automated browser detected - telemetry is not being sent.');
+    }
+    return;
+  }
   try {
     PTA.supabase.from('platform_events').insert(row).then(
       ({ error }) => {

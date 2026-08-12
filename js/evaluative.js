@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before a missing rating stopped being reported as zero, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/7ac64b9/js/evaluative.js
+ *
  *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/evaluative.js
  *
@@ -913,7 +916,7 @@ window.EvaluativeConditioning = {
     ]);
 
     const allRows = [...learningRows, ...testRows];
-    const csvContent = [headers, ...allRows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const csvContent = [headers, ...allRows].map(row => row.map(PTA.csvCell).join(',')).join('\n');
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
 

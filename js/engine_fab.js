@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before an empty Stroop condition stopped being reported as a measurement, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/75330f8/js/engine_fab.js
+ *
  *   before the experimenter-layer event logging, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/engine_fab.js
  *

@@ -334,7 +334,7 @@ window.Social = {
     if (!this.state.results.length) { alert('No results to export'); return; }
     const headers = ['item', 'condition', 'stereotype_word', 'sentence', 'completion_ms'];
     const rows = this.state.results.map((r, i) => [i + 1, r.condition, r.stereotype, r.sentence, Math.round(r.rt)]);
-    const csv = [headers, ...rows].map(row => row.map(c => '"' + c + '"').join(',')).join('\n');
+    const csv = [headers, ...rows].map(row => row.map(PTA.csvCell).join(',')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const l = document.createElement('a');
     l.href = URL.createObjectURL(blob);

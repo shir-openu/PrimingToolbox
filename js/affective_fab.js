@@ -431,7 +431,7 @@ window.Affective = {
     const headers = ['trial', 'prime', 'prime_valence', 'target', 'target_valence', 'congruent', 'response', 'correct', 'rt_ms'];
     const rows = this.state.results.map((r, i) =>
       [i + 1, r.prime, r.primeVal, r.target, r.targetVal, r.congruent, r.response || 'none', r.correct, r.rt === null ? '' : Math.round(r.rt)]);
-    const csv = [headers, ...rows].map(row => row.map(c => '"' + c + '"').join(',')).join('\n');
+    const csv = [headers, ...rows].map(row => row.map(PTA.csvCell).join(',')).join('\n');
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const l = document.createElement('a');
     l.href = URL.createObjectURL(blob);

@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the CSV cells were escaped, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/da8061a/js/number-priming.js
+ *
  *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/number-priming.js
  *
@@ -797,7 +800,7 @@ window.NumberPriming = {
       r.primeDuration
     ]);
 
-    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const csvContent = [headers, ...rows].map(row => row.map(PTA.csvCell).join(',')).join('\n');
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
 

@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the participant ID prompt, the honest-mean helpers and one CSV rule, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/8d65163/js/core_fab.js
+ *
  *   before the experimenter-layer event logging, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/core_fab.js
  *
@@ -862,6 +865,27 @@ PTA.escapeText = function(s) {
 /* =====================================================
    Export Functions
    ===================================================== */
+
+/**
+ * One CSV cell, quoted and escaped to the actual CSV rules.
+ *
+ * Eight modules built their download rows with `'"' + cell + '"'` - wrap
+ * everything in quotes and escape nothing. A value containing a double quote
+ * then produces  "he said "hello""  which every parser reads as the field
+ * ending after `he said `, so that row's remaining columns shift left by one
+ * and the file quietly stops lining up with its header. Stimuli are typed by
+ * the experimenter, so a quote character is entirely reachable.
+ *
+ * Quoting only when needed also keeps numbers as numbers, instead of handing
+ * the analyst a spreadsheet in which every reaction time is text.
+ *
+ * @param {*} value
+ * @returns {string}
+ */
+PTA.csvCell = function(value) {
+  const s = value == null ? '' : String(value);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+};
 
 /**
  * Export data array to CSV file and trigger download.

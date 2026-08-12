@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the recruitment-platform ID was asked for, 2026-08-12
+ *   https://github.com/shir-openu/PrimingToolbox/blob/a1babb9/js/paradigm_kit_fab.js
+ *
  *   before the ABCD footnotes and the template-editing fixes, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/68bddb7/js/paradigm_kit_fab.js
  *

@@ -220,6 +220,54 @@ const CAPTURE = () => {
     await p.close();
   }
 
+  console.log('\n[all SIXTEEN log, not just the ten on the kit]');
+  {
+    // Found hours after the logging went in. Ten paradigms go through
+    // PTK.openBuilder / PTK.buildLink and were covered; the six older ones
+    // carry their own and logged nothing. P in the proposal is "experiments
+    // published", so six of sixteen would never have counted - including Stroop
+    // and Semantic, the two most used. Every model takes P as an input, so the
+    // data would not have been thin, it would have been BIASED toward the newer
+    // paradigms. PTK.instrumentLegacy wraps them.
+    const LEGACY = [
+      ['Stroop', 'stroop'], ['Semantic', 'semantic'], ['AMP', 'amp'],
+      ['NumberPriming', 'number-priming'], ['Subliminal', 'subliminal'],
+      ['EvaluativeConditioning', 'evaluative']
+    ];
+    for (const [global, key] of LEGACY) {
+      const p = await open(INDEX);
+      await p.evaluateOnNewDocument(() => { window.alert = function () {}; });
+      const r = await p.evaluate(async (g, k) => {
+        window.alert = function () {};
+        const m = window[g];
+        if (!m) return { missing: true };
+        try { m.openBuilder(); } catch (e) { /* markup may be absent */ }
+        try { if (m.generateLink) m.generateLink(); } catch (e) { /* identity check */ }
+        await new Promise(r => setTimeout(r, 250));
+        PTA.stopEditorHeartbeat();
+        return {
+          missing: false,
+          types: window.__events.map(e => e.event_type),
+          keys: window.__events.map(e => e.experiment_type)
+        };
+      }, global, key);
+      ok(key + ': logs builder_opened', !r.missing && r.types.indexOf('builder_opened') !== -1,
+         (r.types || []).join(','));
+      ok(key + ': tagged with its own experiment type', !r.missing && r.keys.indexOf(key) !== -1,
+         (r.keys || []).join(','));
+      await p.close();
+    }
+
+    const p = await open(INDEX);
+    const twice = await p.evaluate(() => {
+      const before = Stroop.openBuilder;
+      PTK.instrumentLegacy();          // must not wrap a second time
+      return before === Stroop.openBuilder;
+    });
+    ok('instrumenting twice does not double-wrap', twice);
+    await p.close();
+  }
+
   await browser.close();
   console.log('\n' + pass + ' passed, ' + fail + ' failed');
   process.exit(fail ? 1 : 0);

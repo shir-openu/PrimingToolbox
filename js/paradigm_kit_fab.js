@@ -1371,6 +1371,109 @@ window.PTK = (function () {
   // either, so the loss has to be reported here or not at all.
   PTK._unsaved = [];
 
+  /* ===================================================================
+     Event logging for the six paradigms that predate this kit
+     =================================================================== */
+
+  /**
+   * Wrap the older modules' own openBuilder / generateLink so they log the
+   * same events the kit paradigms do.
+   *
+   * Found 2026-08-12, hours after the event logging went in. Ten paradigms go
+   * through PTK.openBuilder and PTK.buildLink and were covered. The other six -
+   * stroop, semantic, amp, number-priming, subliminal, evaluative - carry their
+   * own versions of both and were logging nothing at all.
+   *
+   * That is not a small gap. P in the DHSS proposal is "experiments published",
+   * and six of sixteen would never have counted - including Stroop and Semantic,
+   * the two most used. Every model in the proposal takes P as an input, so the
+   * result would not merely have been thin, it would have been BIASED, and
+   * biased in a direction that flatters the newer paradigms.
+   *
+   * Wrapping rather than editing six files: one place to read, one place to fix,
+   * and adding a seventh module means adding a name to the list below.
+   */
+  PTK.LEGACY_MODULES = [
+    { global: 'Stroop',                  key: 'stroop' },
+    { global: 'Semantic',                key: 'semantic' },
+    { global: 'AMP',                     key: 'amp' },
+    { global: 'NumberPriming',           key: 'number-priming' },
+    { global: 'Subliminal',              key: 'subliminal' },
+    { global: 'EvaluativeConditioning',  key: 'evaluative' }
+  ];
+
+  PTK.instrumentLegacy = function () {
+    if (!window.PTA || !PTA.logEvent) return 0;
+    var wrapped = 0;
+
+    PTK.LEGACY_MODULES.forEach(function (m) {
+      var mod = window[m.global];
+      if (!mod || mod._ptkInstrumented) return;
+      mod._ptkInstrumented = true;
+
+      if (typeof mod.openBuilder === 'function') {
+        var openOrig = mod.openBuilder;
+        mod.openBuilder = function () {
+          try {
+            PTA.logEvent('builder_opened', {
+              experimentType: m.key,
+              email: mod.experimenterEmail || null,
+              userExperimentId: mod.userExperimentId || null
+            });
+            PTA.startEditorHeartbeat('builder', { experimentType: m.key });
+          } catch (e) { /* telemetry never blocks the builder */ }
+          return openOrig.apply(this, arguments);
+        };
+        wrapped++;
+      }
+
+      if (typeof mod.closeBuilder === 'function') {
+        var closeOrig = mod.closeBuilder;
+        mod.closeBuilder = function () {
+          try { PTA.stopEditorHeartbeat(); } catch (e) { /* same */ }
+          return closeOrig.apply(this, arguments);
+        };
+      }
+
+      if (typeof mod.generateLink === 'function') {
+        var linkOrig = mod.generateLink;
+        mod.generateLink = function () {
+          var out = linkOrig.apply(this, arguments);
+          // AFTER the original: these all validate the identity first and bail
+          // if it is missing, and a refused link is not a publication.
+          try {
+            PTA.logEvent('link_generated', {
+              experimentType: m.key,
+              email: mod.experimenterEmail || null,
+              userExperimentId: mod.userExperimentId || null
+            });
+          } catch (e) { /* same */ }
+          return out;
+        };
+        wrapped++;
+      }
+
+      if (typeof mod.previewFromBuilder === 'function') {
+        var prevOrig = mod.previewFromBuilder;
+        mod.previewFromBuilder = function () {
+          try { PTA.logEvent('preview_run', { experimentType: m.key }); } catch (e) { /* same */ }
+          return prevOrig.apply(this, arguments);
+        };
+      }
+    });
+
+    return wrapped;
+  };
+
+  // These modules load AFTER this file, so wrapping has to wait for the page.
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () { PTK.instrumentLegacy(); });
+    } else {
+      PTK.instrumentLegacy();
+    }
+  }
+
   PTK.save = function (row) {
     if (window.PTA && typeof PTA.saveToSupabase === 'function') {
       PTA.saveToSupabase(row);

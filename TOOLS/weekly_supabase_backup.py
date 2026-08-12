@@ -79,7 +79,18 @@ ANON_KEY = (
 # Every table the platform writes to. affective/social/goal/moral/money/
 # advertising and the rest of the kit paradigms all write into
 # experiment_results; only these three exist as separate tables.
-TABLES = ['experiment_results', 'ec_results', 'subliminal_results']
+# experiment_results is the participant layer. platform_events is the
+# experimenter layer and the meta layer, which the DHSS proposal needs and which
+# the platform did not record until 2026-08-12. experimenter_metrics is the view
+# that assembles the proposal's z = (T,U,E,P,D,R,C,X) per experimenter - pulling
+# it means the analysis-ready table is on disk too, not just the raw events.
+#
+# A table that does not exist yet (the SQL not run) is reported and skipped, not
+# treated as a failure of the whole backup.
+TABLES = ['experiment_results', 'ec_results', 'subliminal_results',
+          'platform_events', 'experimenter_metrics']
+
+OPTIONAL = {'platform_events', 'experimenter_metrics'}
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BACKUP_DIR = os.path.join(ROOT, 'DATA_BACKUP')
@@ -95,7 +106,8 @@ def fetch_all(table):
     rows = []
     offset = 0
     while True:
-        url = '%s/rest/v1/%s?select=*&order=created_at.asc' % (PROJECT_URL, table)
+        order = '' if table == 'experimenter_metrics' else '&order=created_at.asc'
+        url = '%s/rest/v1/%s?select=*%s' % (PROJECT_URL, table, order)
         req = urllib.request.Request(url, headers={
             'apikey': ANON_KEY,
             'Authorization': 'Bearer ' + ANON_KEY,
@@ -293,7 +305,11 @@ def main():
         counts[table] = len(rows)
         errors[table] = err or ''
         if err:
-            print('  %-22s FAILED  %s' % (table, err))
+            if table in OPTIONAL and ('does not exist' in err or '404' in err or 'PGRST205' in err):
+                errors[table] = ''          # not a failure: the SQL has not been run
+                print('  %-22s not created yet - run sql/create_platform_events_table.sql' % table)
+            else:
+                print('  %-22s FAILED  %s' % (table, err))
             continue
         headers = write_csv(os.path.join(folder, table + '.csv'), rows)
         write_json(os.path.join(folder, table + '.json'), rows)

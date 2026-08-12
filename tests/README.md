@@ -27,6 +27,27 @@ Each exits non-zero if anything fails. No test writes to Supabase:
 | `paradigms_interface.test.js` | module loads, appears in the dropdown, has the full interface, injects its overlay, builds balanced conditions, participant config round-trips, `saveTrial` reaches `PTA.saveToSupabase` |
 | `paradigms_endtoend.test.js` | plays every paradigm through to its results screen, then opens a real participant link for each |
 | `paradigms_regression.test.js` | the three defects found on 2026-08-09, each reproduced by its original trigger |
+| `paradigms_practice.test.js` | the v2.0 practice block: practice rows stay out of both results and Supabase, the gate names the right key, and pressing it runs the scored block to completion |
+
+Current status: 39 + 41 + 10 + 9 = **99 checks, all passing** against the v2.0
+modules (2026-08-10).
+
+## Updated for v2.0 on 2026-08-10
+
+The four modules were rewritten (PTK kit, `spec()`, practice blocks, A/S/M
+verdicts). Two harness assumptions broke, and neither was a product fault:
+
+- **Practice blocks.** `negative`, `masked` and `syntactic` now run practice
+  trials first and end them on a *"press a key to begin the real trials"* gate.
+  The harness only answers while `state.awaiting` is true, which is false at
+  that gate, so it waited there forever and recorded zero scored rows. The
+  end-to-end and regression suites now set `practiceTrials = 0` to test the
+  scored path directly, and `paradigms_practice.test.js` covers the gate itself.
+- **Syntactic no longer reports "% structure reuse".** That metric was removed
+  deliberately: a participant with a fixed structural preference scores 50%
+  reuse while showing no priming at all. The suite now asserts the D − C
+  contrast that replaced it. The old assertion had been pinning the wrong
+  behaviour.
 
 ## Why the regression file exists
 

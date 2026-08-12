@@ -43,6 +43,7 @@ const check = (n, c, d) => {
   {
     const p = await page();
     const r = await p.evaluate(async () => {
+      MaskedLexical.practiceTrials = 0;                     // v2.0: scored block only
       MaskedLexical.open(); MaskedLexical.start();          // real timings
       const plan = MaskedLexical.state.trials.map(t => t.target);
       const nap = ms => new Promise(x => setTimeout(x, ms));
@@ -81,6 +82,7 @@ const check = (n, c, d) => {
     const errs = [];
     p.on('pageerror', e => errs.push(e.message));
     const r = await p.evaluate(async () => {
+      SyntacticPriming.practiceTrials = 0;                  // v2.0: scored block only
       SyntacticPriming.open(); SyntacticPriming.start();
       const nap = ms => new Promise(x => setTimeout(x, ms));
       SyntacticPriming.primeDone();

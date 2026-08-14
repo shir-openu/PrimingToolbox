@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before trials recorded the participant's own clock and timezone, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/58d246d/js/core_fab.js
+ *
  *   before reaction times moved to a monotonic clock, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/core_fab.js
  *
@@ -326,6 +329,71 @@ PTA.median = function(arr) {
    ===================================================== */
 
 /**
+ * Where and when the participant actually is, as far as the browser will say.
+ *
+ * The pilot rows carry no location at all and no honest local time either:
+ * created_at is a server DEFAULT now(), so all 241 of them read 23 December
+ * 2025 - the day they were inserted, not the day anyone sat down. The real
+ * session times were only recoverable because participant IDs happen to encode
+ * Date.now() in base 36. That is an accident, not a design, and it gives no
+ * country.
+ *
+ * A timezone does, and costs nothing: the browser already reports it, it needs
+ * no permission prompt, no IP address and no geolocation lookup, and it is
+ * coarse - 'Asia/Jerusalem' names a country, not a person or even a city. That
+ * is the right amount of information for the proposal's location variable.
+ *
+ * Both the zone name and the numeric offset are kept. The name is the truth but
+ * needs a timezone database to interpret; the offset is arithmetic anybody can
+ * do. Old browsers without Intl simply yield nulls, and a null covariate is a
+ * missing covariate, not a broken row.
+ *
+ * @returns {{client_timezone: ?string, client_utc_offset: ?number, client_started_at: string}}
+ */
+PTA.clientContext = function() {
+  let timezone = null, offset = null;
+  try {
+    timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch (e) { /* no Intl: the covariate is simply missing */ }
+  try {
+    // getTimezoneOffset is minutes-behind-UTC, so Israel in winter is -120 once
+    // negated. Negating it here means the stored number reads the way people
+    // say it (UTC+2 -> 120 would be nicer still, but -120 is what every other
+    // JavaScript-sourced dataset holds, and matching them beats being tidy).
+    offset = new Date().getTimezoneOffset();
+  } catch (e) { /* same */ }
+  return {
+    client_timezone: timezone,
+    client_utc_offset: offset,
+    client_started_at: new Date().toISOString()
+  };
+};
+
+/**
+ * Add the client context to a row, without overwriting anything a caller set.
+ *
+ * Stamping here rather than in each paradigm is deliberate: there are eleven
+ * modules writing trials and three save paths, and a covariate that only some
+ * of them remember to attach is worse than none - it looks like a pattern in
+ * the data when it is a pattern in the code.
+ *
+ * @param {Object|Object[]} rows
+ * @returns {Object|Object[]} same shape, stamped copies
+ */
+PTA.stampClientContext = function(rows) {
+  const ctx = PTA.clientContext();
+  const one = (row) => {
+    if (!row || typeof row !== 'object') return row;
+    const out = Object.assign({}, row);
+    Object.keys(ctx).forEach(k => {
+      if (out[k] === undefined || out[k] === null) out[k] = ctx[k];
+    });
+    return out;
+  };
+  return Array.isArray(rows) ? rows.map(one) : one(rows);
+};
+
+/**
  * Save single trial result to Supabase database.
  * @async
  * @param {string} tableName - Target database table name
@@ -341,7 +409,7 @@ PTA.saveTrialResult = async function(tableName, trialData) {
   try {
     const { data, error } = await PTA.supabase
       .from(tableName)
-      .insert([trialData]);
+      .insert([PTA.stampClientContext(trialData)]);
 
     if (error) {
       console.error('PTA: Error saving trial', error);
@@ -415,7 +483,7 @@ PTA.saveAllResults = async function(tableName, trialsData, rescueOpts) {
   // columns (sql/add_missing_columns.sql); this makes the platform survive
   // until that is run, and survive the next schema drift after it.
   const dropped = [];
-  let rows = trialsData;
+  let rows = PTA.stampClientContext(trialsData);
 
   for (let attempt = 0; attempt < 8; attempt++) {
     try {
@@ -688,23 +756,58 @@ PTA.saveToSupabase = function(trialData, tableName) {
     PTA._bufferFailedTrial(trialData, 'Supabase not initialized');
     return;
   }
-  PTA.supabase
-    .from(tableName || 'experiment_results')
-    .insert(trialData)
-    .then(
-      ({ error }) => {
-        if (error) {
+
+  const table = tableName || 'experiment_results';
+
+  // The batch path already survives a column the table does not have; this one
+  // did not, and one unrecognised field would have rejected every single trial
+  // (PGRST204 fails the whole insert). That matters now because the client
+  // context above adds three columns, and a project where
+  // sql/add_timezone_columns.sql has not been run would otherwise lose the
+  // entire run over a covariate nobody asked for. Drop the named column,
+  // remember it so the next trial does not repeat the round trip, retry once.
+  PTA._absentColumns = PTA._absentColumns || {};
+  const absent = PTA._absentColumns[table] || (PTA._absentColumns[table] = []);
+
+  const strip = (row) => {
+    if (!absent.length) return row;
+    const copy = Object.assign({}, row);
+    absent.forEach(c => { delete copy[c]; });
+    return copy;
+  };
+
+  const send = (row, retriesLeft) => {
+    PTA.supabase
+      .from(table)
+      .insert(strip(row))
+      .then(
+        ({ error }) => {
+          if (!error) return;
+
+          const missing = PTA.missingColumnFrom(error);
+          if (missing && retriesLeft > 0) {
+            if (absent.indexOf(missing) === -1) {
+              absent.push(missing);
+              console.warn('PTA: ' + table + ' has no column "' + missing +
+                '" - that value is not being stored. Run sql/add_timezone_columns.sql.');
+            }
+            send(row, retriesLeft - 1);
+            return;
+          }
+
           console.error('PTA: Error saving trial', error);
-          PTA._bufferFailedTrial(trialData, (error && error.message) || String(error));
+          PTA._bufferFailedTrial(row, (error && error.message) || String(error));
+        },
+        // Without this second callback a network-level throw became an unhandled
+        // rejection: nothing logged, nothing buffered, the trial simply gone.
+        (e) => {
+          console.error('PTA: Exception saving trial', e);
+          PTA._bufferFailedTrial(row, (e && e.message) || String(e));
         }
-      },
-      // Without this second callback a network-level throw became an unhandled
-      // rejection: nothing logged, nothing buffered, the trial simply gone.
-      (e) => {
-        console.error('PTA: Exception saving trial', e);
-        PTA._bufferFailedTrial(trialData, (e && e.message) || String(e));
-      }
-    );
+      );
+  };
+
+  send(PTA.stampClientContext(trialData), 4);
 };
 
 /* ---- the per-trial failure buffer ------------------------------------- *

@@ -15,131 +15,14 @@
 /* Base */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
-  background: #120a12;
   color: #e5e7eb;
-  min-height: 100vh;
-  overflow-x: hidden;
-  position: relative;
+  /* background, min-height, overflow-x and position: css/background.css */
 }
 
-/* Animated Background */
-.animated-background {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.1;
-}
-
-.wave-container {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.wave {
-  position: absolute;
-  width: 200%;
-  height: 100%;
-  opacity: 0.6;
-}
-
-.wave path {
-  fill: none;
-  stroke-width: 2;
-}
-
-.wave-teal path {
-  stroke: #169999;
-  animation: wave-drift-1 25s ease-in-out infinite;
-}
-
-.wave-pink path {
-  stroke: #ff4db8;
-  animation: wave-drift-2 30s ease-in-out infinite;
-}
-
-.wave-wine path {
-  stroke: #990f23;
-  animation: wave-drift-3 35s ease-in-out infinite;
-}
-
-@keyframes wave-drift-1 {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(-25%) translateY(-5%); }
-}
-
-@keyframes wave-drift-2 {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(-30%) translateY(8%); }
-}
-
-@keyframes wave-drift-3 {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(-20%) translateY(-8%); }
-}
-
-.particles {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-}
-
-.particle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  opacity: 0;
-}
-
-.particle-teal {
-  background: #169999;
-  animation: float-teal 20s ease-in-out infinite;
-}
-
-.particle-pink {
-  background: #ff4db8;
-  animation: float-pink 25s ease-in-out infinite;
-}
-
-.particle-wine {
-  background: #990f23;
-  animation: float-wine 30s ease-in-out infinite;
-}
-
-@keyframes float-teal {
-  0%, 100% { transform: translate(0, 0); opacity: 0; }
-  10%, 90% { opacity: 0.3; }
-  50% { transform: translate(100px, -150px); opacity: 0.5; }
-}
-
-@keyframes float-pink {
-  0%, 100% { transform: translate(0, 0); opacity: 0; }
-  10%, 90% { opacity: 0.4; }
-  50% { transform: translate(-120px, -180px); opacity: 0.6; }
-}
-
-@keyframes float-wine {
-  0%, 100% { transform: translate(0, 0); opacity: 0; }
-  10%, 90% { opacity: 0.35; }
-  50% { transform: translate(80px, 200px); opacity: 0.5; }
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(ellipse at center, rgba(22, 153, 153, 0.03) 0%, transparent 70%);
-  z-index: 0;
-  pointer-events: none;
-}
+/* The animated background, the waves, the particles and the centre glow
+   moved to css/background.css on 2026-08-14, so the build pages and the
+   article can share the one the front page uses instead of each carrying
+   its own flat colour. Load background.css alongside this file. */
 
 /* Layout */
 .layout {

@@ -30,8 +30,35 @@
 
   <link rel="stylesheet" href="../css/experiment.css?v=1.1">
   <link rel="stylesheet" href="../css/builder.css?v=1.1">
+  <link rel="stylesheet" href="../css/background.css?v=1.0">
 </head>
 <body class="sb-body">
+
+  <!-- Animated Background - the front page's, shared via css/background.css -->
+  <div class="animated-background">
+    <div class="wave-container">
+      <svg class="wave wave-teal" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,160 C320,220 420,100 720,160 C1020,220 1120,100 1440,160 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-pink" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,200 C280,260 380,140 680,200 C980,260 1080,140 1440,200 L1440,320 L0,320 Z"></path>
+      </svg>
+      <svg class="wave wave-wine" viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path d="M0,240 C240,300 340,180 640,240 C940,300 1040,180 1440,240 L1440,320 L0,320 Z"></path>
+      </svg>
+    </div>
+    <div class="particles">
+      <div class="particle particle-teal" style="left: 10%; top: 20%;"></div>
+      <div class="particle particle-pink" style="left: 30%; top: 60%;"></div>
+      <div class="particle particle-wine" style="left: 50%; top: 30%;"></div>
+      <div class="particle particle-teal" style="left: 70%; top: 70%;"></div>
+      <div class="particle particle-pink" style="left: 90%; top: 40%;"></div>
+      <div class="particle particle-wine" style="left: 20%; top: 80%;"></div>
+      <div class="particle particle-teal" style="left: 60%; top: 10%;"></div>
+      <div class="particle particle-pink" style="left: 80%; top: 50%;"></div>
+    </div>
+  </div>
+
 
   <div class="sb-wrap">
 
@@ -149,6 +176,12 @@
       });
     });
   </script>
+
+  <footer class="site-footer">
+    Developed by Shir Sivroni <span class="sep">&middot;</span> &copy; 2026
+    <span class="sep">&middot;</span>
+    <a href="../article/abcd-framework.html">The ABCD framework</a>
+  </footer>
 
 </body>
 </html>

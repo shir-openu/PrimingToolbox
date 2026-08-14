@@ -1,0 +1,180 @@
+/* =====================================================
+   PrimingToolbox - the site background, and the footer
+   =====================================================
+
+   WHY THIS FILE EXISTS
+   --------------------
+   The animated background lived in css/main.css, which only index.html and
+   article/abcd-framework.html load. The two build pages load builder.css
+   instead, so they sat on a flat #0b0f19 and looked like a different product -
+   which is exactly what they are not: build/timeline.html is the page the front
+   page sends you to.
+
+   Extracted here rather than copied a third time. main.css no longer carries
+   these rules; every page that wants the site's background links this file.
+
+   Colours: teal #169999, pink #ff4db8, wine #990f23 on #120a12.
+   ===================================================== */
+
+/* body.sb-body (builder.css) is more specific than a bare `body`, so it is
+   named here or the build pages keep their own flat colour. */
+body,
+body.sb-body {
+  background: #120a12;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Animated Background */
+.animated-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.1;
+}
+
+.wave-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.wave {
+  position: absolute;
+  width: 200%;
+  height: 100%;
+  opacity: 0.6;
+}
+
+.wave path {
+  fill: none;
+  stroke-width: 2;
+}
+
+.wave-teal path {
+  stroke: #169999;
+  animation: wave-drift-1 25s ease-in-out infinite;
+}
+
+.wave-pink path {
+  stroke: #ff4db8;
+  animation: wave-drift-2 30s ease-in-out infinite;
+}
+
+.wave-wine path {
+  stroke: #990f23;
+  animation: wave-drift-3 35s ease-in-out infinite;
+}
+
+@keyframes wave-drift-1 {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-25%) translateY(-5%); }
+}
+
+@keyframes wave-drift-2 {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-30%) translateY(8%); }
+}
+
+@keyframes wave-drift-3 {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(-20%) translateY(-8%); }
+}
+
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.particle-teal {
+  background: #169999;
+  animation: float-teal 20s ease-in-out infinite;
+}
+
+.particle-pink {
+  background: #ff4db8;
+  animation: float-pink 25s ease-in-out infinite;
+}
+
+.particle-wine {
+  background: #990f23;
+  animation: float-wine 30s ease-in-out infinite;
+}
+
+@keyframes float-teal {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  10%, 90% { opacity: 0.3; }
+  50% { transform: translate(100px, -150px); opacity: 0.5; }
+}
+
+@keyframes float-pink {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  10%, 90% { opacity: 0.4; }
+  50% { transform: translate(-120px, -180px); opacity: 0.6; }
+}
+
+@keyframes float-wine {
+  0%, 100% { transform: translate(0, 0); opacity: 0; }
+  10%, 90% { opacity: 0.35; }
+  50% { transform: translate(80px, 200px); opacity: 0.5; }
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(ellipse at center, rgba(22, 153, 153, 0.03) 0%, transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Anything that should sit ON the background rather than under it. The waves
+   are z-index 0 and fixed, so page content needs a stacking context above
+   them; main.css already gives .layout z-index 1, this covers the rest. */
+.sb-wrap,
+.article-wrap,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* -----------------------------------------------------------------
+   Footer - same on every page
+   ----------------------------------------------------------------- */
+
+.site-footer {
+  margin-top: 60px;
+  padding: 22px 26px 30px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #7c8794;
+  font-size: 0.88rem;
+  text-align: center;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+
+.site-footer a {
+  color: #9aa6b2;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.site-footer a:hover { color: #ff4db8; border-bottom-color: #ff4db8; }
+
+.site-footer .sep { opacity: 0.45; margin: 0 8px; }

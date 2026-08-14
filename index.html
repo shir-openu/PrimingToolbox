@@ -83,7 +83,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/main.css?v=1.5">
+  <link rel="stylesheet" href="css/main.css?v=1.6">
   <link rel="stylesheet" href="css/experiment.css?v=1.1">
 </head>
 <body>
@@ -264,7 +264,7 @@
 
           <!-- Build on the Timeline: the same builder, timing drawn rather
                than typed. Added 2026-08-11. -->
-          <div class="module-card" onclick="showBuildOnTimeline()" style="border-color:#2fd4c466;">
+          <div class="module-card" id="card-build-timeline" onclick="showBuildOnTimeline()" style="border-color:#2fd4c466;">
             <div class="module-content">
               <div class="module-icon">&#9202;</div>
               <div class="module-title" style="color:#2fd4c4;">Build With The Timeline</div>
@@ -290,14 +290,21 @@
               <h3 class="card-title" style="color: #ff4db8; font-size: 1.4rem;">The ABCD Framework</h3>
               <p style="color: #9aa6b2; line-height: 2; font-size: 1.1rem;">
                 <strong style="color: #ffffff;">A</strong> = Prime (the influencing information)<br>
-                <strong style="color: #ffffff;">B</strong> = Target (the input that requires processing)<br>
+                <strong style="color: #ffffff;">B</strong> = Target (the input being processed)<br>
                 <strong style="color: #ffffff;">C</strong> = Baseline outcome (without A)<br>
                 <strong style="color: #ffffff;">D</strong> = Measured outcome (with A)
               </p>
-              <p style="color: #9aa6b2; margin-top: 18px; font-size: 1rem; line-height: 1.7;">
-                Three characteristics define priming: <strong>Association</strong> (A-B relationship),
-                <strong>Secondariness</strong> (A is task-irrelevant), and
-                <strong>Modulation</strong> (A changes outcome from C to D).
+              <!-- One characteristic per line since 2026-08-14. As a single
+                   flowing sentence "Modulation (A changes outcome from C to D)"
+                   split across a line break in the middle of the phrase, which
+                   is the one of the three that names the actual test. Three
+                   lines matches the A/B/C/D block above it and reads as a
+                   checklist, which is what it is. -->
+              <p style="color: #9aa6b2; margin-top: 18px; font-size: 1rem; line-height: 1.9;">
+                Three characteristics define priming:<br>
+                <strong style="color:#ffffff;">Association</strong> &mdash; the A&ndash;B relationship<br>
+                <strong style="color:#ffffff;">Secondariness</strong> &mdash; A is task-irrelevant<br>
+                <strong style="color:#ffffff;">Modulation</strong> &mdash; A shifts the outcome C &rarr; D
               </p>
               <p style="color: #ff4db8; margin-top: 20px; font-size: 0.98rem; font-weight: 600;">
                 Read the full framework &rarr;

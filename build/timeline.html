@@ -29,7 +29,7 @@
   -->
 
   <link rel="stylesheet" href="../css/experiment.css?v=1.1">
-  <link rel="stylesheet" href="../css/builder.css?v=1.1">
+  <link rel="stylesheet" href="../css/builder.css?v=1.2">
   <link rel="stylesheet" href="../css/background.css?v=1.0">
 </head>
 <body class="sb-body">
@@ -87,6 +87,15 @@
           <div class="timeline-ticks" id="timeline-ticks"></div>
         </div>
       </div>
+
+      <!-- The six values, in their phases' colours, directly under the timeline
+           and inside the sticky block. The first thing anyone does on this page
+           is grab a block and pull it; the numbers have to move where the eye
+           already is. They used to live in step 5, which is off-screen while
+           you are dragging - so from the user's side the timeline changed and
+           nothing else did. ScratchBuilder fills this in: it looks for an
+           existing #sb-timing-readout before making its own. -->
+      <div id="sb-timing-readout" class="sb-timing-strip"></div>
     </div>
 
     <div class="sb-switch">

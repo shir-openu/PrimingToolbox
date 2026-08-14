@@ -607,10 +607,23 @@ window.ScratchBuilder = (function () {
       var s = section(5, 'Timing: shape the trial above', C.amber,
         'The timeline at the top of this page IS this step. Drag the right edge of any block, or type exact ' +
         'values into it. Whatever it shows when you build the link is the timing your participants get.');
-      var readout = el('div', { id: 'sb-timing-readout', style: 'color:#9aa6b2;font-size:.9rem;' });
-      s.appendChild(readout);
+      // The page may already provide the readout directly under the timeline -
+      // build/timeline.html does, since 2026-08-14. That is where it belongs:
+      // the first thing anyone does on this page is drag a block, and the
+      // numbers have to move where they are already looking, not 1500px down
+      // in step 5. If the host page has not supplied one, step 5 keeps it, so
+      // this still works on any page that mounts the builder in timeline mode.
+      var readout = document.getElementById('sb-timing-readout');
+      if (!readout) {
+        readout = el('div', { id: 'sb-timing-readout', style: 'color:#9aa6b2;font-size:.9rem;' });
+        s.appendChild(readout);
+      } else {
+        s.appendChild(el('p', { class: 'sb-note', text:
+          'The six values are shown under the timeline itself, at the top of this page, ' +
+          'and follow it as you drag.' }));
+      }
       var refresh = el('button', { class: 'sb-btn ghost small', type: 'button', text: 'Show what the timeline currently says' });
-      refresh.onclick = paintTimingReadout;
+      refresh.onclick = function () { paintTimingReadout(); };
       s.appendChild(el('div', { class: 'sb-actions' }, [refresh]));
       paintTimingReadout(readout);
       return s;

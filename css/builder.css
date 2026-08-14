@@ -226,6 +226,26 @@ select option { background: #131a28; color: #e5e7eb; }
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
 }
 
+/* The value strip under the timeline. Inside the sticky block, so it is on
+   screen whenever the timeline is - which is the whole point of it being here
+   rather than in step 5. Compact on purpose: this sits above the fold on every
+   scroll position, so every pixel it takes is a pixel of the form nobody can
+   see. The tiles' own colours are set inline from TimelinePlanner.phases(). */
+.sb-timing-strip {
+  margin-top: 10px;
+}
+.sb-timing-strip > div {
+  padding: 5px 9px !important;
+  border-radius: 7px !important;
+}
+.sb-timing-strip > div > div:first-child {
+  font-size: .68rem !important;
+}
+.sb-timing-strip > div > div:last-child {
+  font-size: .95rem !important;
+  margin-top: 0 !important;
+}
+
 /* A short window would otherwise be all timeline and no form. Below this the
    panel goes back to scrolling away, which is the lesser problem. */
 @media (max-height: 560px) {

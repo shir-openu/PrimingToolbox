@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the drag handle was widened for zoomed-out browsers, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/36fe7ba/js/timeline_fab.js
+ *
  *   before the experimenter-layer event logging, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/timeline_fab.js
  */
@@ -172,18 +175,25 @@ const TimelinePlanner = (function () {
       handle.className = 'timeline-handle';
       handle.dataset.key = p.key;
       handle.title = 'Drag to change ' + p.label + ' (hold Shift for 1 ms steps)';
+      // 22px, not 14. Everything here is CSS pixels, so it shrinks with the
+      // browser's zoom: Shir was reading this page at 40%, where a 14px handle
+      // is 5.6 real pixels and its 4px grip is 1.6 - not visible, and not
+      // grabbable with a mouse. Reset the zoom and it was always there, but a
+      // control that only works at 100% is a control with a footnote. 22/6 is
+      // still 8.8/2.4 at 40%, so this does not rescue that zoom on its own; it
+      // makes the edge obvious at the sizes people actually use.
       handle.style.cssText =
         'position:absolute;top:' + (SEG_TOP - 2) + 'px;height:' + (SEG_HEIGHT + 4) + 'px;' +
-        'width:14px;margin-left:-7px;cursor:col-resize;z-index:' + (10 + i) + ';' +
+        'width:22px;margin-left:-11px;cursor:col-resize;z-index:' + (10 + i) + ';' +
         'display:flex;align-items:center;justify-content:center;touch-action:none;';
       const grip = document.createElement('div');
       grip.style.cssText =
-        'width:4px;height:60%;border-radius:2px;background:' + p.color + ';opacity:.75;' +
-        'box-shadow:0 0 0 1px rgba(0,0,0,.35);pointer-events:none;';
+        'width:6px;height:70%;border-radius:3px;background:' + p.color + ';opacity:.95;' +
+        'box-shadow:0 0 0 1px rgba(0,0,0,.45);pointer-events:none;';
       handle.appendChild(grip);
       handle.addEventListener('pointerdown', ev => startDrag(i, ev));
-      handle.addEventListener('mouseenter', () => { grip.style.opacity = '1'; grip.style.width = '6px'; });
-      handle.addEventListener('mouseleave', () => { if (!dragging) { grip.style.opacity = '.75'; grip.style.width = '4px'; } });
+      handle.addEventListener('mouseenter', () => { grip.style.opacity = '1'; grip.style.width = '9px'; });
+      handle.addEventListener('mouseleave', () => { if (!dragging) { grip.style.opacity = '.95'; grip.style.width = '6px'; } });
       track.appendChild(handle);
 
       // onset tick under the axis at each phase start

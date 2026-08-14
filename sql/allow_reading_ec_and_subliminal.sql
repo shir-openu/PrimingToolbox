@@ -1,6 +1,12 @@
--- NOT YET APPLIED. This one is Shir's call, because it changes who can READ
--- data rather than adding a column. Everything else found on 2026-08-12 was
--- applied directly; this was deliberately left.
+-- APPLIED 2026-08-14, on Shir's instruction. It was held back until then
+-- because it changes who can READ data rather than adding a column; everything
+-- else found on 2026-08-12 was applied directly.
+--
+-- VERIFIED, not assumed. A policy row existing is not a read working, and with
+-- both tables empty the anon response is 200/[] whether or not it is readable -
+-- the exact ambiguity described below. So one marked probe row was committed to
+-- each table, read back through the public anon key over HTTPS (1 row seen in
+-- both), then deleted with the postgres connection; both tables are empty again.
 --
 -- THE PROBLEM
 --

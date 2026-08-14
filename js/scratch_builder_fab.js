@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before step 5 became colour-coded tiles instead of a grey sentence, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/7e3201a/js/scratch_builder_fab.js
+ *
  *   before refreshTiming could be called quietly on every change, 2026-08-14
  *   https://github.com/shir-openu/PrimingToolbox/blob/ed7bd45/js/scratch_builder_fab.js
  *
@@ -642,14 +645,78 @@ window.ScratchBuilder = (function () {
     return f;
   }
 
+  /**
+   * Step 5's readout: one tile per phase, each in that phase's own colour.
+   *
+   * It used to be a single grey sentence - "fixation 710 ms | prime_duration
+   * 200 ms | ..." - sitting three inches under a timeline where every one of
+   * those numbers was colour-coded. Shir asked three times for the numbers to
+   * appear "with the correct colour" and pointed at her own
+   * differential_linear_operator page as the model: change the scalar at the
+   * top and the value propagates into bordered boxes below, each keeping its
+   * own colour. Same idea here - the tiles ARE the timeline's numbers, in the
+   * timeline's colours, and they follow the drag.
+   *
+   * Labels and colours come from TimelinePlanner.phases() rather than being
+   * written out again here; two lists of the same six colours is how they
+   * drift apart.
+   */
   function paintTimingReadout(host) {
     host = host || document.getElementById('sb-timing-readout');
     if (!host) return;
     var TP = planner();
     if (!TP) { host.textContent = 'The timeline is not loaded on this page.'; return; }
-    var plan = TP.getPlan();
-    var parts = Object.keys(plan).map(function (k) { return k.replace(/_ms$/, '') + ' ' + plan[k] + ' ms'; });
-    host.textContent = parts.join('  |  ') + '   (total ' + TP.total() + ' ms per trial)';
+
+    // older planner without phases(): keep the plain line rather than break
+    if (typeof TP.phases !== 'function') {
+      var plan = TP.getPlan();
+      host.textContent = Object.keys(plan).map(function (k) {
+        return k.replace(/_ms$/, '') + ' ' + plan[k] + ' ms';
+      }).join('  |  ') + '   (total ' + TP.total() + ' ms per trial)';
+      return;
+    }
+
+    host.innerHTML = '';
+    host.style.cssText = 'display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:2px 0 4px;';
+
+    TP.phases().forEach(function (p) {
+      var tile = el('div');
+      tile.style.cssText =
+        'flex:1 1 116px;min-width:104px;border:2px ' + (p.box ? 'solid' : 'dashed') + ' ' + p.color + ';' +
+        'border-radius:9px;padding:8px 10px;background:' + p.color + '14;';
+
+      var name = el('div');
+      name.textContent = p.label + (p.letter ? ' (' + p.letter + ')' : '');
+      name.style.cssText = 'color:' + p.color + ';font-size:.78rem;font-weight:700;' +
+                           'letter-spacing:.3px;text-transform:uppercase;';
+
+      var val = el('div');
+      // textContent, never innerHTML - these numbers arrive from a participant
+      // link in other code paths and this file has been bitten by that before
+      val.textContent = p.value + ' ms';
+      val.style.cssText = 'color:#e5e7eb;font-size:1.12rem;font-weight:700;' +
+                          'font-variant-numeric:tabular-nums;margin-top:2px;';
+
+      tile.appendChild(name);
+      tile.appendChild(val);
+      host.appendChild(tile);
+    });
+
+    var totalTile = el('div');
+    totalTile.style.cssText =
+      'flex:1 1 116px;min-width:104px;border:2px solid ' + C.amber + ';border-radius:9px;' +
+      'padding:8px 10px;background:' + C.amber + '14;';
+    var tn = el('div');
+    tn.textContent = 'Whole trial';
+    tn.style.cssText = 'color:' + C.amber + ';font-size:.78rem;font-weight:700;' +
+                       'letter-spacing:.3px;text-transform:uppercase;';
+    var tv = el('div');
+    tv.textContent = TP.total() + ' ms';
+    tv.style.cssText = 'color:#e5e7eb;font-size:1.12rem;font-weight:700;' +
+                       'font-variant-numeric:tabular-nums;margin-top:2px;';
+    totalTile.appendChild(tn);
+    totalTile.appendChild(tv);
+    host.appendChild(totalTile);
   }
 
   /* ------------------------------------------------------------------ *

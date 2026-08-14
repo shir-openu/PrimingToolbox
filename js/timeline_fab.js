@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before phases() exposed the labels and colours, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/7e3201a/js/timeline_fab.js
+ *
  *   before the drag handle was widened for zoomed-out browsers, 2026-08-14
  *   https://github.com/shir-openu/PrimingToolbox/blob/36fe7ba/js/timeline_fab.js
  *
@@ -597,6 +600,18 @@ const TimelinePlanner = (function () {
     loadFromSelected: loadFromSelected,
     reset: resetPlan,
     getPlan: asObject,
+    // getPlan() gives values keyed by name and nothing else, so anything that
+    // wanted to SHOW a phase had to hardcode its label and colour a second
+    // time - which is how the step 5 readout ended up a flat grey sentence
+    // while the timeline three inches above it was colour-coded. One source
+    // for the labels and the colours. Copies, so a caller cannot edit the plan
+    // by accident.
+    phases: function () {
+      return plan.map(function (p) {
+        return { key: p.key, label: p.label, letter: p.letter,
+                 color: p.color, value: p.value, box: p.box };
+      });
+    },
     total: total,
     _plan: plan,
     _isDragging: function () { return dragging; },

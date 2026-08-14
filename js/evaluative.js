@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before the direct ec_results insert carried the client context, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/6a74d11/js/evaluative.js
+ *
  *   before the builder said what the shape split would actually be, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/9ae50da/js/evaluative.js
  *
@@ -875,9 +878,17 @@ window.EvaluativeConditioning = {
       if (!PTA.supabase) {
         primaryFailed = 'Supabase not initialized';
       } else {
+        // This is the ONE insert in the repo that does not go through
+        // PTA.saveAllResults, so it is also the one place the client context
+        // has to be attached by hand. Caught 2026-08-14 by running the
+        // paradigm for real: subliminal's rows came back with the timezone
+        // filled in and EC's came back all NULL, because the batch path stamps
+        // and a direct .insert() does not. The fallback below goes through
+        // saveAllResults and would have stamped it, which is exactly why this
+        // was invisible until a run succeeded on the first try.
         const { error } = await PTA.supabase
           .from('ec_results')
-          .insert(allData);
+          .insert(PTA.stampClientContext(allData));
         if (error) {
           console.error('EC: Error saving results', error);
           primaryFailed = (error && error.message) || String(error);

@@ -2,6 +2,9 @@
  * PREVIOUS VERSIONS ON GITHUB, newest first. Every change to this file adds a
  * line here, so any earlier state can be recovered if something goes wrong.
  *
+ *   before refreshTiming could be called quietly on every change, 2026-08-14
+ *   https://github.com/shir-openu/PrimingToolbox/blob/ed7bd45/js/scratch_builder_fab.js
+ *
  *   before the experimenter-layer event logging, 2026-08-12
  *   https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/js/scratch_builder_fab.js
  */
@@ -1190,11 +1193,18 @@ window.ScratchBuilder = (function () {
    * build/timeline.html when the planner's own button is pressed, so that
    * button confirms something instead of writing into a draft this page does
    * not use.
+   *
+   * @param {boolean} [quiet] - redraw only, no status message. build/timeline.html
+   *   now calls this on every timeline change, and a toast per pixel of a drag
+   *   would be unusable. Added 2026-08-14: the readout was refreshed ONLY by
+   *   the button, so after a drag the timeline said 930 ms and the step 5 line
+   *   underneath it still said 500 - two numbers for the same thing, one of
+   *   them stale, on the page whose whole subject is that number.
    */
-  SB.refreshTiming = function () {
+  SB.refreshTiming = function (quiet) {
     paintTimingReadout();
     var TP = planner();
-    if (TP) {
+    if (TP && !quiet) {
       say('Timing noted: ' + TP.total() + ' ms per trial. The link always carries whatever the timeline shows.', 'ok');
     }
   };

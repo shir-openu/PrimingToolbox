@@ -193,7 +193,27 @@ select option { background: #131a28; color: #e5e7eb; }
    is the subject of the page, not a status bar, so it is un-docked and given
    the same card shell as every section around it. Overridden here rather than
    by editing experiment.css, which the landing page still depends on. */
-.sb-timeline-host { margin: 6px 0 18px; }
+/* STICKY, added 2026-08-14. Step 5 says "the timeline at the top of this page
+   IS this step", and it was - about 1500px above wherever you were reading. So
+   the one control the whole page is named after scrolled out of sight the
+   moment you started filling in the steps, and from down there the page looks
+   like it has no timeline, no numbers and nothing that reacts. Shir reported
+   exactly that. Her own screen proved the widget was working: her Step 5 line
+   read 480/1330/600 ms, values that only a drag produces - the drags landed,
+   she just could not see them land.
+
+   The landing page never had this problem because there the timeline is docked
+   to the bottom of the viewport and always visible. Sticky gives this page the
+   same property without taking the bottom of the screen. */
+.sb-timeline-host {
+  margin: 6px 0 18px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  /* the cards scroll UNDER this, so it cannot be see-through */
+  background: var(--sb-bg);
+  padding: 8px 0 6px;
+}
 .sb-timeline-host .timeline-container {
   position: static;
   inset: auto;
@@ -203,6 +223,13 @@ select option { background: #131a28; color: #e5e7eb; }
   border-left: 4px solid var(--sb-amber);
   padding: 14px 18px 16px;
   z-index: auto;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+/* A short window would otherwise be all timeline and no form. Below this the
+   panel goes back to scrolling away, which is the lesser problem. */
+@media (max-height: 560px) {
+  .sb-timeline-host { position: static; box-shadow: none; }
 }
 
 @media (max-width: 620px) {

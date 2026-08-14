@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <!--
-  PREVIOUS VERSION ON GITHUB (before the experimenter-layer event logging, 2026-08-12):
+  PREVIOUS VERSIONS ON GITHUB, newest first.
+
+  before the timeline was made sticky and step 5 stopped going stale, 2026-08-14:
+      https://github.com/shir-openu/PrimingToolbox/blob/ed7bd45/build/timeline.html
+
+  before the experimenter-layer event logging, 2026-08-12:
       https://github.com/shir-openu/PrimingToolbox/blob/e93dccf/build/timeline.html
 -->
 <html lang="en">
@@ -24,7 +29,7 @@
   -->
 
   <link rel="stylesheet" href="../css/experiment.css?v=1.1">
-  <link rel="stylesheet" href="../css/builder.css?v=1.0">
+  <link rel="stylesheet" href="../css/builder.css?v=1.1">
 </head>
 <body class="sb-body">
 
@@ -95,6 +100,32 @@
         PTA.logEvent('session_start', { page: 'build/timeline' });
         PTA.logEvent('timeline_opened', { editor: 'build-page' });
         PTA.startEditorHeartbeat('timeline', { page: 'build/timeline' });
+      }
+
+      // Keep the step 5 readout honest. It used to refresh only when the
+      // button below was pressed, so a dragged timeline showed 930 ms up here
+      // and 500 ms down there at the same time. Anything that can change the
+      // plan - dragging a handle, typing in a box, arrow keys on a focused
+      // block - now redraws it, throttled to one repaint per frame and quiet
+      // (no status message) because a toast per pixel of a drag is unusable.
+      var host = document.querySelector('.sb-timeline-host');
+      if (host) {
+        var queued = false;
+        var syncReadout = function () {
+          if (queued) return;
+          queued = true;
+          requestAnimationFrame(function () {
+            queued = false;
+            if (window.ScratchBuilder && ScratchBuilder.refreshTiming) {
+              ScratchBuilder.refreshTiming(true);
+            }
+          });
+        };
+        ['input', 'change', 'pointerup', 'keyup'].forEach(function (ev) {
+          host.addEventListener(ev, syncReadout);
+        });
+        // only while a button is actually held, so hovering the bar costs nothing
+        host.addEventListener('pointermove', function (e) { if (e.buttons) syncReadout(); });
       }
 
       // The editor bar is built for the landing page and carries two controls
